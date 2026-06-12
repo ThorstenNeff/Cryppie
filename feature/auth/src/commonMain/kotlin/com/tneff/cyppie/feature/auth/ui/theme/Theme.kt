@@ -16,6 +16,7 @@ val TextPrimary = Color(0xFF000000)
 val TextSubtitle = Color(0xFF5D5D5B)
 val SoftWhite = Color(0x80FFFFFF)
 val DividerGray = Color(0xFFEDEDED)
+val FieldBorder = Color(0x99CFDBD5) // #CFDBD5 @ 60% — form field outlines
 
 private val CryptasaColorScheme = lightColorScheme(
     primary = CryptasaBlue,

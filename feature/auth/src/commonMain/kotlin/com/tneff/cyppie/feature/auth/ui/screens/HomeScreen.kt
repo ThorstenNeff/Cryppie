@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tneff.cyppie.feature.auth.ui.components.BrandLogo
 import com.tneff.cyppie.feature.auth.ui.components.LinkRow
 import com.tneff.cyppie.feature.auth.ui.theme.CryptasaBlue
 import com.tneff.cyppie.feature.auth.ui.theme.CryptasaGreen
@@ -61,16 +61,7 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(40.dp))
-                // Logo (approximation of the brand mark)
-                Box(
-                    modifier = Modifier
-                        .size(54.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Brush.linearGradient(listOf(CryptasaBlue, CryptasaGreen))),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("C", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-                }
+                BrandLogo()
                 Spacer(Modifier.height(40.dp))
                 Text(
                     text = "“Enjoy the world’s largest cryptocurrency exchange at your fingertips”",
