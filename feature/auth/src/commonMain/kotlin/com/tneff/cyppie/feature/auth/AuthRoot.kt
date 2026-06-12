@@ -32,7 +32,6 @@ fun AuthRoot(viewModel: AuthViewModel = viewModel { AuthViewModel() }) {
                 AuthRoute.SIGN_UP -> SignUpScreen(
                     error = state.error,
                     onSubmit = viewModel::submitSignUp,
-                    onNavigateToSignIn = { viewModel.goTo(AuthRoute.SIGN_IN) },
                     onBack = { viewModel.goTo(AuthRoute.HOME) },
                 )
 

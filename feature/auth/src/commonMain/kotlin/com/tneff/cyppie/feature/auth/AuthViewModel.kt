@@ -31,12 +31,14 @@ class AuthViewModel : ViewModel() {
         uiState = uiState.copy(route = route, error = null)
     }
 
-    fun submitSignUp(name: String, email: String, password: String, confirmPassword: String) {
-        val validationError = validateSignUp(name, email, password, confirmPassword)
+    fun submitSignUp(email: String, password: String) {
+        val validationError = validateSignUp(email, password)
         if (validationError != null) {
             uiState = uiState.copy(error = validationError)
             return
         }
+        // The sign-up design has no name field; derive a display name from the email.
+        val name = email.trim().substringBefore("@")
         repository.register(name, email, password)
             .onSuccess { user -> uiState = uiState.copy(currentUser = user, error = null) }
             .onFailure { uiState = uiState.copy(error = it.message ?: "Registration failed.") }
@@ -57,16 +59,9 @@ class AuthViewModel : ViewModel() {
         uiState = AuthUiState()
     }
 
-    private fun validateSignUp(
-        name: String,
-        email: String,
-        password: String,
-        confirmPassword: String,
-    ): String? = when {
-        name.isBlank() -> "Please enter your name."
+    private fun validateSignUp(email: String, password: String): String? = when {
         !isValidEmail(email) -> "Please enter a valid email address."
         password.length < MIN_PASSWORD_LENGTH -> "Password must be at least $MIN_PASSWORD_LENGTH characters."
-        password != confirmPassword -> "Passwords do not match."
         else -> null
     }
 
