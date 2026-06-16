@@ -22,3 +22,7 @@ firebase-service-account.json
 fastlane/report.xml
 keystore.properties
 app/androidApp/**/*
+*.p8
+app/iosApp/Cyppie.app.dSYM.zip
+app/iosApp/Cyppie.ipa
+app/iosApp/fastlane/report.xml

@@ -3,7 +3,20 @@ default_platform(:ios)
 platform :ios do
   desc "Build und Verteilung an Firebase App Distribution"
   lane :distribute do
-    build_app(scheme: "iosApp", export_method: "ad-hoc")
+    app_store_connect_api_key(
+      key_id: "QT74F53MD6",
+      issuer_id: "69a6de86-4ebe-47e3-e053-5b8c7c11a4d1",
+      key_filepath: "./fastlane/AuthKey.p8"
+    )
+
+    register_devices(devices_file: "./fastlane/devices.txt")
+    match(type: "adhoc", force_for_new_devices: true)   # nutzt den Key automatisch
+  
+    build_app(
+        scheme: "iosApp", 
+        export_method: "ad-hoc",
+        project: "iosApp.xcodeproj" 
+    )
 
     firebase_app_distribution(
       app: "1:615841952616:ios:51eb778e7f5c58eb665cdd",

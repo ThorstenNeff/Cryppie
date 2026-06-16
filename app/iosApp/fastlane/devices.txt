@@ -1,0 +1,3 @@
+Device ID	Device Name
+00008020-000928E83EA1402E	Mein iPad
+ac9a189b16993ce1694632bb6de32ec4ffda2a96	iPhone 8
