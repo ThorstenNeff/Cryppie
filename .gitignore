@@ -20,3 +20,5 @@ node_modules/
 firebase-service-account.json
 *.md
 fastlane/report.xml
+keystore.properties
+app/androidApp/**/*
