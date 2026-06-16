@@ -1,0 +1,14 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build und Verteilung an Firebase App Distribution"
+  lane :distribute do
+    build_app(scheme: "iosApp", export_method: "ad-hoc")
+
+    firebase_app_distribution(
+      app: "1:615841952616:ios:51eb778e7f5c58eb665cdd",
+      service_credentials_file: "../../firebase-service-account.json",
+      groups: "qa-team"
+    )
+  end
+end

@@ -1,0 +1,15 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build und Verteilung an Firebase App Distribution"
+  lane :distribute do
+    gradle(task: "app:androidApp:assemble", build_type: "Debug")
+
+    firebase_app_distribution(
+      app: "1:615841952616:android:edad483b162fdbc6665cdd",
+      service_credentials_file: "firebase-service-account.json",
+      groups: "qa-team",
+      android_artifact_type: "APK"
+    )
+  end
+end
