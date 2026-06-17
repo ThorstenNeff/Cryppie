@@ -6,8 +6,9 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
- * Koin module of the onboarding feature (ADR-0007). Each feature owns its module; the app
- * aggregates them in `initKoin()`.
+ * Koin module of the onboarding feature (ADR-0007). Each feature owns its module; the app aggregates
+ * them in `appModules` (`:app:shared`) and provides them to the composition via
+ * `KoinApplication(koinConfiguration { modules(appModules) })` in `App()`.
  */
 val onboardingModule: Module = module {
     viewModelOf(::OnboardingViewModel)

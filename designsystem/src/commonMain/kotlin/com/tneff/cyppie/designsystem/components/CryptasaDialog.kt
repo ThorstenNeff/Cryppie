@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -107,14 +108,19 @@ fun CryptasaDialog(
                 )
 
                 if (dismissText != null && onDismiss != null) {
-                    Text(
-                        text = dismissText,
-                        style = CryptasaTheme.typography.label,
-                        color = colors.primary,
+                    // ≥48 dp hit area around the secondary action (§5.4 touch target).
+                    Box(
                         modifier = Modifier
-                            .padding(top = spacing.xxs)
+                            .heightIn(min = 48.dp)
                             .clickableIcon(contentDescription = dismissText, onClick = onDismiss),
-                    )
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = dismissText,
+                            style = CryptasaTheme.typography.label,
+                            color = colors.primary,
+                        )
+                    }
                 }
             }
         }

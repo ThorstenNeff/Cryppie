@@ -2,9 +2,11 @@ package com.tneff.cyppie.designsystem.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -78,14 +80,20 @@ fun CryptasaBanner(
         }
 
         if (actionText != null && onActionClick != null) {
-            Text(
-                text = actionText,
-                style = CryptasaTheme.typography.labelSmall,
-                color = accent,
+            // ≥48 dp hit area around the action text (§5.4 touch target).
+            Box(
                 modifier = Modifier
                     .padding(start = spacing.xs)
+                    .heightIn(min = 48.dp)
                     .clickableIcon(contentDescription = actionText, onClick = onActionClick),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = actionText,
+                    style = CryptasaTheme.typography.labelSmall,
+                    color = accent,
+                )
+            }
         }
     }
 }
