@@ -12,16 +12,18 @@ import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomePlaceholderScreen
-import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Public entry point of the onboarding feature (replaces `AuthRoot` as the app's start, ADR-0004).
- * Hosts the central [CryptasaTheme], the Koin-provided [OnboardingViewModel] and the Nav3 back stack
- * (ADR-0006). Activates `testTagsAsResourceId` once at the root so every `testTag` becomes a
- * resource-id for Maestro (§5.1 / KAN-10).
+ * Hosts the central [CryptasaTheme] and the Nav3 back stack (ADR-0006). Activates
+ * `testTagsAsResourceId` once at the root so every `testTag` becomes a resource-id for Maestro
+ * (§5.1 / KAN-10).
+ *
+ * The Koin-provided [OnboardingViewModel] (flow state, e.g. Create/Import) is injected by the first
+ * screen that needs it — wired in with ONB-2 (KAN-11). The module is already registered (ADR-0007).
  */
 @Composable
-fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
+fun OnboardingRoot() {
     CryptasaTheme {
         val backStack: SnapshotStateList<OnboardingNavKey> =
             remember { mutableStateListOf(OnboardingNavKey.Welcome) }

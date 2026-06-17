@@ -39,9 +39,12 @@ fun rememberOnboardingWindowClass(): OnboardingWindowClass {
     val mediumWidth = wsc.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) // ≥ 600
     val compactHeight = !wsc.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) // < 480
     return when {
+        // Expanded (≥840 width) has the room for the two-column brand layout.
         expanded -> OnboardingWindowClass.Expanded
-        mediumWidth -> OnboardingWindowClass.Medium
+        // Short height must win over medium width: a phone in landscape (~800×360) is the
+        // band + scroll special case, NOT the centred Medium card (HANDOFF §7a, ADR-0012).
         compactHeight -> OnboardingWindowClass.CompactLandscape
+        mediumWidth -> OnboardingWindowClass.Medium
         else -> OnboardingWindowClass.Compact
     }
 }

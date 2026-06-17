@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,10 +29,13 @@ import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.foundation.clickableIcon
+import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 
 /**
@@ -44,7 +45,11 @@ import com.tneff.cyppie.designsystem.theme.CryptasaTheme
  * icon · helper/error line (`helper`) with leading icon. States derive from inputs:
  * resting/filled/focus/error/disabled. Error binds outline + helper + icon to `danger`; the field
  * is annotated `error` for screen readers and the message is a live region (§5.4). Token-bound;
- * direction-agnostic (uses `start`/`end` via default Row/Arrangement). No autofill on secret fields.
+ * direction-agnostic (uses `start`/`end` via default Row/Arrangement).
+ *
+ * For secret entry (BIP-39 seed import ONB-5, password screens ONB-3/4) the call site must pass
+ * [autoCorrect] = false and [capitalization] = KeyboardCapitalization.None so the keyboard does not
+ * suggest/auto-correct/auto-capitalise secrets (§5.3 / NFR-1).
  */
 @Composable
 fun CryptasaTextField(
@@ -58,6 +63,9 @@ fun CryptasaTextField(
     enabled: Boolean = true,
     singleLine: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Default,
+    autoCorrect: Boolean = true,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon: ImageVector? = null,
     trailingIconContentDescription: String? = null,
@@ -107,7 +115,12 @@ fun CryptasaTextField(
                         textStyle = CryptasaTheme.typography.body.copy(color = valueColor),
                         cursorBrush = SolidColor(colors.primary),
                         visualTransformation = visualTransformation,
-                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = keyboardType,
+                            imeAction = imeAction,
+                            autoCorrectEnabled = autoCorrect,
+                            capitalization = capitalization,
+                        ),
                         interactionSource = interactionSource,
                         decorationBox = { inner ->
                             if (value.isEmpty() && placeholder.isNotEmpty()) {
@@ -122,7 +135,7 @@ fun CryptasaTextField(
                     )
                 }
 
-                val effectiveTrailing = trailingIcon ?: if (isError) Icons.Filled.Error else null
+                val effectiveTrailing = trailingIcon ?: if (isError) CryptasaIcons.Error else null
                 if (effectiveTrailing != null) {
                     val tint = if (isError && trailingIcon == null) colors.danger else colors.onSurfaceVariant
                     Icon(
@@ -155,7 +168,7 @@ fun CryptasaTextField(
             ) {
                 if (isError) {
                     Icon(
-                        imageVector = Icons.Filled.Error,
+                        imageVector = CryptasaIcons.Error,
                         contentDescription = null,
                         tint = colors.danger,
                         modifier = Modifier.size(16.dp),

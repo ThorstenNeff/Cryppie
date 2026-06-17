@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.foundation.clickableIcon
+import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 
 /**
@@ -43,7 +42,7 @@ fun CryptasaDialog(
     modifier: Modifier = Modifier,
     dismissText: String? = null,
     onDismiss: (() -> Unit)? = null,
-    icon: ImageVector = Icons.Filled.Error,
+    icon: ImageVector = CryptasaIcons.Error,
     badgeSurface: Color? = null,
     badgeTint: Color? = null,
 ) {

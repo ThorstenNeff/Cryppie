@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +21,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.foundation.clickableIcon
+import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 
 enum class CryptasaBannerTone { Danger, Warning, Offline }
@@ -51,13 +48,13 @@ fun CryptasaBanner(
     val icon: ImageVector
     when (tone) {
         CryptasaBannerTone.Danger -> {
-            background = colors.dangerSurface; accent = colors.danger; icon = Icons.Filled.Error
+            background = colors.dangerSurface; accent = colors.danger; icon = CryptasaIcons.Error
         }
         CryptasaBannerTone.Warning -> {
-            background = colors.warningSurface; accent = colors.warning; icon = Icons.Filled.Warning
+            background = colors.warningSurface; accent = colors.warning; icon = CryptasaIcons.Warning
         }
         CryptasaBannerTone.Offline -> {
-            background = colors.surfaceVariant; accent = colors.primary; icon = Icons.Filled.CloudOff
+            background = colors.surfaceVariant; accent = colors.primary; icon = CryptasaIcons.CloudOff
         }
     }
 
