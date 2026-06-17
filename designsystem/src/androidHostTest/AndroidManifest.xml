@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Host-test (Robolectric) manifest for the design-system module (KAN-7 / ADR-0013).
+  Registers androidx.activity.ComponentActivity so Compose's runComposeUiTest /
+  ActivityScenario can launch a host for setContent {} under Robolectric. Framework
+  Material theme avoids an AppCompat dependency.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar"
+            android:exported="true" />
+    </application>
+</manifest>

@@ -51,6 +51,19 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            // Compose UI testing — runComposeUiTest/onNodeWithTag (ADR-0011/0013)
+            implementation(libs.compose.uiTest)
+        }
+        // Desktop Compose UI tests need the Skiko native runtime for the host OS (ADR-0011).
+        getByName("jvmTest").dependencies {
+            implementation(compose.desktop.currentOs)
+        }
+        // Android host (JVM) Compose UI & config-change tests via Robolectric (ADR-0013).
+        // activity-compose supplies the ComponentActivity that runComposeUiTest launches.
+        getByName("androidHostTest").dependencies {
+            implementation(libs.robolectric)
+            implementation(libs.androidx.test.core)
+            implementation(libs.androidx.activity.compose)
         }
     }
 }
