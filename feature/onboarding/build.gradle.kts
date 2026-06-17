@@ -68,5 +68,18 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        // Compose UI tests live only on JVM targets — runComposeUiTest API + Skiko runtime (ADR-0011).
+        getByName("jvmTest").dependencies {
+            implementation(libs.compose.uiTest)
+            implementation(compose.desktop.currentOs)
+        }
+        // Android host (JVM) Compose UI tests via Robolectric (ADR-0013); verifies testTag visibility
+        // (testTagsAsResourceId) on the Android renderer for KAN-10.
+        getByName("androidHostTest").dependencies {
+            implementation(libs.compose.uiTest)
+            implementation(libs.robolectric)
+            implementation(libs.androidx.test.core)
+            implementation(libs.androidx.activity.compose)
+        }
     }
 }

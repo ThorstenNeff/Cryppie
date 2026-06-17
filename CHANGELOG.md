@@ -22,6 +22,12 @@ All notable changes to Cyppie are documented here. The format is based on
   - Dependency injection via Koin: app aggregates feature modules in `App()` (`KoinApplication`).
   - `README.md` rewritten as the source of truth for running **and** testing every target
     (incl. JAVA_HOME, module overview, test tooling matrix); this `CHANGELOG.md` added.
+- **KAN-10 — testTag bootstrap.** Central `OnboardingTestTags` catalog enumerating the full
+  `onb_<screen>_<element>` selector contract (`../Tests/.maestro/README.md`) as the single source of
+  truth for the test agent; welcome placeholder wired to `WELCOME_START`/`WELCOME_IMPORT` (remaining
+  IDs applied by their screen tickets, KAN-5+). Robolectric Compose test verifies the root sets
+  `testTagsAsResourceId=true` (Android resource-id) and the welcome tags are selectable; iOS exposes
+  `testTag` as `accessibilityIdentifier` automatically (no bridge needed).
 
 ### Changed
 - `app:shared` `App()` now renders the wallet onboarding flow (`OnboardingRoot()`) instead of

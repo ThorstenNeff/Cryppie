@@ -41,31 +41,34 @@ fun OnboardingRoot() {
                 onBack = { back() },
                 entryProvider = entryProvider {
                     entry<OnboardingNavKey.Welcome> {
-                        WelcomePlaceholderScreen(onStart = { goTo(OnboardingNavKey.ChoosePath) })
+                        WelcomePlaceholderScreen(
+                            onStart = { goTo(OnboardingNavKey.ChoosePath) },
+                            onImport = { goTo(OnboardingNavKey.ImportSeed) },
+                        )
                     }
                     entry<OnboardingNavKey.ChoosePath> {
-                        OnboardingPlaceholderScreen("Pfad wählen", "onb_choose_path_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("Pfad wählen", onBack = ::back)
                     }
                     entry<OnboardingNavKey.SetPassword> {
-                        OnboardingPlaceholderScreen("App-Passwort", "onb_set_password_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("App-Passwort", onBack = ::back)
                     }
                     entry<OnboardingNavKey.ConfirmPassword> {
-                        OnboardingPlaceholderScreen("Passwort bestätigen", "onb_confirm_password_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("Passwort bestätigen", onBack = ::back)
                     }
                     entry<OnboardingNavKey.ShowSeed> {
-                        OnboardingPlaceholderScreen("Seed anzeigen", "onb_show_seed_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("Seed anzeigen", onBack = ::back)
                     }
                     entry<OnboardingNavKey.ConfirmBackup> {
-                        OnboardingPlaceholderScreen("Backup bestätigen", "onb_confirm_backup_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("Backup bestätigen", onBack = ::back)
                     }
                     entry<OnboardingNavKey.ImportSeed> {
-                        OnboardingPlaceholderScreen("Seed eingeben", "onb_import_seed_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("Seed eingeben", onBack = ::back)
                     }
                     entry<OnboardingNavKey.WalletSetup> {
-                        OnboardingPlaceholderScreen("Wallet wird eingerichtet", "onb_wallet_setup_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("Wallet wird eingerichtet", onBack = ::back)
                     }
                     entry<OnboardingNavKey.Biometrics> {
-                        OnboardingPlaceholderScreen("Biometrie aktivieren", "onb_biometrics_screen", onBack = ::back)
+                        OnboardingPlaceholderScreen("Biometrie aktivieren", onBack = ::back)
                     }
                 },
             )
