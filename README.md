@@ -1,54 +1,87 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM), Server.
+# Cyppie
 
-* [/app/iosApp](./app/iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Non-custodial DeFi wallet built with **Kotlin Multiplatform** + **Compose Multiplatform**, targeting
+**Android, iOS, Desktop (JVM), Web (JS + Wasm)** and a **Ktor server**. All UI is shared via Compose.
 
-* [/app/shared](./app/shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./app/shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./app/shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./app/shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+> Architecture, module graph, `expect`/`actual` pattern and coding conventions live in
+> [`CLAUDE.md`](./CLAUDE.md); architecture decisions in [`docs/adr/`](./docs/adr/INDEX.md). This file
+> is the single source of truth for **how to run and test** each target.
 
-* [/core](./core/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./core/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
+## Prerequisites — JAVA_HOME
 
-* [/server](./server/src/main/kotlin) is for the Ktor server application.
+This machine has no Java on the `PATH`. Use the Gradle-managed JDK (Amazon Corretto 21) and export it
+before any `./gradlew` call:
 
-### Running the apps
+```bash
+export JAVA_HOME=/Users/customer/.gradle/jdks/amazon_com_inc_-21-aarch64-os_x.2/amazon-corretto-21.jdk/Contents/Home
+```
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+## Module overview
 
-- Android app: `./gradlew :app:androidApp:assembleDebug`
-- Desktop app:
-  - Hot reload: `./gradlew :app:desktopApp:hotRun --auto`
-  - Standard run: `./gradlew :app:desktopApp:run`
-- Server: `./gradlew :server:run`
-- Web app:
-  - Wasm target (faster, modern browsers): `./gradlew :app:webApp:wasmJsBrowserDevelopmentRun`
-  - JS target (slower, supports older browsers): `./gradlew :app:webApp:jsBrowserDevelopmentRun`
-- iOS app: open the [/app/iosApp](./app/iosApp) directory in Xcode and run it from there.
+| Module | Purpose |
+|---|---|
+| `:core` | Platform-agnostic logic, no Compose; usable by the server too. |
+| `:designsystem` | Central `CryptasaTheme` (tokens, light/dark) + foundation components & patterns (ADR-0004). Shared by every feature. |
+| `:feature:onboarding` | Wallet onboarding flow: `OnboardingRoot()`, Nav3 navigation, adaptive `OnboardingScaffold`, Koin module. |
+| `:feature:auth` | KAN-1 example account-auth screens — **deferred to PRD-08**, not wired into the app (kept as the feature-module reference). |
+| `:app:shared` | Shared Compose entry `App()` (bootstraps Koin, renders `OnboardingRoot()`). |
+| `:app:androidApp` / `:desktopApp` / `:webApp` / `:iosApp` | Thin per-platform entry points. |
+| `:server` | Ktor (Netty) server, depends on `:core` only. |
 
-### Running tests
+## Running the app
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+| Target | Command |
+|---|---|
+| Android | `./gradlew :app:androidApp:assembleDebug` (then install the APK) |
+| Desktop (hot reload) | `./gradlew :app:desktopApp:hotRun --auto` |
+| Desktop (standard) | `./gradlew :app:desktopApp:run` |
+| Server | `./gradlew :server:run` (listens on `0.0.0.0:8080`) |
+| Web — Wasm (modern browsers) | `./gradlew :app:webApp:wasmJsBrowserDevelopmentRun` |
+| Web — JS (older browsers) | `./gradlew :app:webApp:jsBrowserDevelopmentRun` |
+| iOS | Open [`/app/iosApp`](./app/iosApp) in Xcode and run (consumes the `Shared` framework). |
 
-- Android tests: `./gradlew :app:shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :app:shared:jvmTest`
-- Server tests: `./gradlew :server:test`
-- Web tests:
-  - Wasm target: `./gradlew :app:shared:wasmJsTest`
-  - JS target: `./gradlew :app:shared:jsTest`
-- iOS tests: `./gradlew :app:shared:iosSimulatorArm64Test`
+## Testing
+
+Tooling matrix (ADR-0011 / ADR-0013):
+
+| Layer | Tool | Where |
+|---|---|---|
+| Unit / logic | `kotlin.test` + **Turbine** (Flows) + **MockK** (JVM/Android only) | `commonTest` (multiplatform fakes, no MockK), `jvmTest`/`androidHostTest` |
+| Android Compose-UI **& config-changes** (rotation, size class, dark/light, locale/RTL, font scale, state retention) | **Robolectric** (`@Config`/`setQualifiers`, `DeviceConfigurationOverride`) | `androidHostTest` |
+| Desktop Compose-UI | **`runComposeUiTest`** | `jvmTest` |
+| Device E2E (Android/iOS) | **Maestro** | `../Tests/.maestro/` (owned by the test agent; expects our `testTag`s) |
+
+There is **no single "test everything" task** — Compose UI/logic tests run **per target**:
+
+| Target | Command |
+|---|---|
+| Desktop (JVM) | `./gradlew :app:shared:jvmTest` |
+| Android (host/unit, incl. Robolectric) | `./gradlew :app:shared:testAndroidHostTest` |
+| iOS simulator | `./gradlew :app:shared:iosSimulatorArm64Test` |
+| Web — Wasm | `./gradlew :app:shared:wasmJsTest` |
+| Web — JS | `./gradlew :app:shared:jsTest` |
+| Server | `./gradlew :server:test` |
+
+Run a single test class/method with the standard filter, e.g.:
+`./gradlew :app:shared:jvmTest --tests "com.tneff.cyppie.AppKoinTest"`
+
+Per-module tests (e.g. the design system / onboarding) follow the same per-target tasks, e.g.
+`./gradlew :designsystem:jvmTest`, `./gradlew :feature:onboarding:jvmTest`.
+
+### Maestro (Android/iOS device flows)
+
+Maestro runs against a **built, installed** app on a device/emulator. Flows live in
+[`../Tests/.maestro/`](../Tests/.maestro) and select elements by `id:`, which maps to our Compose
+`testTag`s (the onboarding root enables `testTagsAsResourceId`, §5.1 / KAN-10). Until the screens are
+built, the `.maestro/onb-*.yaml` files are templates.
+
+## Build / quality
+
+- Full build: `./gradlew build`
+- Clean: `./gradlew clean`
+- Code style: `kotlin.code.style=official` (no separate lint/format task configured).
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
-
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
+and [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform).
