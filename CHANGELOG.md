@@ -12,7 +12,7 @@ All notable changes to Cyppie are documented here. The format is based on
     radius and typography tokens (CompositionLocals; System/Light/Dark mode); foundation components
     `CryptasaButton`, `CryptasaTextField` (incl. inline error), `CryptasaBanner`, `CryptasaDialog`;
     reusable patterns `SelectionCard`, `CryptasaCheckbox`, `SegmentedControl`, `SeedWordCell`,
-    `PasswordStrengthIndicator`, `ProgressRing`. All token-bound, RTL-ready (`start`/`end`), a11y
+    `PasswordStrengthIndicator`, `ProgressRing`, `CryptasaTopAppBar`. All token-bound, RTL-ready (`start`/`end`), a11y
     touch targets ≥ 48 dp, errors conveyed via icon + text (ADR-0004).
   - New `:feature:onboarding` module: `OnboardingRoot()` with Compose Navigation 3 back stack
     (ADR-0006), adaptive `OnboardingScaffold(sizeClass)` driven by Material 3 Window Size Classes
