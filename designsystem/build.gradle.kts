@@ -50,17 +50,19 @@ kotlin {
             implementation(libs.compose.ui)
         }
         commonTest.dependencies {
+            // commonTest holds only pure logic tests (WCAG math) — no Compose UI test artifact here,
+            // so js/wasmJs/iOS test compilations stay free of ui-test (which they don't publish).
             implementation(libs.kotlin.test)
-            // Compose UI testing — runComposeUiTest/onNodeWithTag (ADR-0011/0013)
-            implementation(libs.compose.uiTest)
         }
-        // Desktop Compose UI tests need the Skiko native runtime for the host OS (ADR-0011).
+        // Compose UI tests live only on JVM targets — runComposeUiTest API + Skiko native runtime (ADR-0011).
         getByName("jvmTest").dependencies {
+            implementation(libs.compose.uiTest)
             implementation(compose.desktop.currentOs)
         }
         // Android host (JVM) Compose UI & config-change tests via Robolectric (ADR-0013).
         // activity-compose supplies the ComponentActivity that runComposeUiTest launches.
         getByName("androidHostTest").dependencies {
+            implementation(libs.compose.uiTest)
             implementation(libs.robolectric)
             implementation(libs.androidx.test.core)
             implementation(libs.androidx.activity.compose)

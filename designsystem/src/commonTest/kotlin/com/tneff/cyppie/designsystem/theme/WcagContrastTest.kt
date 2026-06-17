@@ -3,6 +3,7 @@ package com.tneff.cyppie.designsystem.theme
 import androidx.compose.ui.graphics.Color
 import kotlin.math.pow
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -85,4 +86,42 @@ class WcagContrastTest {
 
     @Test
     fun darkModeUiPairsMeetNonTextContrast() = check("Dark", CryptasaDark, uiPairs)
+
+    // Status tokens (success/warning/danger) as text on their solid/tint surfaces — banners,
+    // strength indicators, badges. The AA text bar is 4.5:1.
+    private val statusTextPairs = listOf(
+        Pair("onSuccess/success", { it.onSuccess }, { it.success }, 4.5),
+        Pair("onWarning/warning", { it.onWarning }, { it.warning }, 4.5),
+        Pair("onDanger/danger", { it.onDanger }, { it.danger }, 4.5),
+        Pair("success/successSurface", { it.success }, { it.successSurface }, 4.5),
+        Pair("warning/warningSurface", { it.warning }, { it.warningSurface }, 4.5),
+        Pair("danger/dangerSurface", { it.danger }, { it.dangerSurface }, 4.5),
+    )
+
+    // Status pairs in the current KAN-4 palette that fall below WCAG-AA text (4.5:1). This is a
+    // *baseline of known design findings* (flagged to UI/UX on KAN-7), NOT an acceptance: the test
+    // passes only while the failing set matches exactly. A NEW sub-AA pair (regression) OR a UI/UX
+    // fix both flip it red — prompting a token review and a baseline update. Measured 2026-06-17.
+    private val knownSubAaStatusPairs = setOf(
+        "Light:onSuccess/success",       // 2.65:1
+        "Light:success/successSurface",  // 2.43:1
+        "Light:warning/warningSurface",  // 1.56:1
+        "Dark:onDanger/danger",          // 3.05:1
+    )
+
+    @Test
+    fun statusTokenPairsMatchKnownContrastBaseline() {
+        val belowAa = buildSet {
+            for ((mode, colors) in listOf("Light" to CryptasaLight, "Dark" to CryptasaDark)) {
+                for (p in statusTextPairs) {
+                    if (contrast(p.fg(colors), p.bg(colors)) < 4.5) add("$mode:${p.name}")
+                }
+            }
+        }
+        assertEquals(
+            knownSubAaStatusPairs,
+            belowAa,
+            "Status-token WCAG-AA baseline changed — review the design tokens with UI/UX and update the baseline",
+        )
+    }
 }

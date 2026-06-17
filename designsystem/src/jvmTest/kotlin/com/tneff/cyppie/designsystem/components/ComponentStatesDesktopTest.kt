@@ -11,10 +11,12 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.runComposeUiTest
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
@@ -26,9 +28,11 @@ import kotlin.test.assertTrue
 /**
  * AK1 (KAN-7) — foundation component states on **Desktop** (`runComposeUiTest`, ADR-0011).
  *
- * Behaviour, not pixels: the colour swaps for pressed/disabled are tokens (covered by AK4); here we
- * assert the semantics that the framework and screen readers rely on. Selection is by a test-set
- * `testTag` — the components expose no production tags (those come from the Dev-Agent per screen).
+ * Behaviour, not pixels: we assert the semantics the framework and screen readers rely on. Selection
+ * is by a test-set `testTag` — the components expose no production tags (those come from the Dev-Agent
+ * per screen). The **pressed** state is asserted as a layout-invariant interaction (a colour-only
+ * token swap); its exact pressed *colour* is left to visual/Maestro checks because CryptasaButton owns
+ * its `MutableInteractionSource` internally and does not expose it for injection here.
  */
 @OptIn(ExperimentalTestApi::class)
 class ComponentStatesDesktopTest {
@@ -61,6 +65,26 @@ class ComponentStatesDesktopTest {
         // Compose keeps the OnClick action but marks the node Disabled; clicking must be a no-op.
         onNodeWithTag("btn").assertIsNotEnabled().performClick()
         assertEquals(0, clicks, "Disabled button must not invoke onClick")
+    }
+
+    @Test
+    fun buttonPressedKeepsLayoutColourOnlySwap() = runComposeUiTest {
+        setContent {
+            CryptasaTheme(ThemeMode.Light) {
+                CryptasaButton(text = "Continue", onClick = {}, modifier = Modifier.testTag("btn"))
+            }
+        }
+        val before = onNodeWithTag("btn").getUnclippedBoundsInRoot()
+        // Hold the press: pressed state active (primary → primaryHover), layout must not move.
+        onNodeWithTag("btn").performTouchInput { down(center) }
+        waitForIdle()
+        val pressed = onNodeWithTag("btn").getUnclippedBoundsInRoot()
+        onNodeWithTag("btn").performTouchInput { up() }
+
+        assertEquals(before.left.value, pressed.left.value, 0.01f, "pressed must not move left edge")
+        assertEquals(before.top.value, pressed.top.value, 0.01f, "pressed must not move top edge")
+        assertEquals(before.right.value, pressed.right.value, 0.01f, "pressed must not move right edge")
+        assertEquals(before.bottom.value, pressed.bottom.value, 0.01f, "pressed must not move bottom edge")
     }
 
     @Test

@@ -40,9 +40,9 @@ import kotlin.test.assertTrue
  *
  * Mirrors the Desktop suite on the Android renderer and adds a configuration-change check
  * (`DeviceConfigurationOverride.DarkMode`) proving the layout is invariant under a *system* dark
- * config — only tokens change — which Maestro cannot do per screen (ADR-0013). `manifest = NONE`
- * keeps the design-system library test free of an app manifest; `GraphicsMode.NATIVE` enables
- * Compose drawing under Robolectric.
+ * config — only tokens change — which Maestro cannot do per screen (ADR-0013). The host-test
+ * `AndroidManifest.xml` registers `ComponentActivity` so `runComposeUiTest` can launch a host;
+ * `GraphicsMode.NATIVE` enables Compose drawing under Robolectric.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
