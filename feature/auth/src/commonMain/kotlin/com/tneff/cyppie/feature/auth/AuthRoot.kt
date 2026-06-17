@@ -6,7 +6,7 @@ import com.tneff.cyppie.feature.auth.ui.screens.HomeScreen
 import com.tneff.cyppie.feature.auth.ui.screens.LoggedInScreen
 import com.tneff.cyppie.feature.auth.ui.screens.SignInScreen
 import com.tneff.cyppie.feature.auth.ui.screens.SignUpScreen
-import com.tneff.cyppie.feature.auth.ui.theme.CryptasaTheme
+import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 
 /**
  * Public entry point of the auth feature. Hosts the theme, the [AuthViewModel] and

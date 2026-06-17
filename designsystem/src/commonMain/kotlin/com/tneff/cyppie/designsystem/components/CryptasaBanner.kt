@@ -1,0 +1,94 @@
+package com.tneff.cyppie.designsystem.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import com.tneff.cyppie.designsystem.foundation.clickableIcon
+import com.tneff.cyppie.designsystem.theme.CryptasaTheme
+
+enum class CryptasaBannerTone { Danger, Warning, Offline }
+
+/**
+ * Screen banner (HANDOFF §3 "Banner"). Leading icon · title (`labelSmall`) + description (`helper`)
+ * · optional trailing text action. Surface and accent bind to the [tone]; text uses `on-surface`.
+ * Always conveys state with **icon + text** (never colour alone, §5.4); announced as a live region.
+ */
+@Composable
+fun CryptasaBanner(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    tone: CryptasaBannerTone = CryptasaBannerTone.Danger,
+    actionText: String? = null,
+    onActionClick: (() -> Unit)? = null,
+) {
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+
+    val background: Color
+    val accent: Color
+    val icon: ImageVector
+    when (tone) {
+        CryptasaBannerTone.Danger -> {
+            background = colors.dangerSurface; accent = colors.danger; icon = Icons.Filled.Error
+        }
+        CryptasaBannerTone.Warning -> {
+            background = colors.warningSurface; accent = colors.warning; icon = Icons.Filled.Warning
+        }
+        CryptasaBannerTone.Offline -> {
+            background = colors.surfaceVariant; accent = colors.primary; icon = Icons.Filled.CloudOff
+        }
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(CryptasaTheme.radius.md))
+            .background(background)
+            .padding(spacing.md)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
+
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+            Text(text = title, style = CryptasaTheme.typography.labelSmall, color = colors.onSurface)
+            if (description != null) {
+                Text(text = description, style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
+            }
+        }
+
+        if (actionText != null && onActionClick != null) {
+            Text(
+                text = actionText,
+                style = CryptasaTheme.typography.labelSmall,
+                color = accent,
+                modifier = Modifier
+                    .padding(start = spacing.xs)
+                    .clickableIcon(contentDescription = actionText, onClick = onActionClick),
+            )
+        }
+    }
+}
