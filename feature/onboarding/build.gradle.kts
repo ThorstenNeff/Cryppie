@@ -60,14 +60,11 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
-            // Navigation 3 (ADR-0006)
-            implementation(libs.navigation3.runtime)
+            // Navigation 3 (ADR-0006) — navigation3-ui brings navigation3-runtime transitively
             implementation(libs.navigation3.ui)
-            implementation(libs.lifecycle.viewmodel.navigation3)
 
             // Adaptive layouts / Window Size Classes (ADR-0012)
             implementation(libs.compose.material3.adaptive)
-            implementation(libs.compose.material3.adaptive.navigation3)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
