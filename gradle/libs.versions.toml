@@ -34,6 +34,7 @@ kotlinxSerialization = "1.11.0"
 qrose = "1.1.2"
 # NFT media loading (KAN-105, PO-approved). Coil3 Compose-MP + Ktor3 network fetcher. Dep-verification = KAN-106.
 coil = "3.4.0"
+reownBom = "1.6.14" # WalletConnect v2 (Reown), Android-only (ADR-0015)
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -99,6 +100,11 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+
+# WalletConnect v2 — Reown WalletKit (ADR-0015), Android-only; BOM-managed. Project-id via build-config.
+reown-android-bom = { module = "com.reown:android-bom", version.ref = "reownBom" }
+reown-android-core = { module = "com.reown:android-core" }
+reown-walletkit = { module = "com.reown:walletkit" }
 
 # Dependency Injection — Koin (ADR-0007)
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }

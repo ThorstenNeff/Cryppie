@@ -25,6 +25,14 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        // Reown/WalletConnect Android SDK (ADR-0015) transitives — WalletConnect's Scarlet fork +
+        // java-multibase are JitPack-hosted (Reown's documented requirement), scoped to those groups.
+        maven("https://jitpack.io") {
+            mavenContent {
+                includeGroupByRegex("com\\.github\\..*") // JitPack namespace (multiformats, komputing.kethereum, …)
+                includeGroupAndSubgroups("com.walletconnect") // WalletConnect's Scarlet fork
+            }
+        }
     }
 }
 

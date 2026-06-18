@@ -42,6 +42,11 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
-        // Chunk 3/4 add Reown WalletKit (androidMain) + reown-swift shim (iosMain).
+        // Chunk 3: Android Reown WalletKit (Android-only; iOS reown-swift shim = Chunk 4).
+        androidMain.dependencies {
+            implementation(project.dependencies.platform(libs.reown.android.bom))
+            implementation(libs.reown.android.core)
+            implementation(libs.reown.walletkit)
+        }
     }
 }
