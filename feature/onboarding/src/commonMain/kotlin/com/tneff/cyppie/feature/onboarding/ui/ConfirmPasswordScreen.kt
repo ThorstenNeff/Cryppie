@@ -34,6 +34,7 @@ import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.ConfirmError
 import com.tneff.cyppie.feature.onboarding.OnboardingTestTags
+import com.tneff.cyppie.feature.onboarding.SecureScreenEffect
 import com.tneff.cyppie.feature.onboarding.generated.resources.Res
 import com.tneff.cyppie.feature.onboarding.generated.resources.cd_back
 import com.tneff.cyppie.feature.onboarding.generated.resources.cd_password_hide
@@ -65,6 +66,7 @@ fun ConfirmPasswordScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    SecureScreenEffect() // KAN-84/A2: confirmation re-enters the secret — block screenshots/recents.
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
 
