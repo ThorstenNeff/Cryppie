@@ -22,6 +22,11 @@ nav3 = "1.1.1"
 composeAdaptive = "1.2.0"
 robolectric = "4.14.1"
 androidx-testCore = "1.6.1"
+# Wallet crypto stack (ADR-0008). Versions re-verified against Maven Central 2026-06-18.
+bitcoinKmp = "0.31.0"
+secp256k1Kmp = "0.23.0"
+kotlincryptoHash = "0.8.0"
+cryptographyKotlin = "0.6.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -52,6 +57,20 @@ ktor-serverCore = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor
 ktor-serverNetty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
 ktor-serverTestHost = { module = "io.ktor:ktor-server-test-host-jvm", version.ref = "ktor" }
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
+
+# Wallet crypto (ADR-0008) — BIP-39/BIP-32 (HD) + secp256k1 (EVM). No JS/Wasm → :wallet module only.
+# bitcoin-kmp publishes no Android variant; Android/JVM consume the explicit -jvm jar, iOS the multiplatform (native) artifact.
+bitcoin-kmp = { module = "fr.acinq.bitcoin:bitcoin-kmp", version.ref = "bitcoinKmp" }
+bitcoin-kmp-jvm = { module = "fr.acinq.bitcoin:bitcoin-kmp-jvm", version.ref = "bitcoinKmp" }
+# secp256k1 native binding: per-target JNI providers (the .so / .dylib loaders).
+secp256k1-kmp-jni-jvm = { module = "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm", version.ref = "secp256k1Kmp" }
+secp256k1-kmp-jni-android = { module = "fr.acinq.secp256k1:secp256k1-kmp-jni-android", version.ref = "secp256k1Kmp" }
+# keccak-256 for EVM addresses (ADR-0008 — cryptography-kotlin has SHA3 but not keccak).
+kotlincrypto-hash-sha3 = { module = "org.kotlincrypto.hash:sha3", version.ref = "kotlincryptoHash" }
+kotlincrypto-hash-sha3-jvm = { module = "org.kotlincrypto.hash:sha3-jvm", version.ref = "kotlincryptoHash" }
+# cryptography-kotlin (ADR-0008/0009) — AES-GCM/PBKDF2/RNG/ed25519. Declared here; wired by the storage layer.
+cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptographyKotlin" }
+cryptography-provider-optimal = { module = "dev.whyoleg.cryptography:cryptography-provider-optimal", version.ref = "cryptographyKotlin" }
 
 # Dependency Injection — Koin (ADR-0007)
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }

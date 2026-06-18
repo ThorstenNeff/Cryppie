@@ -26,6 +26,23 @@ All notable changes to Cyppie are documented here. The format is based on
   trailing icon; added `AddCircle`/`Download`/`ChevronRight` (RTL-mirrored) to `CryptasaIcons`.
   Also corrects the ONB-1 welcome import-link to route via the mandatory app password
   (`choosePath(Import)` + `SetPassword`) instead of skipping straight to seed entry (KAN-5 flow).
+- **KAN-56 — Wallet-Core L1: Key/Account layer (BIP-44 HD + EIP-55).** Two modules (ADR-0016):
+  - **`:evm`** — web-safe EVM primitives (targets android · iosArm64 · iosSimulatorArm64 · jvm ·
+    **js · wasmJs**): `EvmAddress` (always EIP-55 checksummed), `Quantity` (pure-Kotlin
+    minimal-big-endian 256-bit), `Hex`, `Keccak` (keccak-256 via KotlinCrypto sha3 — multiplatform
+    incl. web, no SPI), `Rlp` codec, `Erc20Abi`, sealed `EvmException`. No secp256k1 → fully
+    web-capable, which is what makes Web read-only viable (FR-6).
+  - **`:wallet`** (depends on `:evm`; android · iosArm64 · iosSimulatorArm64 · jvm — **no js/wasm**,
+    since secp256k1-kmp has no web binding; ADR-0008): L1 API in `commonMain` — `EvmKeyManager`
+    (BIP-44 `m/44'/60'/0'/0/i`, multi-account via index `i`; `deriveAccount`, `deriveAddress`,
+    `sign`), `Mnemonic` (BIP-39 checksum validated at construction), `EvmAccount`,
+    `RecoverableSignature` (`r`/`s` low-S + `recId` for L2's `v`), `SeedSource` (unlock→sign gate,
+    ADR-0009), sealed `WalletKeyException`. Keys are derived **on demand** inside the seed scope,
+    used, then zeroized — never returned, stringified, persisted, or logged. The secp256k1 stack
+    (ACINQ bitcoin-kmp `0.31.0` / secp256k1-kmp `0.23.0`) is isolated behind the internal `EvmCrypto`
+    expect/actual SPI, keeping `commonMain` dependency-free and compilable for every target.
+  - Verified against the Hardhat default-mnemonic addresses and the canonical EIP-55 vectors on
+    **JVM and iOS** (`commonTest`); the authoritative vector suite is KAN-57.
 - **KAN-4 — Onboarding foundations / design system.**
   - New `:designsystem` module: central `CryptasaTheme` with light/dark semantic colour, spacing,
     radius and typography tokens (CompositionLocals; System/Light/Dark mode); foundation components
