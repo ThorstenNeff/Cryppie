@@ -50,7 +50,9 @@ import com.tneff.cyppie.feature.onboarding.generated.resources.onb_setup_loading
 import com.tneff.cyppie.feature.onboarding.generated.resources.onb_setup_loading_title
 import com.tneff.cyppie.feature.onboarding.generated.resources.onb_setup_success_body
 import com.tneff.cyppie.feature.onboarding.generated.resources.onb_setup_success_title
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
 
 private enum class SetupPhase { Loading, Success, EncryptionError, KeystoreError, StorageFull }
@@ -80,7 +82,8 @@ fun WalletSetupScreen(
 
     LaunchedEffect(attempt) {
         phase = SetupPhase.Loading
-        val outcome = walletStore.persist(words, password)
+        // M4: KDF (PBKDF2 210k) + AES-GCM + file IO off the main thread to avoid an ANR.
+        val outcome = withContext(Dispatchers.Default) { walletStore.persist(words, password) }
         phase = when (outcome) {
             WalletSetupOutcome.Success -> SetupPhase.Success
             WalletSetupOutcome.KeystoreError -> SetupPhase.KeystoreError

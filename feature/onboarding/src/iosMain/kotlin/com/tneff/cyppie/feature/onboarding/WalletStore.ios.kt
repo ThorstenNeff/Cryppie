@@ -71,8 +71,12 @@ private class IosFileCiphertextStore : CiphertextStore {
 
     override suspend fun write(blob: ByteArray) {
         val path = filePath()
-        blob.toNSData().writeToFile(path, atomically = true)
-        // Exclude from backup.
+        // M2: a silently-ignored write would surface as "wallet ready" while nothing was saved —
+        // a lockout/data-loss trap. writeToFile returns false on failure → propagate as an error.
+        check(path.isNotEmpty()) { "Application Support directory unavailable" }
+        val written = blob.toNSData().writeToFile(path, atomically = true)
+        check(written) { "Failed to persist wallet file" }
+        // Exclude from iCloud/iTunes backup (defense-in-depth).
         NSURL.fileURLWithPath(path).setResourceValue(
             value = NSNumber.numberWithBool(true),
             forKey = NSURLIsExcludedFromBackupKey,
