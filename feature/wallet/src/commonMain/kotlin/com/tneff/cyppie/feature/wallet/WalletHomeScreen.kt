@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
+import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
 import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.foundation.clickableIcon
 import com.tneff.cyppie.designsystem.icons.CryptasaIcons
@@ -38,9 +39,11 @@ import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.feature.wallet.generated.resources.Res
 import com.tneff.cyppie.feature.wallet.generated.resources.home_account_label
 import com.tneff.cyppie.feature.wallet.generated.resources.home_accounts
+import com.tneff.cyppie.feature.wallet.generated.resources.home_add_token
 import com.tneff.cyppie.feature.wallet.generated.resources.home_degraded
 import com.tneff.cyppie.feature.wallet.generated.resources.home_empty
 import com.tneff.cyppie.feature.wallet.generated.resources.home_error
+import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
 import com.tneff.cyppie.feature.wallet.generated.resources.home_retry
 import com.tneff.cyppie.feature.wallet.generated.resources.home_title
@@ -58,6 +61,8 @@ private const val NATIVE_DECIMALS = 18
  */
 @Composable
 fun WalletHomeScreen(
+    onReceive: () -> Unit = {},
+    onAddToken: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -123,6 +128,24 @@ fun WalletHomeScreen(
                     title = stringResource(Res.string.home_degraded),
                     tone = CryptasaBannerTone.Warning,
                     modifier = Modifier.testTag(WalletTestTags.HOME_DEGRADED_BANNER),
+                )
+            }
+
+            // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            ) {
+                CryptasaButton(
+                    text = stringResource(Res.string.home_receive),
+                    onClick = onReceive,
+                    modifier = Modifier.weight(1f).testTag(WalletTestTags.HOME_RECEIVE),
+                )
+                CryptasaButton(
+                    text = stringResource(Res.string.home_add_token),
+                    onClick = onAddToken,
+                    style = CryptasaButtonStyle.Secondary,
+                    modifier = Modifier.weight(1f).testTag(WalletTestTags.HOME_ADD_TOKEN),
                 )
             }
 

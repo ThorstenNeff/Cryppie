@@ -31,4 +31,6 @@
   <string name="home_error">Couldn't load your balances.</string>
   <string name="home_retry">Retry</string>
   <string name="home_refresh_cd">Refresh balances</string>
+  <string name="home_receive">Receive</string>
+  <string name="home_add_token">Add token</string>
 </resources>

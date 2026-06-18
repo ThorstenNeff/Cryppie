@@ -7,6 +7,17 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-103 — Live Wallet-Home (app-shell Home wired end-to-end).** The Home destination renders the
+  real wallet instead of a placeholder: a new non-web `SeedSession` (`:storage`) holds the unlocked
+  `SecureSeedSource` (set by unlock, cleared by auto-lock), and a `WalletShell` (`:feature:wallet`)
+  builds `WalletRepository(AccountManager(EvmKeyManager(seedSource)), rpcByChain)` from it — RPC over
+  **public dev/test endpoints** (publicnode ETH/Base, no key; release keys via build-config = follow-up)
+  — and hosts **Home → Receive / Add-token** nav (unblocks the Receive E2E). `WalletHomeScreen` gained
+  `onReceive`/`onAddToken` entry points (receive always available, even on an empty wallet) and now
+  formats **token rows with per-token `decimals`/`symbol` from `TokenCatalog`** (KAN-89 M1 gate — never
+  `NATIVE_DECIMALS`, which would render USDC/USDT as "0"). Bridged into `:app:shared` via a non-web
+  `WalletShellRoot` seam (web = stub, never routed). Curated tokens query per chain; persisting
+  added-by-contract tokens = follow-up. Builds on every target incl. web + APK; wallet/onboarding tests green.
 - **KAN-100 — Portfolio assembler + performance metrics (PRD-03, Slice 4 — part 1).** `PortfolioService`
   end-to-end assembler: fetch ERC-20 (Alchemy Data) + native (L3) across accounts × chains → price
   (native ETH via its chain's audited WETH) → `PortfolioValuator` (deps injected as functions / the

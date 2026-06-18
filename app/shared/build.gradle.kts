@@ -50,14 +50,17 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             // Launch-check (walletExists) reads the encrypted seed file via :storage — only where it
-            // exists (no js/wasm; KAN-89 seam).
+            // exists (no js/wasm; KAN-89 seam). The live wallet shell (KAN-103) is likewise non-web.
             implementation(projects.storage)
+            implementation(projects.feature.wallet)
         }
         jvmMain.dependencies {
             implementation(projects.storage)
+            implementation(projects.feature.wallet)
         }
         iosMain.dependencies {
             implementation(projects.storage)
+            implementation(projects.feature.wallet)
         }
         commonMain.dependencies {
             api(projects.core)

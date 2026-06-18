@@ -31,4 +31,6 @@
   <string name="home_error">Guthaben konnten nicht geladen werden.</string>
   <string name="home_retry">Erneut versuchen</string>
   <string name="home_refresh_cd">Guthaben aktualisieren</string>
+  <string name="home_receive">Empfangen</string>
+  <string name="home_add_token">Token hinzufügen</string>
 </resources>

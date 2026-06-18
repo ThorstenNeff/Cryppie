@@ -39,6 +39,8 @@ kotlin {
         commonMain.dependencies {
             api(projects.designsystem)
             api(projects.walletcore)
+            // SeedSession — the unlocked seed source the wallet shell builds the repository from (KAN-103).
+            implementation(projects.storage)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

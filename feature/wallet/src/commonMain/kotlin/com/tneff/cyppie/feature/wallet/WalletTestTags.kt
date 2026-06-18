@@ -24,6 +24,8 @@ object WalletTestTags {
     const val HOME_EMPTY = "home_empty"
     const val HOME_ERROR = "home_error"
     const val HOME_RETRY = "home_retry"
+    const val HOME_RECEIVE = "home_receive"
+    const val HOME_ADD_TOKEN = "home_add_token"
 
     /** Account row `i` in the switcher. */
     fun homeAccountItem(i: Int): String = "home_account_item_$i"

@@ -85,15 +85,15 @@ fun AppRoot() {
                 // route back through onboarding (import path), which replaces the on-device wallet.
                 onRecover = { destination = AppDestination.Onboarding },
             )
-            AppDestination.Home -> HomePlaceholder()
+            AppDestination.Home -> WalletShellRoot(
+                // Lost/expired seed session → clear + back to unlock.
+                onLock = {
+                    UnlockSupport.lock()
+                    destination = AppDestination.Unlock
+                },
+            )
         }
     }
-}
-
-/** Placeholder until the live `WalletRepository` is wired (KAN-89 final / KAN-95). */
-@Composable
-private fun HomePlaceholder() {
-    Centered { Text("Wallet-Home (wiring pending KAN-95/KAN-92)", color = CryptasaTheme.colors.onSurface) }
 }
 
 @Composable
