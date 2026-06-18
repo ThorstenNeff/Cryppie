@@ -34,7 +34,10 @@ import org.koin.compose.viewmodel.koinViewModel
  * set on ONB-2 and consumed by the later branch (ADR-0007).
  */
 @Composable
-fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
+fun OnboardingRoot(
+    viewModel: OnboardingViewModel = koinViewModel(),
+    onComplete: () -> Unit = {},
+) {
     CryptasaTheme {
         val backStack: SnapshotStateList<OnboardingNavKey> =
             remember { mutableStateListOf(OnboardingNavKey.Welcome) }
@@ -167,12 +170,11 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                     entry<OnboardingNavKey.Biometrics> {
                         BiometricsScreen(
                             password = viewModel.password,
-                            // Onboarding complete: zeroize the password and return to the start
-                            // (Wallet-Home is a separate epic — placeholder route for now).
+                            // Onboarding complete: zeroize the in-memory secrets, then hand off to the
+                            // app shell (→ Home/Unlock; KAN-89). Default no-op keeps standalone callers safe.
                             onFinish = {
                                 viewModel.reset()
-                                backStack.clear()
-                                backStack.add(OnboardingNavKey.Welcome)
+                                onComplete()
                             },
                             onOpenSettings = {}, // platform settings deep-link = follow-up
                         )
