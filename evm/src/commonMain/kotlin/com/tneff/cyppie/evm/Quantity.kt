@@ -5,11 +5,11 @@ package com.tneff.cyppie.evm
  * zero; zero is the empty array). EVM scalars — nonce, value (wei), gas, fees, chainId — are all
  * encoded this way for RLP, and left-padded to 32 bytes for ABI.
  *
- * L2 performs no arithmetic on quantities (decimal↔wei conversion belongs to the UI/L3 layer);
- * a [Quantity] is purely a validated byte container, which keeps the tx encoder deterministic and
- * auditable (ADR-0014).
+ * The L2 tx encoder performs no arithmetic (decimal↔wei conversion belongs to the UI). The minimal
+ * unsigned 256-bit [plus]/[times]/[compareTo] below exist for the **send pipeline's** balance check
+ * (`value + gasLimit * maxFee`, KAN-91) — exact, overflow-checked (a result > 2^256-1 throws).
  */
-class Quantity private constructor(private val magnitude: ByteArray) {
+class Quantity private constructor(private val magnitude: ByteArray) : Comparable<Quantity> {
 
     init {
         require(magnitude.size <= 32) { "Quantity exceeds 256 bits" }
@@ -38,6 +38,55 @@ class Quantity private constructor(private val magnitude: ByteArray) {
         for (b in magnitude) v = (v shl 8) or (b.toLong() and 0xFF)
         if (v < 0) throw EvmException.InvalidQuantity("Quantity exceeds Long range")
         return v
+    }
+
+    /** Unsigned big-endian comparison (both magnitudes are minimal, so length orders first). */
+    override fun compareTo(other: Quantity): Int {
+        if (magnitude.size != other.magnitude.size) return magnitude.size - other.magnitude.size
+        for (i in magnitude.indices) {
+            val d = (magnitude[i].toInt() and 0xFF) - (other.magnitude[i].toInt() and 0xFF)
+            if (d != 0) return d
+        }
+        return 0
+    }
+
+    /** Exact 256-bit addition; throws on overflow (a result > 2^256-1). */
+    operator fun plus(other: Quantity): Quantity {
+        val a = magnitude
+        val b = other.magnitude
+        val n = maxOf(a.size, b.size) + 1
+        val out = ByteArray(n)
+        var carry = 0
+        for (i in 0 until n) {
+            val av = if (i < a.size) a[a.size - 1 - i].toInt() and 0xFF else 0
+            val bv = if (i < b.size) b[b.size - 1 - i].toInt() and 0xFF else 0
+            val s = av + bv + carry
+            out[n - 1 - i] = (s and 0xFF).toByte()
+            carry = s shr 8
+        }
+        return ofBytes(out)
+    }
+
+    /** Exact 256-bit multiplication; throws on overflow (a result > 2^256-1). */
+    operator fun times(other: Quantity): Quantity {
+        val a = magnitude
+        val b = other.magnitude
+        if (a.isEmpty() || b.isEmpty()) return ZERO
+        val acc = IntArray(a.size + b.size)
+        for (i in a.indices) {
+            val av = a[a.size - 1 - i].toInt() and 0xFF
+            var carry = 0
+            for (j in b.indices) {
+                val bv = b[b.size - 1 - j].toInt() and 0xFF
+                val s = acc[i + j] + av * bv + carry
+                acc[i + j] = s and 0xFF
+                carry = s shr 8
+            }
+            acc[i + b.size] += carry
+        }
+        val bytes = ByteArray(acc.size)
+        for (k in acc.indices) bytes[acc.size - 1 - k] = (acc[k] and 0xFF).toByte()
+        return ofBytes(bytes)
     }
 
     override fun equals(other: Any?): Boolean =
