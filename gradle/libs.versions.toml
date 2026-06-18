@@ -30,6 +30,8 @@ secp256k1Kmp = "0.23.0"
 kotlincryptoHash = "0.8.0"
 cryptographyKotlin = "0.6.0"
 kotlinxSerialization = "1.11.0"
+# QR rendering for the Receive screen (KAN-78). Compose-MP, pinned vs Maven Central (2026-06-18).
+qrose = "1.1.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -107,6 +109,9 @@ navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui",
 
 # Adaptive layouts / Window Size Classes (ADR-0012) — currentWindowAdaptiveInfo()
 compose-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "composeAdaptive" }
+
+# QR code rendering (KAN-78 Receive) — Compose-MP, commonMain, rememberQrCodePainter (vector, web-capable)
+qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

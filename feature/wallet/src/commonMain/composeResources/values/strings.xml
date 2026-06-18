@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="common_close">Close</string>
+  <string name="wallet_action_receive">Receive</string>
+  <string name="wallet_chain_eth">Ethereum</string>
+  <string name="wallet_chain_base">Base</string>
+  <string name="receive_chain">Network</string>
+  <string name="receive_address_label">Your %1$s address</string>
+  <string name="receive_copy">Copy address</string>
+  <string name="receive_copied">Copied</string>
+  <string name="receive_warning">Only send Ethereum &amp; Base assets to this address. Other networks will result in loss.</string>
+  <string name="receive_qr_cd">QR code of your receiving address</string>
+</resources>
