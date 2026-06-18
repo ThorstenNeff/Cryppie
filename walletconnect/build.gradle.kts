@@ -36,6 +36,7 @@ kotlin {
         commonMain.dependencies {
             api(projects.wallet) // EvmKeyManager / tx signer / EvmAddress
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json) // parse eth_signTypedData_v4 JSON (JsonElement; no plugin)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

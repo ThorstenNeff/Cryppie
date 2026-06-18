@@ -41,6 +41,17 @@ class WalletConnectSigner(private val keyManager: EvmKeyManager) {
         return transactionSigner.sign(request.transaction, accountIndex)
     }
 
+    /**
+     * `eth_signTypedData_v4` (EIP-712): signs the typed-data digest. Returns the 65-byte
+     * `r ‖ s ‖ v` signature with `v = 27 + recId`.
+     */
+    fun signTypedDataV4(request: WcSigningRequest.SignTypedDataV4, accountIndex: Int): ByteArray {
+        requireSignerMatches(accountIndex, request.address)
+        val digest = Eip712.encode(request.typedDataJson)
+        val signature = keyManager.sign(accountIndex, digest)
+        return signature.r + signature.s + byteArrayOf((27 + signature.recId).toByte())
+    }
+
     /** FR-3 safeguard: the signing account must match the address shown in the request. */
     private fun requireSignerMatches(accountIndex: Int, expected: EvmAddress) {
         val actual = keyManager.deriveAddress(accountIndex)
