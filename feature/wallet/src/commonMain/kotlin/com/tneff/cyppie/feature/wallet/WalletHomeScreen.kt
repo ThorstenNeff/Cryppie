@@ -34,6 +34,7 @@ import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.walletcore.ChainBalances
+import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.feature.wallet.generated.resources.Res
 import com.tneff.cyppie.feature.wallet.generated.resources.home_account_label
 import com.tneff.cyppie.feature.wallet.generated.resources.home_accounts
@@ -182,14 +183,19 @@ private fun ChainSection(balances: ChainBalances) {
             amount = formatTokenAmount(balances.native, NATIVE_DECIMALS),
             modifier = Modifier.testTag(WalletTestTags.homeBalanceNative(chain)),
         )
-        // Token rows appear once the curated/added token list lands (Story 3); decimals/symbol come
-        // from ERC-20 metadata then — until then [tokens] is empty. Placeholder formatting at 18.
+        // Token rows: symbol + decimals come from the curated token metadata (KAN-89 M1 gate — never
+        // NATIVE_DECIMALS, which would render USDC/USDT/6-dp tokens as "0"). Non-curated added-by-contract
+        // tokens carry their own metadata once persisted (KAN-83 follow-up); skipped here rather than
+        // misformatted.
         balances.tokens.forEach { (token, amount) ->
-            BalanceRow(
-                symbol = token.short(),
-                amount = formatTokenAmount(amount, NATIVE_DECIMALS),
-                modifier = Modifier.testTag(WalletTestTags.homeBalanceToken(chain, token.value)),
-            )
+            val meta = TokenCatalog.find(token, balances.chain)
+            if (meta != null) {
+                BalanceRow(
+                    symbol = meta.symbol,
+                    amount = formatTokenAmount(amount, meta.decimals),
+                    modifier = Modifier.testTag(WalletTestTags.homeBalanceToken(chain, token.value)),
+                )
+            }
         }
     }
 }
