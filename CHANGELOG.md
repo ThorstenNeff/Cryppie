@@ -7,6 +7,21 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-91 — Send-flow orchestrator (`:send`).** New non-web `:send` module — the **one** orchestrator
+  (ADR-0019 pending) for both entry points (in-app send + WalletConnect `eth_sendTransaction`).
+  `prepare(input, accounts)`: resolves the signer account (#3 — from the wallet's cached public
+  addresses, no seed pre-approval) → completes the tx via `:rpc` (nonce / `eth_feeHistory` /
+  `eth_estimateGas` / chainId, **fill-missing-not-override** #2) → validates `balance ≥ value +
+  gasLimit*maxFee` → assembles the disclosure of the **completed** tx (#1 signed == disclosed), with
+  ERC-20 `transfer`/`transferFrom`/`approve` decoded human-readably (unknown calldata → raw + warning,
+  fail-safe #5). `signAndBroadcast(prepared, seedSource)`: signs via L2 over the unlocked seed,
+  **zeroizes it immediately** (M1, minimal seed window), then broadcasts — node-rejections are
+  authoritative (no retry), transport → retryable `NetworkError`. Chain-bound (#4: built + signed on
+  the request's chain id). Prereqs added: `:rpc.estimateGas` (`eth_estimateGas`) + 256-bit `Quantity`
+  `plus`/`times`/`compareTo` (balance math). Tested on JVM (9 — complete/disclose, fill-not-override,
+  account/chain binding, signed-tx **recovers to the bound account**, insufficient-funds, ERC-20 decode,
+  sign+zeroize+broadcast, node-reject); compiles iOS/Android. UI = separate story; the WalletConnect
+  adapter (decode → `SendInput`, respond) folds in when `:walletconnect` merges.
 - **KAN-82 — Reset wipes the biometric enroll (security, M1).** Unified the biometric-unlock Keystore
   alias into one shared `SEED_UNLOCK_ALIAS`: `SeedVault.store()`/`clear()` and the Android enroll
   (`AndroidSecureKeyStore.enableBiometricUnlock`) now use the **same** alias, so a wallet reset/
