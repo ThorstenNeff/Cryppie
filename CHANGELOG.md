@@ -7,6 +7,13 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-80 — `:storage` Android biometric-unlock enroll API.** `AndroidSecureKeyStore` now exposes a
+  wallet-level API over a **private, fixed Keystore alias** (`cyppie_seed_unlock`) so the app never
+  names it: `biometricEnrollCipher()` + `enableBiometricUnlock(password, authenticatedCipher)` (enroll
+  after the password is set), `biometricUnlockCipher()` + `retrieveUnlockPassword(authenticatedCipher)`
+  (unlock), and `disableBiometricUnlock()`. The alias-parameter wrap/unwrap helpers are now private;
+  the `BiometricPrompt` UI stays in ONB-9 (Dev-1) via the `CryptoObject` cipher. iOS Keychain
+  unchanged. Robolectric androidHostTest round-trips enroll→unlock and disable with a fake-HW Cipher.
 - **KAN-77 — Wallet-Core read-side domain.** New non-web `:walletcore` module (android · ios · jvm;
   depends on `:wallet`+`:rpc`) orchestrating the read paths: `AccountManager` (derive/list EVM accounts
   via L1, addresses only) and `WalletRepository` — native + ERC-20 balances and nonce per `EvmChain`

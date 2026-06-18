@@ -22,7 +22,9 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
         }
-        withHostTest {}
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
     }
 
     applyDefaultHierarchyTemplate()
@@ -38,6 +40,13 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+        }
+        // Android host (JVM) tests via Robolectric (ADR-0013) — exercises AndroidSecureKeyStore's
+        // wrap/persist/unwrap round-trip with a fake-HW Cipher + Robolectric SharedPreferences (KAN-80).
+        getByName("androidHostTest").dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.robolectric)
+            implementation(libs.androidx.test.core)
         }
     }
 }
