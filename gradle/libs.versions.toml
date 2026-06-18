@@ -68,9 +68,12 @@ secp256k1-kmp-jni-android = { module = "fr.acinq.secp256k1:secp256k1-kmp-jni-and
 # keccak-256 for EVM addresses (ADR-0008 — cryptography-kotlin has SHA3 but not keccak).
 kotlincrypto-hash-sha3 = { module = "org.kotlincrypto.hash:sha3", version.ref = "kotlincryptoHash" }
 kotlincrypto-hash-sha3-jvm = { module = "org.kotlincrypto.hash:sha3-jvm", version.ref = "kotlincryptoHash" }
-# cryptography-kotlin (ADR-0008/0009) — AES-GCM/PBKDF2/RNG/ed25519. Declared here; wired by the storage layer.
+# cryptography-kotlin (ADR-0008/0009) — AES-GCM/PBKDF2/RNG/ed25519. core/provider wired by the storage layer.
 cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptographyKotlin" }
 cryptography-provider-optimal = { module = "dev.whyoleg.cryptography:cryptography-provider-optimal", version.ref = "cryptographyKotlin" }
+# CSPRNG (CryptographyRandom) for BIP-39 entropy (KAN-72). -jvm jar for android+jvm, multiplatform (native) for iOS.
+cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptographyKotlin" }
+cryptography-random-jvm = { module = "dev.whyoleg.cryptography:cryptography-random-jvm", version.ref = "cryptographyKotlin" }
 
 # Dependency Injection — Koin (ADR-0007)
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }

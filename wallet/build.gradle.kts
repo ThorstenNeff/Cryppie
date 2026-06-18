@@ -49,6 +49,7 @@ kotlin {
             dependsOn(commonMain.get())
             dependencies {
                 implementation(libs.bitcoin.kmp.jvm)
+                implementation(libs.cryptography.random.jvm) // CSPRNG (BIP-39 entropy)
             }
         }
         jvmMain.get().dependsOn(jvmAndroidMain)
@@ -64,6 +65,7 @@ kotlin {
         // iOS: multiplatform artifacts resolve to the native klibs (secp256k1 bundled transitively).
         iosMain.dependencies {
             implementation(libs.bitcoin.kmp)
+            implementation(libs.cryptography.random) // CSPRNG (BIP-39 entropy)
         }
     }
 }

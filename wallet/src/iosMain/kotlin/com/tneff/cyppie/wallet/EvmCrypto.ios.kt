@@ -1,5 +1,6 @@
 package com.tneff.cyppie.wallet
 
+import dev.whyoleg.cryptography.random.CryptographyRandom
 import fr.acinq.bitcoin.DeterministicWallet
 import fr.acinq.bitcoin.MnemonicCode
 import fr.acinq.secp256k1.Secp256k1
@@ -48,4 +49,6 @@ internal actual object EvmCrypto {
 
     actual fun recoverPublicKey(hash: ByteArray, signature: RecoverableSignature): ByteArray =
         Secp256k1.ecdsaRecover(signature.r + signature.s, hash, signature.recId)
+
+    actual fun secureRandomBytes(size: Int): ByteArray = CryptographyRandom.nextBytes(size)
 }

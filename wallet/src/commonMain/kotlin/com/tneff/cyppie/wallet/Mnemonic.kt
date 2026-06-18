@@ -36,6 +36,20 @@ class Mnemonic private constructor(words: List<String>) {
          */
         fun fromEntropy(entropy: ByteArray): Mnemonic = Mnemonic(EvmCrypto.entropyToMnemonic(entropy))
 
+        /**
+         * Generates a fresh BIP-39 mnemonic of [wordCount] words (12 or 24) from CSPRNG entropy
+         * (KAN-72). Entropy is drawn in the crypto layer ([EvmCrypto.secureRandomBytes],
+         * CryptographyRandom) — never in the UI. 12 words = 128 bits, 24 words = 256 bits.
+         */
+        fun generate(wordCount: Int = 12): Mnemonic {
+            val entropyBytes = when (wordCount) {
+                12 -> 16
+                24 -> 32
+                else -> throw IllegalArgumentException("wordCount must be 12 or 24, was $wordCount")
+            }
+            return fromEntropy(EvmCrypto.secureRandomBytes(entropyBytes))
+        }
+
         /** True iff [words] are a valid BIP-39 phrase. */
         fun isValid(words: List<String>): Boolean =
             EvmCrypto.isValidMnemonic(words.map { it.trim().lowercase() }.filter { it.isNotEmpty() })

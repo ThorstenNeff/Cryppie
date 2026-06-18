@@ -38,4 +38,9 @@ internal expect object EvmCrypto {
 
     /** Recovers the uncompressed (65-byte) public key that produced [signature] over [hash]. */
     fun recoverPublicKey(hash: ByteArray, signature: RecoverableSignature): ByteArray
+
+    // ---- RNG ----
+
+    /** [size] cryptographically-secure random bytes (CryptographyRandom, ADR-0008) for BIP-39 entropy. */
+    fun secureRandomBytes(size: Int): ByteArray
 }

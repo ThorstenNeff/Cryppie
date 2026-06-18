@@ -24,6 +24,12 @@ All notable changes to Cyppie are documented here. The format is based on
   logging; the value is held in-memory in the flow `OnboardingViewModel` (survives navigation) —
   at-rest handling/zeroization is deferred to the secure-storage work (Screen 8, ADR-0009). Added a
   single `Visibility` icon to `CryptasaIcons` (eye-off variant is a follow-up).
+- **KAN-72 — `Mnemonic.generate(wordCount)` (BIP-39, CSPRNG).** `:wallet`'s `Mnemonic` companion now
+  generates a fresh 12- or 24-word phrase from cryptographically-secure entropy drawn in the crypto
+  layer (`EvmCrypto.secureRandomBytes` via cryptography-kotlin `CryptographyRandom`, ADR-0008) —
+  never in the UI; Dev-1's ONB-6 consumes it through the `Mnemonic` seam. 12 words = 128-bit, 24 =
+  256-bit; round-trips through `of`/`isValid`. Property-tested (distinct each call, valid checksum,
+  unsupported word counts rejected) on **JVM and iOS**.
 - **KAN-5 — ONB-1 Welcome screen.** Real `WelcomeScreen(onStart, onImport, state)` (replaces the
   placeholder): brand hero with the fixed green→blue `CryptasaBrandGradient` (new design-system
   token) + a full-width dark scrim band across the hero middle so the white hero text keeps WCAG AA
