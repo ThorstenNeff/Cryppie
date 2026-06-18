@@ -7,6 +7,13 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-90 — TokenCatalog authoritative address audit (pre-release security gate).** Cross-checked
+  every curated `TokenCatalog` entry's address + symbol + decimals against Etherscan / BaseScan and
+  pinned them in `TokenCatalogAuditTest`: a fixture audit (catches a typo to *another valid* address —
+  which EIP-55 can't) **plus** a resolve-vs-fixture check (the catalog's claimed symbol/decimals ==
+  what `resolveErc20` reads from chain). **Base USDT decision — omitted:** there's no official native
+  Tether on Base; the only USDT (`0xfde4…`) is a *bridged* token Tether disclaims, so the curated list
+  doesn't endorse it (users add it via Add-by-Contract). 4 Ethereum + 3 Base entries confirmed. JVM tests.
 - **KAN-95 — File-backed `CiphertextStore` (single seed-file source).** `:storage` now owns the
   canonical encrypted-seed file: `CiphertextStore.file(path)` + `CiphertextStore.defaultFile()` over a
   platform `defaultSeedFilePath()` — Android `filesDir` (`AndroidStoragePaths.init(filesDir)` at
