@@ -7,6 +7,13 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-13 — ONB-4 Confirm-password screen.** `ConfirmPasswordScreen(value, password, onValueChange,
+  onNext, onBack)`: masked re-entry field (eye toggle) compared live against the ONB-3 password via
+  `validateConfirmPassword` (empty / mismatch); "continue" stays visible but disabled until they
+  match, errors surface on focus-loss and clear when fixed. After match it branches by the chosen
+  path — import → seed entry (Screen 5), create → seed display (Screen 6). Both password inputs live
+  in the flow `OnboardingViewModel` so neither is lost on navigation. Copy from `composeResources`
+  (`onb_pwc_*`), tokens only, testTags `onb_confirm_*` (incl. error), adaptive (≤480 dp, scroll).
 - **KAN-12 — ONB-3 Set-password screen.** `SetPasswordScreen(value, onValueChange, onNext, onBack)`:
   masked `CryptasaTextField` with an eye toggle (reveal; state via contentDescription), live
   `PasswordStrengthIndicator` (rule-based `evaluatePasswordStrength` → KAN-64 status colours), and a

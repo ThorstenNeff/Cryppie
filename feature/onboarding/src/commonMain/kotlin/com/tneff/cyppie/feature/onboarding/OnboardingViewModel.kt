@@ -30,6 +30,10 @@ class OnboardingViewModel : ViewModel() {
     var password: String by mutableStateOf("")
         private set
 
+    /** Confirmation input (ONB-4), in-memory only — same handling/lifetime as [password]. */
+    var confirmPassword: String by mutableStateOf("")
+        private set
+
     fun choosePath(path: OnboardingPath) {
         uiState = uiState.copy(path = path)
     }
@@ -38,8 +42,13 @@ class OnboardingViewModel : ViewModel() {
         password = value
     }
 
+    fun updateConfirmPassword(value: String) {
+        confirmPassword = value
+    }
+
     fun reset() {
         uiState = OnboardingUiState()
         password = ""
+        confirmPassword = ""
     }
 }

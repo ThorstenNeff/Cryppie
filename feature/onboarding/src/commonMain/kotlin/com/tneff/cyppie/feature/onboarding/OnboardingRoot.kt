@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
+import com.tneff.cyppie.feature.onboarding.ui.ConfirmPasswordScreen
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
 import com.tneff.cyppie.feature.onboarding.ui.PathScreen
 import com.tneff.cyppie.feature.onboarding.ui.SetPasswordScreen
@@ -91,7 +92,23 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         )
                     }
                     entry<OnboardingNavKey.ConfirmPassword> {
-                        OnboardingPlaceholderScreen("Passwort bestätigen", onBack = ::back)
+                        ConfirmPasswordScreen(
+                            value = viewModel.confirmPassword,
+                            password = viewModel.password,
+                            onValueChange = viewModel::updateConfirmPassword,
+                            onNext = {
+                                // Branch by the path chosen on ONB-2: import → seed entry (Screen 5),
+                                // create → seed display (Screen 6).
+                                goTo(
+                                    if (viewModel.uiState.path == OnboardingPath.Import) {
+                                        OnboardingNavKey.ImportSeed
+                                    } else {
+                                        OnboardingNavKey.ShowSeed
+                                    },
+                                )
+                            },
+                            onBack = ::back,
+                        )
                     }
                     entry<OnboardingNavKey.ShowSeed> {
                         OnboardingPlaceholderScreen("Seed anzeigen", onBack = ::back)

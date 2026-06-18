@@ -46,3 +46,16 @@ fun validatePassword(pw: String): PwError? = when {
     evaluatePasswordStrength(pw) == PasswordStrength.Weak -> PwError.Weak
     else -> null
 }
+
+/** Confirm-password validation errors (ONB-4). */
+enum class ConfirmError { Empty, Mismatch }
+
+/**
+ * Validates the confirmation against the [original] password (ONB-4); `null` means it matches.
+ * Empty → [ConfirmError.Empty]; differing → [ConfirmError.Mismatch].
+ */
+fun validateConfirmPassword(confirm: String, original: String): ConfirmError? = when {
+    confirm.isEmpty() -> ConfirmError.Empty
+    confirm != original -> ConfirmError.Mismatch
+    else -> null
+}
