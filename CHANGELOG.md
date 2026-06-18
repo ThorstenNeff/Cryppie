@@ -54,6 +54,17 @@ All notable changes to Cyppie are documented here. The format is based on
   trailing icon; added `AddCircle`/`Download`/`ChevronRight` (RTL-mirrored) to `CryptasaIcons`.
   Also corrects the ONB-1 welcome import-link to route via the mandatory app password
   (`choosePath(Import)` + `SetPassword`) instead of skipping straight to seed entry (KAN-5 flow).
+- **KAN-58 — Wallet-Core L2: EVM transaction stack (EIP-1559 signer).** Self-built, deterministic,
+  audit-isolated stack stacked on L1 (ADR-0014):
+  - `tx.Eip1559Transaction` (Type-2) + `tx.EvmTransactionSigner` (`:wallet`) — builds
+    `0x02 || rlp(fields)` from `:evm`'s `Rlp`/`Quantity`, hashes with keccak-256, signs via L1
+    (`EvmKeyManager`, private key never enters L2), sets the typed-tx `v` = signature y-parity
+    (`recId`); chainId carried in-payload (ETH 1 / Base 8453). Emits `SignedTransaction`
+    (broadcast-ready `rawTransaction`/hex + tx hash); `recoverSigner` self-verifies.
+  - Uses `:evm`'s `Rlp` codec and `Erc20Abi` (`transfer`/`balanceOf`/`decimals`/`symbol`; selectors
+    `a9059cbb`/`70a08231`/`313ce567`/`95d89b41`). `EvmCrypto` SPI gained `recoverPublicKey`.
+  - Verified on **JVM and iOS**: RLP/ABI known-answers and signed txs that cryptographically recover
+    to the signer; official signed-tx vectors are KAN-59.
 - **KAN-56 — Wallet-Core L1: Key/Account layer (BIP-44 HD + EIP-55).** Two modules (ADR-0016):
   - **`:evm`** — web-safe EVM primitives (targets android · iosArm64 · iosSimulatorArm64 · jvm ·
     **js · wasmJs**): `EvmAddress` (always EIP-55 checksummed), `Quantity` (pure-Kotlin
