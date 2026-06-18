@@ -42,14 +42,17 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
-            // L1 wallet (BIP-39 Mnemonic) — only on targets where :wallet exists (no js/wasm; ADR-0008).
+            // L1 wallet (BIP-39 Mnemonic) + secure storage — only where they exist (no js/wasm; ADR-0008/0009).
             implementation(projects.wallet)
+            implementation(projects.storage)
         }
         jvmMain.dependencies {
             implementation(projects.wallet)
+            implementation(projects.storage)
         }
         iosMain.dependencies {
             implementation(projects.wallet)
+            implementation(projects.storage)
         }
         commonMain.dependencies {
             api(projects.designsystem)
