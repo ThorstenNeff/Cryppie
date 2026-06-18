@@ -9,7 +9,8 @@ All notable changes to Cyppie are documented here. The format is based on
 ### Added
 - **KAN-5 — ONB-1 Welcome screen.** Real `WelcomeScreen(onStart, onImport, state)` (replaces the
   placeholder): brand hero with the fixed green→blue `CryptasaBrandGradient` (new design-system
-  token) + a black 0→25 % scrim so the white hero text keeps WCAG AA, over a `surface` bottom sheet
+  token) + a full-width dark scrim band across the hero middle so the white hero text keeps WCAG AA
+  (wordmark ≥3:1, tagline ≥4.5:1), over a `surface` bottom sheet
   (rounded top) with headline/body/CTA/import-link. All copy from `composeResources`
   (`onb_welcome_*`, `common_close`), all values from tokens; actions tagged `WELCOME_START`/
   `WELCOME_IMPORT`; nav start→ChoosePath, import→ImportSeed. Launch integrity check via

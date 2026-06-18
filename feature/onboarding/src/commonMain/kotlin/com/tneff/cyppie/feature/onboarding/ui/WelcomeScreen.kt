@@ -81,20 +81,26 @@ fun WelcomeScreen(
                     .background(Brush.linearGradient(CryptasaBrandGradient)),
                 contentAlignment = Alignment.Center,
             ) {
-                // Local radial scrim behind the text only: white on the light-green gradient end is
-                // ~1.7:1, far below AA. A ~0.6 black scrim concentrated behind the centred text keeps
-                // the brand gradient bright at the edges while lifting the text to WCAG AA
-                // (white on the darkened mid-gradient ≈ 5:1+). Verified by the screen contrast test (KAN-9).
+                // a11y scrim: white on the bright-green upper gradient is only ~1.7:1. A full-width
+                // dark band across the hero's vertical middle — where the centred wordmark+tagline
+                // sit — lifts both to WCAG AA (white on the ~0.66 black-over-gradient ≈ 4.7–6.5:1:
+                // wordmark ≥3:1 large, tagline ≥4.5:1) while keeping the gradient bright top/bottom.
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                0.0f to Color.Transparent,
+                                0.30f to Color.Black.copy(alpha = 0.66f),
+                                0.70f to Color.Black.copy(alpha = 0.66f),
+                                1.0f to Color.Transparent,
+                            ),
+                        ),
+                )
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(spacing.xs),
-                    modifier = Modifier
-                        .background(
-                            Brush.radialGradient(
-                                listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent),
-                            ),
-                        )
-                        .padding(horizontal = spacing.xxl, vertical = spacing.xl),
+                    modifier = Modifier.padding(horizontal = spacing.xl),
                 ) {
                     Text(
                         text = BRAND_WORDMARK,
