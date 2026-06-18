@@ -19,6 +19,8 @@ captures
 node_modules/
 firebase-service-account.json
 *.md
+# Versioned project docs (ADRs, agent guides) must not be swept up by the broad *.md ignore (KAN-91).
+!docs/**/*.md
 fastlane/report.xml
 keystore.properties
 app/androidApp/build/

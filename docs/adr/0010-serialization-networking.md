@@ -1,0 +1,23 @@
+# ADR-0010 — Serialisierung & Networking
+
+- **Status:** Accepted (2026-06-17) — Richtung festgelegt. **RPC-Feindetails finalisiert in PRD-02 / KAN-60** (`:rpc`-Layer, s. u.); Auth-Refresh-Logik bleibt für **PRD-08**. **Nicht** relevant für den on-device Onboarding-Slice.
+- **Kontext:** Ab PRD-03+ (Portfolio, Market-Data, Backend-Anbindung) braucht die App **JSON-Serialisierung + HTTP-Client** (multiplattform). `kotlinx.serialization` ist über **Nav3** ([[0006]]) bereits im Stack; **Ktor** ist serverseitig drin (`:server`, `ktor 3.5.0`).
+- **Entscheidung:** **kotlinx.serialization (JSON) + Ktor-Client 3.x** — ein Ökosystem für Client **und** Server. Verifiziert via Context7 (offizielle Ktor-3.x-Doku):
+  - **Engines je Target** über `expect`/`actual`-`httpClient()`: **OkHttp** (Android) · **Darwin** (iOS) · **CIO**/Java (JVM/Desktop) · **Js** (Web/Wasm).
+  - **ContentNegotiation** mit `io.ktor.serialization.kotlinx.json.json()`.
+  - **Auth-Plugin** (`bearer { … }`) mit Token-**Refresh** → koppelt an PRD-08 (Keycloak/JWT).
+  - **Resilienz:** `HttpTimeout`, `HttpRequestRetry`, Logging-Plugin.
+  - Datenmodelle mit `@Serializable` in `commonMain`; Repository-Schicht ([[0002]]) konsumiert den Client.
+- **Feindetails (finalisiert in PRD-02 / KAN-60 — `:rpc`-Layer):**
+  - **Engines:** OkHttp (Android) · Darwin (iOS) · CIO (JVM/Desktop) · Js (Web js+wasm).
+  - **JSON:** kotlinx.serialization via ContentNegotiation, `ignoreUnknownKeys` + `isLenient`. **Timeouts:** request 20s / connect 10s / socket 20s.
+  - **Retry (per-Provider, Ktor `HttpRequestRetry`):** maxRetries 3 auf 429/5xx + Transport/Timeout; exponentielles Backoff **+ Jitter**, respektiert `Retry-After`.
+  - **Failover (cross-Provider, Alchemy→Infura→…):** Rollover bei Transport, non-2xx (429/5xx), retrybaren JSON-RPC-Codes `{-32005, -32016, -32029, -32603, 429}`. **Kein** Failover bei autoritativen Node-Errors (Revert `-32000/3`, invalid params `-32602`). `degraded=true`, sobald ein nicht-primärer Provider liefert.
+  - **Fehlermodell:** sealed `RpcException { Transport, Node(code,msg), AllProvidersFailed, Decoding, ReceiptTimeout }`; suspendige API, Exceptions (kein Result-Wrapper).
+  - **Fees:** `eth_feeHistory` (1 Block, P50) → `maxFee = 2·baseFee + priority`; **Fallback** `eth_gasPrice` (+ `eth_maxPriorityFeePerGas`, Default-Tip 1.5 gwei), falls `feeHistory` fehlt.
+  - **Receipt-Polling:** 4s-Intervall bis confirmed/failed, Timeout 120s → `ReceiptTimeout`.
+  - **RPC-Keys:** Build-Config (in `RpcEndpoint.url`), **nicht committed** (PRD-02 §9).
+- **Update (PRD-03 / Portfolio, [[0017]] — accepted 2026-06-18):** Neben JSON-RPC kommen **REST-Clients** für Alchemy **Data API** (`assets/tokens/balances/by-address`, `getAssetTransfers`, NFT) und **Prices API** (aktuell + historisch) hinzu — derselbe `httpClient()`/ContentNegotiation-Stack, eigener Basis-Pfad (`api.g.alchemy.com/data|prices/v1`). Retry/Timeout wie oben; **Rate-Limit (429)**-Behandlung respektiert `Retry-After` + Backoff/Jitter (Portfolio-Reads sind read-only/idempotent → safe retry). **Failover** für REST analog cross-Provider, soweit ein Fallback-Provider den Endpunkt abdeckt; sonst `degraded=true`. Fehlermodell: REST-Fehler in dasselbe sealed `RpcException`-Schema mappen (HTTP-Status → `Transport`/`Node`).
+- **Offen (PRD-08):** Auth-Refresh-Logik (`bearer`/JWT, Keycloak).
+- **Konsequenzen:** minimaler neuer Stack (`kotlinx.serialization` schon vorhanden); einheitliches Kotlin/Ktor-Ökosystem Client+Server; klare Trennung über die Repository-Schicht.
+- **Alternativen (nicht gewählt):** Ktorfit (Retrofit-Stil über Ktor — als optionaler Komfort-Layer später denkbar, nicht Default); Nicht-KMP-JSON-Libs (Moshi/Gson — verworfen); Plattform-HTTP via `expect`/`actual` ohne Ktor (mehr Glue, kein Mehrwert).
