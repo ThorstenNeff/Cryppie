@@ -56,14 +56,17 @@ All notable changes to Cyppie are documented here. The format is based on
   (`choosePath(Import)` + `SetPassword`) instead of skipping straight to seed entry (KAN-5 flow).
 - **KAN-60 — Wallet-Core L3: RPC / networking layer (Ktor, Alchemy→Infura failover).** New `:rpc`
   module (Ktor client, ADR-0010; web-capable — engines per target OkHttp/Darwin/CIO/Js via
-  `expect`/`actual`; depends on `:evm`, no secp256k1): `EvmRpcClient` with transparent provider
-  failover + visible `degraded` state (FR-4), `eth_getBalance`, ERC-20 `balanceOf` via `eth_call`,
-  nonce, `eth_feeHistory`→EIP-1559 `FeeData`, `eth_sendRawTransaction` (consumes L2's
-  `rawTransactionHex`), and `eth_getTransactionReceipt` + `awaitReceipt` polling
-  (pending→confirmed/failed). JSON via kotlinx.serialization; timeouts + server-error retry. RPC keys
-  come from build-config and are **never committed** (PRD-02 §9). Verified with Ktor `MockEngine`
-  tests (reads, broadcast, fee data, receipt polling, failover/degraded, all-providers-failed, node
-  error); official endpoint vectors/fakes are KAN-61.
+  `expect`/`actual`; depends on `:evm`, no secp256k1): `EvmRpcClient` with **rate-limit-aware**
+  provider failover + visible `degraded` state (FR-4) — rolls over on transport errors, 429/5xx, and
+  retryable JSON-RPC codes, while surfacing authoritative node errors (revert/invalid-params).
+  `eth_getBalance`, ERC-20 `balanceOf` via `eth_call`, nonce, `eth_feeHistory`→EIP-1559 `FeeData`
+  with an `eth_gasPrice`/`eth_maxPriorityFeePerGas` **fallback** when a provider lacks feeHistory,
+  `eth_sendRawTransaction` (consumes L2's `rawTransactionHex`), and `eth_getTransactionReceipt` +
+  `awaitReceipt` polling (pending→confirmed/failed). Per-provider retry with exponential backoff +
+  jitter (respects `Retry-After`); JSON via kotlinx.serialization. RPC keys come from build-config
+  and are **never committed** (PRD-02 §9). Verified with Ktor `MockEngine` tests (reads, broadcast,
+  fee data + gasPrice fallback, receipt polling, transport & rate-limit failover/degraded,
+  all-providers-failed, node error); official endpoint vectors/fakes are KAN-61.
 - **KAN-58 — Wallet-Core L2: EVM transaction stack (EIP-1559 signer).** Self-built, deterministic,
   audit-isolated stack stacked on L1 (ADR-0014):
   - `tx.Eip1559Transaction` (Type-2) + `tx.EvmTransactionSigner` (`:wallet`) — builds

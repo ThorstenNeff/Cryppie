@@ -85,6 +85,43 @@ class EvmJsonRpcClientTest {
     }
 
     @Test
+    fun failsOverOnRateLimitedNodeError() = runTest {
+        // Primary answers a retryable JSON-RPC error (-32005 rate limit); fallback serves the result.
+        val engine = MockEngine { request ->
+            val id = rpcJson.parseToJsonElement((request.body as TextContent).text).jsonObject["id"]!!.jsonPrimitive.content
+            val body = if (request.url.host.startsWith("primary")) {
+                """{"jsonrpc":"2.0","id":$id,"error":{"code":-32005,"message":"rate limit"}}"""
+            } else {
+                """{"jsonrpc":"2.0","id":$id,"result":"0x64"}"""
+            }
+            respond(body, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
+        val c = EvmJsonRpcClient(listOf(primary, fallback), HttpClient(engine) { install(ContentNegotiation) { json(rpcJson) } })
+        assertEquals(Quantity.of(100), c.getBalance(account))
+        assertTrue(c.degraded)
+    }
+
+    @Test
+    fun feeDataFallsBackToGasPriceWhenFeeHistoryUnsupported() = runTest {
+        val engine = MockEngine { request ->
+            val obj = rpcJson.parseToJsonElement((request.body as TextContent).text).jsonObject
+            val id = obj["id"]!!.jsonPrimitive.content
+            val body = when (obj["method"]!!.jsonPrimitive.content) {
+                "eth_feeHistory" -> """{"jsonrpc":"2.0","id":$id,"error":{"code":-32601,"message":"method not found"}}"""
+                "eth_gasPrice" -> """{"jsonrpc":"2.0","id":$id,"result":"0x4"}"""
+                "eth_maxPriorityFeePerGas" -> """{"jsonrpc":"2.0","id":$id,"result":"0x1"}"""
+                else -> error("unexpected")
+            }
+            respond(body, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
+        val c = EvmJsonRpcClient(listOf(primary), HttpClient(engine) { install(ContentNegotiation) { json(rpcJson) } })
+        val fee = c.getFeeData()
+        assertEquals(Quantity.of(4), fee.baseFeePerGas)
+        assertEquals(Quantity.of(1), fee.maxPriorityFeePerGas)
+        assertEquals(Quantity.of(5), fee.maxFeePerGas)
+    }
+
+    @Test
     fun pollsReceiptUntilMined() = runTest {
         var calls = 0
         val receipt = """{"transactionHash":"0xdead","status":"0x1","blockNumber":"0x10","gasUsed":"0x5208"}"""
