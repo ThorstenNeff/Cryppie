@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="common_retry">Erneut versuchen</string>
   <string name="common_close">Schließen</string>
   <string name="wallet_action_receive">Empfangen</string>
   <string name="wallet_chain_eth">Ethereum</string>
@@ -10,4 +11,15 @@
   <string name="receive_copied">Kopiert</string>
   <string name="receive_warning">Sende nur Ethereum- &amp; Base-Assets an diese Adresse. Andere Netzwerke führen zu Verlust.</string>
   <string name="receive_qr_cd">QR-Code deiner Empfangsadresse</string>
+  <string name="token_add_title">Token hinzufügen</string>
+  <string name="token_add_subtitle">Füge ein ERC-20-Token per Contract-Adresse hinzu (Ethereum oder Base).</string>
+  <string name="token_contract_label">Contract-Adresse</string>
+  <string name="token_contract_placeholder">0x… Contract-Adresse</string>
+  <string name="token_contract_helper">Adresse des ERC-20-Tokens einfügen.</string>
+  <string name="token_resolved_detail">Symbol: %1$s · Decimals: %2$d</string>
+  <string name="token_add_cta">Token hinzufügen</string>
+  <string name="token_err_invalid">Keine gültige Adresse (EIP-55-Prüfsumme stimmt nicht).</string>
+  <string name="token_err_not_erc20">Kein ERC-20-Token an dieser Adresse.</string>
+  <string name="token_err_network_title">Netzwerk nicht erreichbar</string>
+  <string name="token_err_network_body">Token konnte nicht geprüft werden.</string>
 </resources>

@@ -25,7 +25,12 @@ All notable changes to Cyppie are documented here. The format is based on
   (`Erc20Abi`, bytes32-symbol fallback), mapping `Node`-revert / undecodable → not-ERC-20 and
   transport / all-providers-failed → network-error. EIP-55 enforced by the `EvmAddress` param. Added
   `Erc20Token` / `TokenResolution` models. Tested on JVM (resolve, revert, EOA/empty, transport,
-  no-provider). Stages 2 (`AddTokenScreen`) + 3 (curated `TokenCatalog`) follow.
+  no-provider).
+  - **Stage 2 (`AddTokenScreen`, KAN-49):** add an ERC-20 by contract address — LTR contract field
+    (EIP-55 validated locally), resolve → token card (`Symbol · Decimals` + check) / `NotErc20` field
+    error / `NetworkError` retry banner; Add CTA disabled until resolved. `token_*` testTags/i18n,
+    tokens-only, adaptive. Desktop `runComposeUiTest` covers resolved/invalid/network. Stage 3
+    (curated `TokenCatalog`) follows.
 - **KAN-78 — Wallet D2: Receive screen (`:feature:wallet`).** New Compose-MP feature module
   (android/ios/jvm; depends `:designsystem`+`:walletcore`), modeled on `:feature:onboarding`, with
   `ReceiveScreen(address, onBack)` (KAN-47): segmented chain selector (Ethereum/Base — **same EVM

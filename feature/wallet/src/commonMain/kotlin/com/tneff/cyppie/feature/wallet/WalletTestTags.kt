@@ -11,4 +11,10 @@ object WalletTestTags {
     const val RECEIVE_ADDRESS = "receive_address"
     const val RECEIVE_COPY = "receive_copy"
     const val RECEIVE_WARNING = "receive_warning"
+
+    const val TOKEN_CONTRACT_FIELD = "token_contract_field"
+    const val TOKEN_ERROR = "token_error"
+    const val TOKEN_RESOLVED = "token_resolved"
+    const val TOKEN_NETWORK = "token_network"
+    const val TOKEN_ADD = "token_add"
 }
