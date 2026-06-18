@@ -22,4 +22,13 @@
   <string name="token_err_not_erc20">No ERC-20 token at this address.</string>
   <string name="token_err_network_title">Network unavailable</string>
   <string name="token_err_network_body">The token could not be verified.</string>
+  <!-- Wallet-Home (KAN-81). en base; other locales fall back to en until KAN-76. -->
+  <string name="home_title">Wallet</string>
+  <string name="home_accounts">Accounts</string>
+  <string name="home_account_label">Account %1$d</string>
+  <string name="home_degraded">Some balances may be out of date — a network provider is degraded.</string>
+  <string name="home_empty">No balances yet.</string>
+  <string name="home_error">Couldn't load your balances.</string>
+  <string name="home_retry">Retry</string>
+  <string name="home_refresh_cd">Refresh balances</string>
 </resources>

@@ -22,4 +22,13 @@
   <string name="token_err_not_erc20">Kein ERC-20-Token an dieser Adresse.</string>
   <string name="token_err_network_title">Netzwerk nicht erreichbar</string>
   <string name="token_err_network_body">Token konnte nicht geprüft werden.</string>
+  <!-- Wallet-Home (KAN-81) -->
+  <string name="home_title">Wallet</string>
+  <string name="home_accounts">Konten</string>
+  <string name="home_account_label">Konto %1$d</string>
+  <string name="home_degraded">Einige Guthaben sind evtl. nicht aktuell — ein Netzwerk-Provider ist eingeschränkt.</string>
+  <string name="home_empty">Noch keine Guthaben.</string>
+  <string name="home_error">Guthaben konnten nicht geladen werden.</string>
+  <string name="home_retry">Erneut versuchen</string>
+  <string name="home_refresh_cd">Guthaben aktualisieren</string>
 </resources>

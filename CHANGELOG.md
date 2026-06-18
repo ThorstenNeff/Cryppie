@@ -14,6 +14,15 @@ All notable changes to Cyppie are documented here. The format is based on
   (temp + rename / `writeToFile atomically`) via expect/actual file IO. One source of truth for where
   the seed lives, so launch / unlock / onboarding read the same file; ONB-8's per-platform `WalletStore`
   file store dedupes onto this. Round-trip test (write/read/overwrite/clear) on JVM; compiles iOS/Android.
+- **KAN-81 — Wallet-Home (accounts + multi-chain balances + switcher).** `WalletHomeScreen` +
+  `WalletHomeViewModel` in `:feature:wallet` over `:walletcore` (`accounts` / `accountPortfolio`):
+  BIP-44 account switcher (EIP-55 truncated addresses), per-chain (Ethereum/Base) native + ERC-20
+  balances, `degraded` warning banner (FR-4), and Loading / Empty / Error+Retry states. Read-only, no
+  fiat valuation (PRD-02). Amounts via a new **big-integer-safe** `formatTokenAmount` (commonMain, no
+  BigInteger; truncating so a balance is never overstated; 8 unit tests incl. `>Long.MAX`). Copy from
+  `composeResources` (`home_*`, en+de; rest → KAN-76), tokens-only, testTags `home_*`, adaptive
+  (≤480 dp); added `CryptasaIcons.Refresh`. The `WalletRepository` is DI-injected — its live
+  construction (unlocked `SeedSource` + RPC config + nav entry-points) is the app-shell story KAN-89.
 - **KAN-82 — Reset wipes the biometric enroll (security, M1).** Unified the biometric-unlock Keystore
   alias into one shared `SEED_UNLOCK_ALIAS`: `SeedVault.store()`/`clear()` and the Android enroll
   (`AndroidSecureKeyStore.enableBiometricUnlock`) now use the **same** alias, so a wallet reset/
