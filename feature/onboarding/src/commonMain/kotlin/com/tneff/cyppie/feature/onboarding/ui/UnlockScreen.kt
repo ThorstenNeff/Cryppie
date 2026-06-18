@@ -14,9 +14,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,17 +33,22 @@ import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
+import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
 import com.tneff.cyppie.designsystem.components.CryptasaDialog
 import com.tneff.cyppie.designsystem.components.CryptasaTextField
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.designsystem.icons.CryptasaIcons
+import com.tneff.cyppie.feature.onboarding.BiometricUnlockResult
 import com.tneff.cyppie.feature.onboarding.SecureScreenEffect
 import com.tneff.cyppie.feature.onboarding.UnlockError
 import com.tneff.cyppie.feature.onboarding.UnlockViewModel
+import com.tneff.cyppie.feature.onboarding.rememberBiometricUnlock
 import com.tneff.cyppie.feature.onboarding.generated.resources.Res
 import com.tneff.cyppie.feature.onboarding.generated.resources.cd_password_hide
 import com.tneff.cyppie.feature.onboarding.generated.resources.cd_password_show
 import com.tneff.cyppie.feature.onboarding.generated.resources.common_cancel
+import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_biometric
+import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_biometric_failed
 import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_err_empty
 import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_err_lockout
 import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_err_wrong
@@ -54,6 +61,7 @@ import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_recover_co
 import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_subtitle
 import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_submit
 import com.tneff.cyppie.feature.onboarding.generated.resources.unlock_title
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -80,6 +88,28 @@ fun UnlockScreen(
 
     var revealed by rememberSaveable { mutableStateOf(false) }
     var showRecover by remember { mutableStateOf(false) }
+    var biometricFailed by remember { mutableStateOf(false) }
+
+    val biometric = rememberBiometricUnlock()
+    val biometricAvailable = remember { biometric.available() }
+    val scope = rememberCoroutineScope()
+
+    fun runBiometric() {
+        scope.launch {
+            when (biometric.unlock()) {
+                BiometricUnlockResult.Success -> onUnlocked()
+                BiometricUnlockResult.WrongPassword, BiometricUnlockResult.Error ->
+                    biometricFailed = true
+                // Cancelled / Unavailable: stay silently on the password path.
+                else -> {}
+            }
+        }
+    }
+
+    // Auto-prompt biometrics once on entry (if enrolled & not locked out); the button is the retry.
+    LaunchedEffect(biometricAvailable) {
+        if (biometricAvailable && !viewModel.lockedOut) runBiometric()
+    }
 
     val errorText = when (viewModel.error) {
         UnlockError.Empty -> stringResource(Res.string.unlock_err_empty)
@@ -147,6 +177,25 @@ fun UnlockScreen(
                 enabled = canSubmit,
                 modifier = Modifier.fillMaxWidth().testTag("unlock_submit"),
             )
+
+            if (biometricAvailable) {
+                CryptasaButton(
+                    text = stringResource(Res.string.unlock_biometric),
+                    onClick = { biometricFailed = false; runBiometric() },
+                    style = CryptasaButtonStyle.Secondary,
+                    enabled = !viewModel.lockedOut,
+                    modifier = Modifier.fillMaxWidth().testTag("unlock_biometric"),
+                )
+                if (biometricFailed) {
+                    Text(
+                        text = stringResource(Res.string.unlock_biometric_failed),
+                        style = CryptasaTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.testTag("unlock_biometric_failed"),
+                    )
+                }
+            }
 
             Text(
                 text = stringResource(Res.string.unlock_forgot),
