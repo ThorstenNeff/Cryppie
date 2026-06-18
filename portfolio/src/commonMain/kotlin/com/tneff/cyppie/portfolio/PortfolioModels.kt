@@ -17,7 +17,15 @@ data class Money(val minorUnits: Long, val scale: Int, val currency: String) {
     operator fun plus(other: Money): Money {
         require(currency == other.currency) { "currency mismatch: $currency vs ${other.currency}" }
         require(scale == other.scale) { "scale mismatch: $scale vs ${other.scale} (normalize with atScale first)" }
-        return Money(minorUnits + other.minorUnits, scale, currency)
+        // Saturating add (KAN-100 L1, defensive): real values are bounded (spam/dust filtered before
+        // valuation), but capped-absurd inputs must never silently wrap a portfolio total.
+        val sum = minorUnits + other.minorUnits
+        val saturated = if ((minorUnits xor sum) and (other.minorUnits xor sum) < 0L) {
+            if (minorUnits > 0L) Long.MAX_VALUE else Long.MIN_VALUE
+        } else {
+            sum
+        }
+        return Money(saturated, scale, currency)
     }
 
     /** Re-scales to [newScale] (only upscaling is exact; downscaling truncates). */

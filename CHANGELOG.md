@@ -7,6 +7,15 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-100 — Portfolio assembler + performance metrics (PRD-03, Slice 4 — part 1).** `PortfolioService`
+  end-to-end assembler: fetch ERC-20 (Alchemy Data) + native (L3) across accounts × chains → price
+  (native ETH via its chain's audited WETH) → `PortfolioValuator` (deps injected as functions / the
+  `PriceSource` interface → unit-testable, web-capable). `PortfolioPerformance` — the deterministic,
+  **float-free** rich-metric math (FR-6), every result `Metric.approximate(reasons)` (FR-9): unrealized
+  P&L (value − cost basis), max-drawdown (bps of the running peak), Sharpe-like ratio (×1000, integer
+  std-dev via `isqrt`). `Money.plus` is now **saturating** (KAN-98 L1 fix — capped-absurd values can't
+  wrap a portfolio total). Tested on JVM; compiles incl. web. Part 2 (separate): FIFO cost-basis from
+  `getAssetTransfers` + historical prices (`priceHistory`) → the value series these metrics consume + 24h.
 - **KAN-98 — Portfolio balances + valuation + allocation (`:portfolio` / `:rpc`, PRD-03 P1+P2).**
   **Stage A:** `:rpc` Alchemy **Data API** (`tokens/by-address` — multi-chain ERC-20 balances + metadata
   per holder, **follows `pageKey` to the end** so token-rich wallets aren't under-counted) + **Prices
