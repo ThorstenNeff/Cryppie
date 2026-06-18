@@ -19,7 +19,6 @@ object WalletTestTags {
     const val TOKEN_ADD = "token_add"
     // Wallet-Home (KAN-81 / D1)
     const val HOME_ACCOUNT_LIST = "home_account_list"
-    const val HOME_ACCOUNT_SWITCH = "home_account_switch_btn"
     const val HOME_DEGRADED_BANNER = "home_degraded_banner"
     const val HOME_REFRESH = "home_refresh"
     const val HOME_EMPTY = "home_empty"
