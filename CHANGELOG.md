@@ -7,6 +7,15 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-77 — Wallet-Core read-side domain.** New non-web `:walletcore` module (android · ios · jvm;
+  depends on `:wallet`+`:rpc`) orchestrating the read paths: `AccountManager` (derive/list EVM accounts
+  via L1, addresses only) and `WalletRepository` — native + ERC-20 balances and nonce per `EvmChain`
+  (Ethereum/Base) via L3, `receiveInfo` (address + **EIP-681** QR payload), `chainBalances`/
+  `accountPortfolio` aggregation with `degraded` surfacing (FR-4) and **per-token isolation** (one
+  failing `balanceOf` doesn't blank wallet-home). PRD-02-scoped (NFT / fiat valuation = PRD-03);
+  write/send/seed/WC paths fold in later. M1 note: reads are address-based so a later web-read-only
+  split is trivial (ADR-0016). Tested on **JVM and iOS** (Hardhat addresses, EIP-681, aggregation,
+  missing-chain/degraded/per-token-isolation via a fake RPC).
 - **KAN-75 — Wallet-Core: secure seed storage / KDF (ADR-0009), core + seam.** New non-web
   `:storage` module (android · iosArm64 · iosSimulatorArm64 · jvm; depends on `:wallet`):
   - `SeedVault(CiphertextStore, SecureKeyStore)` — `store(seed, password)` / `unlock(password):
