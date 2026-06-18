@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
+import com.tneff.cyppie.feature.onboarding.ui.BiometricsScreen
 import com.tneff.cyppie.feature.onboarding.ui.ConfirmBackupScreen
 import com.tneff.cyppie.feature.onboarding.ui.ConfirmPasswordScreen
 import com.tneff.cyppie.feature.onboarding.ui.ImportSeedScreen
-import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
 import com.tneff.cyppie.feature.onboarding.ui.PathScreen
 import com.tneff.cyppie.feature.onboarding.ui.SetPasswordScreen
 import com.tneff.cyppie.feature.onboarding.ui.ShowSeedScreen
@@ -165,7 +165,17 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         )
                     }
                     entry<OnboardingNavKey.Biometrics> {
-                        OnboardingPlaceholderScreen("Biometrie aktivieren", onBack = ::back)
+                        BiometricsScreen(
+                            password = viewModel.password,
+                            // Onboarding complete: zeroize the password and return to the start
+                            // (Wallet-Home is a separate epic — placeholder route for now).
+                            onFinish = {
+                                viewModel.reset()
+                                backStack.clear()
+                                backStack.add(OnboardingNavKey.Welcome)
+                            },
+                            onOpenSettings = {}, // platform settings deep-link = follow-up
+                        )
                     }
                 },
             )
