@@ -5,6 +5,8 @@ import com.tneff.cyppie.evm.EvmException
 import com.tneff.cyppie.evm.Quantity
 import com.tneff.cyppie.evm.abi.Erc20Abi
 import com.tneff.cyppie.rpc.EvmRpcClient
+import com.tneff.cyppie.rpc.NftPage
+import com.tneff.cyppie.rpc.NftReadClient
 import com.tneff.cyppie.rpc.RpcException
 import com.tneff.cyppie.wallet.EvmAccount
 import kotlin.coroutines.cancellation.CancellationException
@@ -19,6 +21,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class WalletRepository(
     private val accountManager: AccountManager,
     private val rpcByChain: Map<Long, EvmRpcClient>,
+    private val nftByChain: Map<Long, NftReadClient> = emptyMap(),
 ) {
 
     /** The first [count] accounts (addresses). */
@@ -105,6 +108,17 @@ class WalletRepository(
         } catch (e: RpcException) {
             TokenResolution.NetworkError // transport / all-providers-failed / decoding
         }
+    }
+
+    /**
+     * Read-only NFTs for account [accountIndex] on [chain], one page (NFT-READ-SPEC). [pageKey] pages
+     * forward (null = first page; the returned [NftPage.nextPageKey] feeds the next call). A chain
+     * without a configured NFT client throws (config error, like [rpc]).
+     */
+    suspend fun nfts(accountIndex: Int, chain: EvmChain, pageKey: String? = null): NftPage {
+        val client = nftByChain[chain.chainId]
+            ?: throw IllegalArgumentException("No NFT client configured for ${chain.displayName}")
+        return client.nftsForOwner(accountManager.account(accountIndex).address, pageKey)
     }
 
     /** True if any configured provider for [chain] is currently degraded (on a fallback). */

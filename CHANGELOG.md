@@ -7,6 +7,17 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-88 — NFT read logic (Alchemy NFT API v3).** New **web-capable** `:rpc` `NftReadClient` +
+  `AlchemyNftClient` (`getNFTsForOwner` v3, `eth-mainnet`/`base-mainnet`): paging (`pageKey`, default
+  pageSize 50), `excludeFilters=SPAM` default + `isSpam` passthrough, **Alchemy-cached media URLs only**
+  (privacy — no fetch from arbitrary NFT origins/IPFS), ERC-721/1155 mapping (`balance` for 1155),
+  retry/timeout from the shared Ktor stack, errors → `RpcException`. Domain models `NftItem` / `NftPage`
+  / `NftType`, keyed on `chainId` to keep `:rpc` free of `:walletcore`'s `EvmChain` (UI maps via
+  `EvmChain.fromChainId`). `WalletRepository.nfts(accountIndex, chain, pageKey)` wraps it (non-configured
+  chain throws). Read-only, no valuation/floor (PRD-03). API key = build-config (never committed).
+  Tested on JVM (MockEngine: ERC721+1155 parse, paging, spam-filter, missing-fields→null/UNKNOWN,
+  HTTP-error→AllProvidersFailed; `:walletcore` passthrough / pageKey / unconfigured-chain); compiles
+  incl. web. Gate for the NFT-grid UI (KAN-51).
 - **KAN-82 — Reset wipes the biometric enroll (security, M1).** Unified the biometric-unlock Keystore
   alias into one shared `SEED_UNLOCK_ALIAS`: `SeedVault.store()`/`clear()` and the Android enroll
   (`AndroidSecureKeyStore.enableBiometricUnlock`) now use the **same** alias, so a wallet reset/
