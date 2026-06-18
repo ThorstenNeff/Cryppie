@@ -11,6 +11,13 @@ import kotlinx.coroutines.flow.Flow
  * The Reown/Swift singletons are initialized by the app layer (Android `Application`; iOS Swift); a
  * no-arg `actual` constructor binds to those — keeping platform config (project-id/context) out of
  * `commonMain`.
+ *
+ * ## 🔒 Key-path invariant (ADR-0005 / ADR-0018 security gate)
+ * The WalletConnect SDK is **transport only** and must **never** receive the seed or a private key.
+ * Signing happens exclusively in `:wallet` ([WalletConnectSigner] over `EvmKeyManager`); only the
+ * **signature result** (a hex string) flows back here via [respondRequest]. Structurally enforced:
+ * the Reown / `kethereum` types live solely in this module's platform sources (`androidMain` + the
+ * iOS Swift shim) — never in `:wallet`/`:evm` — so no WC/SDK type touches the derivation/signing path.
  */
 expect class WalletConnectController() {
 
