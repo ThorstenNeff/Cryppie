@@ -24,6 +24,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +80,7 @@ fun ReceiveScreen(
     val typography = CryptasaTheme.typography
     val clipboard = LocalClipboardManager.current
 
-    var selectedChain by remember { mutableStateOf(EvmChain.ETHEREUM) }
+    var selectedChain by rememberSaveable(stateSaver = EvmChainSaver) { mutableStateOf(EvmChain.ETHEREUM) }
     var copied by remember { mutableStateOf(false) }
 
     // Copied confirmation auto-reverts so the CTA returns to "copy" (L1).
@@ -183,3 +185,9 @@ fun ReceiveScreen(
         }
     }
 }
+
+/** Saver so the selected chain survives process death (enums aren't auto-saveable in commonMain). */
+private val EvmChainSaver: Saver<EvmChain, String> = Saver(
+    save = { it.name },
+    restore = { EvmChain.valueOf(it) },
+)
