@@ -1,5 +1,7 @@
 package com.tneff.cyppie.wallet
 
+import com.tneff.cyppie.evm.EvmAddress
+
 /**
  * A recoverable secp256k1 ECDSA signature over a 32-byte message hash.
  *
@@ -26,4 +28,8 @@ class RecoverableSignature(
             recId == other.recId && r.contentEquals(other.r) && s.contentEquals(other.s))
 
     override fun hashCode(): Int = (r.contentHashCode() * 31 + s.contentHashCode()) * 31 + recId
+
+    /** Recovers the signer's EIP-55 address from this signature over [messageHash] (32 bytes). */
+    fun recoverAddress(messageHash: ByteArray): EvmAddress =
+        EvmAddress.fromPublicKey(EvmCrypto.recoverPublicKey(messageHash, this))
 }
