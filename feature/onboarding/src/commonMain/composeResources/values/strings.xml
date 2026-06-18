@@ -124,4 +124,20 @@
   <string name="onb_bio_link_title">Couldn't link biometrics</string>
   <string name="onb_bio_link_body">You can use the app with your password for now and enable biometrics again later.</string>
   <string name="onb_bio_link_action">Continue without biometrics</string>
+  <!-- KAN-92 Unlock (returning user). en base; other locales fall back to en until KAN-76. -->
+  <string name="unlock_title">Welcome back</string>
+  <string name="unlock_subtitle">Unlock your wallet with your app password.</string>
+  <string name="unlock_password_label">App password</string>
+  <string name="unlock_password_placeholder">Enter your password</string>
+  <string name="unlock_submit">Unlock</string>
+  <string name="unlock_biometric">Unlock with biometrics</string>
+  <string name="unlock_biometric_cd">Unlock with biometrics</string>
+  <string name="unlock_err_wrong">Wrong password.</string>
+  <string name="unlock_err_empty">Please enter your password.</string>
+  <string name="unlock_err_lockout">Too many attempts. Try again in %1$s.</string>
+  <string name="unlock_biometric_failed">Biometrics failed — please enter your password.</string>
+  <string name="unlock_forgot">Forgot password?</string>
+  <string name="unlock_recover_confirm_title">Restore with recovery phrase?</string>
+  <string name="unlock_recover_confirm_body">This replaces the wallet on this device. You'll need your 12- or 24-word recovery phrase.</string>
+  <string name="unlock_recover_confirm_action">Continue to import</string>
 </resources>
