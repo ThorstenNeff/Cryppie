@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +54,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.wallet_chain_base
 import com.tneff.cyppie.feature.wallet.generated.resources.wallet_chain_eth
 import com.tneff.cyppie.walletcore.EvmChain
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -78,6 +80,14 @@ fun ReceiveScreen(
 
     var selectedChain by remember { mutableStateOf(EvmChain.ETHEREUM) }
     var copied by remember { mutableStateOf(false) }
+
+    // Copied confirmation auto-reverts so the CTA returns to "copy" (L1).
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(2_000)
+            copied = false
+        }
+    }
 
     val ethName = stringResource(Res.string.wallet_chain_eth)
     val baseName = stringResource(Res.string.wallet_chain_base)

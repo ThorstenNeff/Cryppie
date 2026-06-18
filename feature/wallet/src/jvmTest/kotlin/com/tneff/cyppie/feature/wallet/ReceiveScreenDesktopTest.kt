@@ -39,10 +39,17 @@ class ReceiveScreenDesktopTest {
     }
 
     @Test
-    fun copyButtonSwitchesToCopiedState() = runComposeUiTest {
+    fun copyButtonSwitchesToCopiedThenReverts() = runComposeUiTest {
         setContent { CryptasaTheme(ThemeMode.Light) { ReceiveScreen(address = address, onBack = {}) } }
         onNodeWithText("Copy address").assertIsDisplayed() // button label, en default
+
+        mainClock.autoAdvance = false // control the auto-revert timer (L1)
         onNodeWithTag(WalletTestTags.RECEIVE_COPY).performClick()
+        mainClock.advanceTimeByFrame()
         onNodeWithText("Copied").assertIsDisplayed()
+
+        mainClock.advanceTimeBy(2_500) // past the 2s revert
+        mainClock.advanceTimeByFrame()
+        onNodeWithText("Copy address").assertIsDisplayed()
     }
 }

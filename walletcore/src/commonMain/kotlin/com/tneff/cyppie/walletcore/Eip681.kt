@@ -2,7 +2,12 @@ package com.tneff.cyppie.walletcore
 
 import com.tneff.cyppie.evm.EvmAddress
 
-/** EIP-681 payment/receive URIs (the QR payload for the Receive screen). */
+/**
+ * EIP-681 payment/receive URIs. Note (KAN-78 L2): the Receive screen's QR encodes the **bare
+ * address** (not [receiveUri]) for maximum scanner compatibility, since the address is chain-identical
+ * for Ethereum and Base. These builders are retained for **amount/value requests** ([valueRequestUri])
+ * — a "request N tokens" QR — which is the planned next use; keep, don't remove.
+ */
 object Eip681 {
 
     /** Plain receive target: `ethereum:<address>@<chainId>` (chain-scoped, no amount). */
