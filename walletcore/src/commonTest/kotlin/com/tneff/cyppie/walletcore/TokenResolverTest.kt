@@ -22,6 +22,7 @@ private class TokenRpc(private val onCall: (selector: ByteArray) -> ByteArray) :
     override suspend fun getErc20Balance(token: EvmAddress, owner: EvmAddress) = throw NotImplementedError()
     override suspend fun getTransactionCount(address: EvmAddress, pending: Boolean) = throw NotImplementedError()
     override suspend fun getFeeData(): FeeData = throw NotImplementedError()
+    override suspend fun estimateGas(from: EvmAddress, to: EvmAddress, value: com.tneff.cyppie.evm.Quantity, data: ByteArray) = throw NotImplementedError()
     override suspend fun sendRawTransaction(rawTransactionHex: String): String = throw NotImplementedError()
     override suspend fun getTransactionReceipt(txHash: String): TransactionReceipt? = null
     override suspend fun awaitReceipt(txHash: String, pollIntervalMillis: Long, timeoutMillis: Long): TransactionReceipt =

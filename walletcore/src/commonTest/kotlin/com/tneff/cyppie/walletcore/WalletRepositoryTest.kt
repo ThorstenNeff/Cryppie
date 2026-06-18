@@ -30,6 +30,7 @@ private class FakeRpc(
     }
     override suspend fun getTransactionCount(address: EvmAddress, pending: Boolean) = accountNonce
     override suspend fun getFeeData(): FeeData = throw NotImplementedError()
+    override suspend fun estimateGas(from: EvmAddress, to: EvmAddress, value: Quantity, data: ByteArray) = throw NotImplementedError()
     override suspend fun call(to: EvmAddress, data: ByteArray): ByteArray = throw NotImplementedError()
     override suspend fun sendRawTransaction(rawTransactionHex: String): String = throw NotImplementedError()
     override suspend fun getTransactionReceipt(txHash: String): TransactionReceipt? = null
