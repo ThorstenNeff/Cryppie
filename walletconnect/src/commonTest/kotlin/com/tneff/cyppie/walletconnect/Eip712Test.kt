@@ -65,6 +65,28 @@ class Eip712Test {
         }
     }
 
+    private fun singleField(type: String, value: String) = """
+        {
+          "types": { "EIP712Domain": [{"name":"name","type":"string"}], "T": [{"name":"x","type":"$type"}] },
+          "primaryType": "T",
+          "domain": { "name": "d" },
+          "message": { "x": $value }
+        }
+    """.trimIndent()
+
+    @Test
+    fun rejectsUintExceedingDeclaredWidth() {
+        assertFailsWith<WalletConnectException.UnsupportedRequest> { Eip712.encode(singleField("uint8", "300")) }
+        Eip712.encode(singleField("uint8", "200")) // valid uint8 encodes fine
+    }
+
+    @Test
+    fun rejectsHexNegativeAndOutOfRangeInt() {
+        assertFailsWith<WalletConnectException.UnsupportedRequest> { Eip712.encode(singleField("int8", "\"-0x5\"")) }
+        assertFailsWith<WalletConnectException.UnsupportedRequest> { Eip712.encode(singleField("int8", "200")) } // > 127
+        Eip712.encode(singleField("int8", "\"-128\"")) // legitimate most-negative int8
+    }
+
     @Test
     fun signTypedDataV4RecoversToSigner() {
         val keyManager = EvmKeyManager(

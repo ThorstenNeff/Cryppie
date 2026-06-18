@@ -110,8 +110,8 @@ internal object Eip712 {
             type == "bytes" -> Keccak.keccak256(decodeHexOrThrow(value.jsonPrimitive.content))
             type == "bool" -> ByteArray(32).also { it[31] = if (value.jsonPrimitive.boolean) 1 else 0 }
             type == "address" -> leftPad32(decodeAddress(value.jsonPrimitive.content))
-            type.startsWith("uint") -> uintTo32(value.jsonPrimitive.content)
-            type.startsWith("int") -> intTo32(value.jsonPrimitive.content)
+            type.startsWith("uint") -> uintTo32(type, value.jsonPrimitive.content)
+            type.startsWith("int") -> intTo32(type, value.jsonPrimitive.content)
             type.startsWith("bytes") -> rightPad32(decodeHexOrThrow(value.jsonPrimitive.content))
             else -> throw WalletConnectException.UnsupportedRequest("Unsupported EIP-712 type: $type")
         }
@@ -126,12 +126,32 @@ internal object Eip712 {
         return bytes
     }
 
-    private fun uintTo32(value: String): ByteArray =
-        if (value.startsWith("0x") || value.startsWith("0X")) Quantity.ofHex(value).toBytes32() else decimalTo32(value)
+    /** `uintN` (N=8..256, default 256): magnitude must fit N bits, else fail-closed. */
+    private fun uintTo32(type: String, value: String): ByteArray {
+        val bits = bitWidth(type, "uint")
+        val bytes = if (value.startsWith("0x") || value.startsWith("0X")) Quantity.ofHex(value).toBytes32() else decimalTo32(value)
+        if (highBytesNonZero(bytes, bits)) throw WalletConnectException.UnsupportedRequest("$type value exceeds $bits bits")
+        return bytes
+    }
 
-    private fun intTo32(value: String): ByteArray {
-        if (!value.startsWith("-")) return uintTo32(value)
-        val magnitude = decimalTo32(value.substring(1)) // two's complement of |value|
+    /** `intN`: rejects hex-negative; checks the signed value fits N bits; emits two's complement. */
+    private fun intTo32(type: String, value: String): ByteArray {
+        val bits = bitWidth(type, "int")
+        if (value.startsWith("-0x") || value.startsWith("-0X")) {
+            throw WalletConnectException.UnsupportedRequest("negative hex not allowed for $type")
+        }
+        if (!value.startsWith("-")) {
+            val bytes = if (value.startsWith("0x") || value.startsWith("0X")) Quantity.ofHex(value).toBytes32() else decimalTo32(value)
+            // positive: must fit N-1 bits (sign bit stays 0)
+            if (highBytesNonZero(bytes, bits) || (bits < 256 && signBitSet(bytes, bits))) {
+                throw WalletConnectException.UnsupportedRequest("$type value out of range")
+            }
+            return bytes
+        }
+        val magnitude = decimalTo32(value.substring(1)) // |value|; must be ≤ 2^(N-1)
+        if (highBytesNonZero(magnitude, bits) || (bits < 256 && signBitSet(magnitude, bits) && !isExactlyMinInt(magnitude, bits))) {
+            throw WalletConnectException.UnsupportedRequest("$type value out of range")
+        }
         for (i in magnitude.indices) magnitude[i] = magnitude[i].toInt().inv().toByte()
         var carry = 1
         for (i in 31 downTo 0) {
@@ -140,6 +160,36 @@ internal object Eip712 {
             carry = v shr 8
         }
         return magnitude
+    }
+
+    /** Parses the bit width from a `uintN`/`intN` type (default 256); validates 8..256, multiple of 8. */
+    private fun bitWidth(type: String, prefix: String): Int {
+        val suffix = type.removePrefix(prefix)
+        val bits = if (suffix.isEmpty()) 256 else suffix.toIntOrNull()
+            ?: throw WalletConnectException.UnsupportedRequest("Unsupported type: $type")
+        if (bits !in 8..256 || bits % 8 != 0) throw WalletConnectException.UnsupportedRequest("Invalid bit width: $type")
+        return bits
+    }
+
+    /** True if any byte above the low N/8 bytes of [bytes32] is non-zero (value exceeds N bits). */
+    private fun highBytesNonZero(bytes32: ByteArray, bits: Int): Boolean {
+        val low = bits / 8
+        for (i in 0 until 32 - low) if (bytes32[i].toInt() != 0) return true
+        return false
+    }
+
+    /** True if the sign bit (bit N-1) of an N-bit value held in [bytes32] is set. */
+    private fun signBitSet(bytes32: ByteArray, bits: Int): Boolean {
+        val topByteIndex = 32 - bits / 8
+        return (bytes32[topByteIndex].toInt() and 0x80) != 0
+    }
+
+    /** True iff [magnitude] == 2^(N-1) (the legitimate most-negative `intN`). */
+    private fun isExactlyMinInt(magnitude: ByteArray, bits: Int): Boolean {
+        val topByteIndex = 32 - bits / 8
+        if ((magnitude[topByteIndex].toInt() and 0xFF) != 0x80) return false
+        for (i in topByteIndex + 1 until 32) if (magnitude[i].toInt() != 0) return false
+        return true
     }
 
     /** Big-endian 32-byte encoding of a base-10 string (schoolbook mul-add); throws on overflow. */
