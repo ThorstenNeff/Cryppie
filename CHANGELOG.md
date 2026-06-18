@@ -28,8 +28,13 @@ All notable changes to Cyppie are documented here. The format is based on
   Stage 2: `CostBasisEngine` — **FIFO** cost-basis / realized-P&L reconstruction over a token's
   time-ordered acquire/dispose events (deterministic, float-free; disposing more than tracked →
   zero-cost + `INCOMPLETE_TRANSFERS` / `WALLET_PREDATES_TRACKING` flags, FR-9). Added `Quantity.minus`
-  (256-bit, for FIFO lot consumption). Reference-vector tested. Remaining: historical prices
-  (`priceHistory`) → the value series + 24h.
+  (256-bit, for FIFO lot consumption). Reference-vector tested. Stage 3: `PriceSource.priceHistory`
+  (the interface growth — PRD-04 drop-in, default-empty) + `PricePoint`; `PortfolioTimeSeries` —
+  **value-over-time series** (cumulative net holdings from transfers × historical prices) feeding the
+  drawdown/Sharpe metrics + the chart, and a **robust 24h change** (current holdings × price delta);
+  integer / float-free (FR-6). 23 `:portfolio` tests; compiles incl. web/iOS. Remaining (final wiring):
+  the live `AlchemyPriceSource.priceHistory` (Alchemy Historical Prices REST) — gated on an ISO→epoch
+  timestamp decision (kotlinx-datetime dep vs. manual parse).
 - **KAN-100 — Portfolio assembler + performance metrics (PRD-03, Slice 4 — part 1).** `PortfolioService`
   end-to-end assembler: fetch ERC-20 (Alchemy Data) + native (L3) across accounts × chains → price
   (native ETH via its chain's audited WETH) → `PortfolioValuator` (deps injected as functions / the

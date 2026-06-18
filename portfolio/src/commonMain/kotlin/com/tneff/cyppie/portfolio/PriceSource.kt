@@ -7,7 +7,24 @@ package com.tneff.cyppie.portfolio
  */
 interface PriceSource {
     suspend fun currentPrices(tokens: List<PortfolioToken>, vs: String): Map<PortfolioToken, TokenPrice>
+
+    /**
+     * Historical fiat prices for [token] in [vs] across [fromEpochSeconds]..[toEpochSeconds] at roughly
+     * [intervalSeconds] spacing — feeds the value-over-time series + 24h change (KAN-102 P4). The
+     * PRD-04 market-data service implements the **same** interface (Q4 drop-in). Default = empty so
+     * current-price-only callers/fakes need not implement it.
+     */
+    suspend fun priceHistory(
+        token: PortfolioToken,
+        vs: String,
+        fromEpochSeconds: Long,
+        toEpochSeconds: Long,
+        intervalSeconds: Long,
+    ): List<PricePoint> = emptyList()
 }
+
+/** A historical price sample: [price] in fiat as of [epochSeconds]. */
+data class PricePoint(val epochSeconds: Long, val price: Money)
 
 /**
  * A fiat price for one token at [asOfEpochSeconds], so a caller can flag staleness (FR-2 / Q8 TTL 60s).
