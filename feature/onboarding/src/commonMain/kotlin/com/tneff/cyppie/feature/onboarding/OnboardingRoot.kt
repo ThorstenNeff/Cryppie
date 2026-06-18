@@ -17,6 +17,7 @@ import com.tneff.cyppie.feature.onboarding.ui.ImportSeedScreen
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
 import com.tneff.cyppie.feature.onboarding.ui.PathScreen
 import com.tneff.cyppie.feature.onboarding.ui.SetPasswordScreen
+import com.tneff.cyppie.feature.onboarding.ui.ShowSeedScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeState
 import org.koin.compose.viewmodel.koinViewModel
@@ -112,7 +113,15 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         )
                     }
                     entry<OnboardingNavKey.ShowSeed> {
-                        OnboardingPlaceholderScreen("Seed anzeigen", onBack = ::back)
+                        ShowSeedScreen(
+                            words = viewModel.seedWords,
+                            wordCount = viewModel.seedWordCount,
+                            generationFailed = viewModel.seedGenerationFailed,
+                            onGenerate = { viewModel.generateSeed() },
+                            onRetry = { viewModel.retrySeedGeneration() },
+                            onContinue = { goTo(OnboardingNavKey.ConfirmBackup) },
+                            onBack = ::back,
+                        )
                     }
                     entry<OnboardingNavKey.ConfirmBackup> {
                         OnboardingPlaceholderScreen("Backup bestätigen", onBack = ::back)

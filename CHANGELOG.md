@@ -29,6 +29,14 @@ All notable changes to Cyppie are documented here. The format is based on
   write/send/seed/WC paths fold in later. M1 note: reads are address-based so a later web-read-only
   split is trivial (ADR-0016). Tested on **JVM and iOS** (Hardhat addresses, EIP-681, aggregation,
   missing-chain/degraded/per-token-isolation via a fake RPC).
+- **KAN-15 — ONB-6 Show-seed screen.** `ShowSeedScreen` (create flow): generates a fresh BIP-39 phrase
+  once via the `:wallet` CSPRNG through the `MnemonicSupport` seam (held in `OnboardingViewModel`,
+  identical across navigation). Words are **covered until tapped** (mask + eye affordance) behind a
+  hard danger warning banner; "continue" is gated on the "I've written it down" `CryptasaCheckbox`.
+  On generation failure a **blocking** `CryptasaDialog` appears with a single retry action and **no
+  insecure fallback** (`onb_show_seed_error_dialog`). No share/cloud action; copy is opt-in. Screenshots
+  blocked (`SecureScreenEffect` / Android `FLAG_SECURE`); phrase never logged. Read-only `SeedWordCell`
+  grid, copy from `composeResources` (`onb_seedshow_*`), tokens only, testTags `onb_show_seed_*`.
 - **KAN-14 — ONB-5 Seed-import screen.** `ImportSeedScreen` (12/24 `SegmentedControl` + editable word
   grid): live per-word validation against the BIP-39 list, prefix autocomplete suggestions, and a
   full-phrase checksum check on "Import wallet" (banner above the grid on failure). Read-only paste

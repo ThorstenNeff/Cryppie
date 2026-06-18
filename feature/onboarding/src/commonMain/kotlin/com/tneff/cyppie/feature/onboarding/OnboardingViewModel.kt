@@ -51,8 +51,37 @@ class OnboardingViewModel : ViewModel() {
     val seedWords: SnapshotStateList<String> =
         mutableStateListOf<String>().also { list -> repeat(MAX_SEED_WORDS) { list.add("") } }
 
+    /** True if secure seed generation failed (ONB-6) — UI must block with no insecure fallback. */
+    var seedGenerationFailed: Boolean by mutableStateOf(false)
+        private set
+    private var seedGenerated = false
+
     fun choosePath(path: OnboardingPath) {
         uiState = uiState.copy(path = path)
+    }
+
+    /**
+     * Generates a fresh BIP-39 phrase once for the create flow (ONB-6), via the `:wallet` CSPRNG
+     * (through [MnemonicSupport]). On failure sets [seedGenerationFailed] — never falls back to
+     * insecure entropy. Idempotent within the flow so the seed stays identical across navigation.
+     */
+    fun generateSeed(wordCount: Int = 12) {
+        if (seedGenerated) return
+        runCatching { MnemonicSupport.generate(wordCount) }
+            .onSuccess { generated ->
+                seedWordCount = wordCount
+                for (i in seedWords.indices) seedWords[i] = generated.getOrElse(i) { "" }
+                seedGenerated = true
+                seedGenerationFailed = false
+            }
+            .onFailure { seedGenerationFailed = true }
+    }
+
+    /** Re-attempt generation after a failure (ONB-6 error dialog). */
+    fun retrySeedGeneration(wordCount: Int = 12) {
+        seedGenerated = false
+        seedGenerationFailed = false
+        generateSeed(wordCount)
     }
 
     fun updateSeedWordCount(count: Int) {
@@ -77,5 +106,7 @@ class OnboardingViewModel : ViewModel() {
         confirmPassword = ""
         seedWordCount = 12
         for (i in seedWords.indices) seedWords[i] = ""
+        seedGenerated = false
+        seedGenerationFailed = false
     }
 }
