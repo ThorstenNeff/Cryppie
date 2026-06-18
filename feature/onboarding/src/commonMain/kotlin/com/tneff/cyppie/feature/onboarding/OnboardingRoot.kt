@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.ui.ConfirmPasswordScreen
+import com.tneff.cyppie.feature.onboarding.ui.ImportSeedScreen
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
 import com.tneff.cyppie.feature.onboarding.ui.PathScreen
 import com.tneff.cyppie.feature.onboarding.ui.SetPasswordScreen
@@ -117,7 +118,14 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         OnboardingPlaceholderScreen("Backup bestätigen", onBack = ::back)
                     }
                     entry<OnboardingNavKey.ImportSeed> {
-                        OnboardingPlaceholderScreen("Seed eingeben", onBack = ::back)
+                        ImportSeedScreen(
+                            wordCount = viewModel.seedWordCount,
+                            words = viewModel.seedWords,
+                            onWordCountChange = viewModel::updateSeedWordCount,
+                            onWordChange = viewModel::setSeedWord,
+                            onImport = { goTo(OnboardingNavKey.WalletSetup) },
+                            onBack = ::back,
+                        )
                     }
                     entry<OnboardingNavKey.WalletSetup> {
                         OnboardingPlaceholderScreen("Wallet wird eingerichtet", onBack = ::back)

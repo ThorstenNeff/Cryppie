@@ -1,12 +1,17 @@
 package com.tneff.cyppie.feature.onboarding
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 
 /** Which onboarding branch the user picked on [OnboardingNavKey.ChoosePath]. */
 enum class OnboardingPath { Create, Import }
+
+/** Slots held for the seed phrase (BIP-39 max 24 words); the import screen shows the first 12|24. */
+const val MAX_SEED_WORDS: Int = 24
 
 /** Explicit onboarding flow state (ADR-0002). Extended per screen in the ONB-* tickets. */
 data class OnboardingUiState(
@@ -34,8 +39,28 @@ class OnboardingViewModel : ViewModel() {
     var confirmPassword: String by mutableStateOf("")
         private set
 
+    /** Seed import (ONB-5): 12 or 24. */
+    var seedWordCount: Int by mutableStateOf(12)
+        private set
+
+    /**
+     * Seed words being entered/imported (ONB-5), in-memory only — never logged/persisted. Fixed
+     * [MAX_SEED_WORDS] slots so toggling 12↔24 preserves typed words; the screen uses the first
+     * [seedWordCount]. Zeroization is the secure-storage work (Screen 8, ADR-0009).
+     */
+    val seedWords: SnapshotStateList<String> =
+        mutableStateListOf<String>().also { list -> repeat(MAX_SEED_WORDS) { list.add("") } }
+
     fun choosePath(path: OnboardingPath) {
         uiState = uiState.copy(path = path)
+    }
+
+    fun updateSeedWordCount(count: Int) {
+        if (count == 12 || count == 24) seedWordCount = count
+    }
+
+    fun setSeedWord(index: Int, word: String) {
+        if (index in seedWords.indices) seedWords[index] = word
     }
 
     fun updatePassword(value: String) {
@@ -50,5 +75,7 @@ class OnboardingViewModel : ViewModel() {
         uiState = OnboardingUiState()
         password = ""
         confirmPassword = ""
+        seedWordCount = 12
+        for (i in seedWords.indices) seedWords[i] = ""
     }
 }

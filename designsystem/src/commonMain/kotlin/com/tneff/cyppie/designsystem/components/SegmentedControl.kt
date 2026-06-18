@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
@@ -30,6 +31,7 @@ fun <T> SegmentedControl(
     modifier: Modifier = Modifier,
     label: (T) -> String,
     enabled: Boolean = true,
+    optionTestTag: ((T) -> String?)? = null,
 ) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
@@ -45,11 +47,13 @@ fun <T> SegmentedControl(
     ) {
         options.forEach { option ->
             val isSelected = option == selected
+            val tag = optionTestTag?.invoke(option)
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(40.dp)
                     .padding(horizontal = spacing.xxs)
+                    .then(if (tag != null) Modifier.testTag(tag) else Modifier)
                     .clip(innerShape)
                     .background(if (isSelected) colors.surface else colors.surfaceVariant)
                     .selectable(

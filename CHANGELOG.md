@@ -29,6 +29,17 @@ All notable changes to Cyppie are documented here. The format is based on
   write/send/seed/WC paths fold in later. M1 note: reads are address-based so a later web-read-only
   split is trivial (ADR-0016). Tested on **JVM and iOS** (Hardhat addresses, EIP-681, aggregation,
   missing-chain/degraded/per-token-isolation via a fake RPC).
+- **KAN-14 — ONB-5 Seed-import screen.** `ImportSeedScreen` (12/24 `SegmentedControl` + editable word
+  grid): live per-word validation against the BIP-39 list, prefix autocomplete suggestions, and a
+  full-phrase checksum check on "Import wallet" (banner above the grid on failure). Read-only paste
+  from the clipboard (count/character checks; never written back). Consumes L1 `:wallet` through a new
+  `MnemonicSupport` `expect`/`actual` **seam** — `:wallet` (no js/wasm; ADR-0008/0016) is wired only on
+  android/ios/jvm; js/wasm are `unsupported`, so `:feature:onboarding` stays web-compilable and the
+  seed screens are non-web (Web read-only). New `SecureScreenEffect` `expect`/`actual` sets Android
+  `FLAG_SECURE` (screenshot/recents protection; other targets no-op for now). Words live in the flow
+  `OnboardingViewModel` (in-memory, survive navigation; zeroization deferred to Screen 8). Copy from
+  `composeResources` (`onb_seedin_*`), tokens only, testTags `onb_seed_*` (incl. per-cell + banner);
+  `SegmentedControl` gained an optional `optionTestTag`. Letters-only/lowercase input, no logging (§5.3).
 - **KAN-75 — Wallet-Core: secure seed storage / KDF (ADR-0009), core + seam.** New non-web
   `:storage` module (android · iosArm64 · iosSimulatorArm64 · jvm; depends on `:wallet`):
   - `SeedVault(CiphertextStore, SecureKeyStore)` — `store(seed, password)` / `unlock(password):
