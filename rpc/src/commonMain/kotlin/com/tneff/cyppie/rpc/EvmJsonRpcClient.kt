@@ -65,6 +65,17 @@ internal class EvmJsonRpcClient(
         return Hex.decodeOrNull(result.asHexString()) ?: throw RpcException.Decoding("eth_call result is not hex")
     }
 
+    override suspend fun estimateGas(from: EvmAddress, to: EvmAddress, value: Quantity, data: ByteArray): Quantity =
+        rpc("eth_estimateGas", buildJsonArray {
+            addJsonObject {
+                put("from", from.value)
+                put("to", to.value)
+                put("value", value.toHex())
+                if (data.isNotEmpty()) put("data", "0x" + Hex.encode(data))
+            }
+            add("latest")
+        }).asQuantity()
+
     override suspend fun getFeeData(): FeeData =
         runCatching { feeDataFromHistory() }.getOrNull() ?: feeDataFromGasPrice()
 

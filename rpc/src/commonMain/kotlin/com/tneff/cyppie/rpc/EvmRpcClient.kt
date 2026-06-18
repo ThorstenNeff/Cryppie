@@ -47,6 +47,9 @@ interface EvmRpcClient {
     /** Raw `eth_call`; returns the ABI-encoded return bytes. */
     suspend fun call(to: EvmAddress, data: ByteArray): ByteArray
 
+    /** Gas estimate for a tx — `eth_estimateGas` (completes `gasLimit` in the send pipeline). */
+    suspend fun estimateGas(from: EvmAddress, to: EvmAddress, value: Quantity, data: ByteArray): Quantity
+
     /** Broadcast a signed raw tx (L2's `rawTransactionHex`) — `eth_sendRawTransaction`; returns tx hash. */
     suspend fun sendRawTransaction(rawTransactionHex: String): String
 
