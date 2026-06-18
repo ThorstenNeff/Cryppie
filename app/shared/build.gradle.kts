@@ -49,6 +49,15 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
+            // Launch-check (walletExists) reads the encrypted seed file via :storage — only where it
+            // exists (no js/wasm; KAN-89 seam).
+            implementation(projects.storage)
+        }
+        jvmMain.dependencies {
+            implementation(projects.storage)
+        }
+        iosMain.dependencies {
+            implementation(projects.storage)
         }
         commonMain.dependencies {
             api(projects.core)
