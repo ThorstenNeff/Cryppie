@@ -24,6 +24,8 @@ All notable changes to Cyppie are documented here. The format is based on
   `expect/actual observeConnectivity(): Flow<Boolean>` (stub online until platform monitors land).
   Design-system: `SelectionCard` upgraded to a `Role.Button` navigation card with icon badge + optional
   trailing icon; added `AddCircle`/`Download`/`ChevronRight` (RTL-mirrored) to `CryptasaIcons`.
+  Also corrects the ONB-1 welcome import-link to route via the mandatory app password
+  (`choosePath(Import)` + `SetPassword`) instead of skipping straight to seed entry (KAN-5 flow).
 - **KAN-4 — Onboarding foundations / design system.**
   - New `:designsystem` module: central `CryptasaTheme` with light/dark semantic colour, spacing,
     radius and typography tokens (CompositionLocals; System/Light/Dark mode); foundation components

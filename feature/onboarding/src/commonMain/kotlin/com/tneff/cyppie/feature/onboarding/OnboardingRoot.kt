@@ -52,7 +52,14 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         WelcomeScreen(
                             state = welcomeState,
                             onStart = { goTo(OnboardingNavKey.ChoosePath) },
-                            onImport = { goTo(OnboardingNavKey.ImportSeed) },
+                            // Import-link = shortcut into the import flow: pick the Import path and go
+                            // to the mandatory app password (Screen 3) — NOT straight to seed entry
+                            // (the password must not be skipped; SPEC_ONBOARDING_SCREEN1 §Verhalten,
+                            // same wiring as ONB-2's import card).
+                            onImport = {
+                                viewModel.choosePath(OnboardingPath.Import)
+                                goTo(OnboardingNavKey.SetPassword)
+                            },
                             // Corrupted install: blocking dialog stays up; real close/exit is
                             // platform-specific and lands with the integrity check (ADR-0009).
                             onCloseError = {},
