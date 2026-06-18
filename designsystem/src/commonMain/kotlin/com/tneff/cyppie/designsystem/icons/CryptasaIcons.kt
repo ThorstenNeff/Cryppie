@@ -124,6 +124,30 @@ object CryptasaIcons {
         }
     }
 
+    /** Reveal-password affordance (ONB-3 eye toggle); reveal state is conveyed via contentDescription. */
+    val Visibility: ImageVector by lazy {
+        materialVector("Cryptasa.Visibility") {
+            moveTo(12.0f, 4.5f)
+            curveTo(7.0f, 4.5f, 2.73f, 7.61f, 1.0f, 12.0f)
+            curveToRelative(1.73f, 4.39f, 6.0f, 7.5f, 11.0f, 7.5f)
+            reflectiveCurveToRelative(9.27f, -3.11f, 11.0f, -7.5f)
+            curveTo(21.27f, 7.61f, 17.0f, 4.5f, 12.0f, 4.5f)
+            close()
+            moveTo(12.0f, 17.0f)
+            curveToRelative(-2.76f, 0.0f, -5.0f, -2.24f, -5.0f, -5.0f)
+            reflectiveCurveToRelative(2.24f, -5.0f, 5.0f, -5.0f)
+            reflectiveCurveToRelative(5.0f, 2.24f, 5.0f, 5.0f)
+            reflectiveCurveToRelative(-2.24f, 5.0f, -5.0f, 5.0f)
+            close()
+            moveTo(12.0f, 9.0f)
+            curveToRelative(-1.66f, 0.0f, -3.0f, 1.34f, -3.0f, 3.0f)
+            reflectiveCurveToRelative(1.34f, 3.0f, 3.0f, 3.0f)
+            reflectiveCurveToRelative(3.0f, -1.34f, 3.0f, -3.0f)
+            reflectiveCurveToRelative(-1.34f, -3.0f, -3.0f, -3.0f)
+            close()
+        }
+    }
+
     /** Create / "new" affordance (ONB-2 create-wallet card). */
     val AddCircle: ImageVector by lazy {
         materialVector("Cryptasa.AddCircle") {

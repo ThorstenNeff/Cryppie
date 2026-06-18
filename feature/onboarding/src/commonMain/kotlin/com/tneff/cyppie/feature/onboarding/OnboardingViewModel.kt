@@ -22,11 +22,24 @@ class OnboardingViewModel : ViewModel() {
     var uiState by mutableStateOf(OnboardingUiState())
         private set
 
+    /**
+     * The app password while it is being set/confirmed (ONB-3/4). Held in memory only — never
+     * logged, never persisted; deliberately kept off [OnboardingUiState] (and its `toString`).
+     * At-rest handling (KDF/encryption, zeroization) is the secure-storage work (Screen 8, ADR-0009).
+     */
+    var password: String by mutableStateOf("")
+        private set
+
     fun choosePath(path: OnboardingPath) {
         uiState = uiState.copy(path = path)
     }
 
+    fun updatePassword(value: String) {
+        password = value
+    }
+
     fun reset() {
         uiState = OnboardingUiState()
+        password = ""
     }
 }

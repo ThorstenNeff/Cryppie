@@ -14,6 +14,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
 import com.tneff.cyppie.feature.onboarding.ui.PathScreen
+import com.tneff.cyppie.feature.onboarding.ui.SetPasswordScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeState
 import org.koin.compose.viewmodel.koinViewModel
@@ -82,7 +83,12 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         )
                     }
                     entry<OnboardingNavKey.SetPassword> {
-                        OnboardingPlaceholderScreen("App-Passwort", onBack = ::back)
+                        SetPasswordScreen(
+                            value = viewModel.password,
+                            onValueChange = viewModel::updatePassword,
+                            onNext = { goTo(OnboardingNavKey.ConfirmPassword) },
+                            onBack = ::back,
+                        )
                     }
                     entry<OnboardingNavKey.ConfirmPassword> {
                         OnboardingPlaceholderScreen("Passwort bestätigen", onBack = ::back)

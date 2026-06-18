@@ -7,6 +7,16 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-12 — ONB-3 Set-password screen.** `SetPasswordScreen(value, onValueChange, onNext, onBack)`:
+  masked `CryptasaTextField` with an eye toggle (reveal; state via contentDescription), live
+  `PasswordStrengthIndicator` (rule-based `evaluatePasswordStrength` → KAN-64 status colours), and a
+  "continue" button that stays visible but disabled until valid. Live validation (`validatePassword`:
+  empty / whitespace-only / too short <8 / too weak) surfaces on focus-loss and clears when fixed;
+  copy from `composeResources` (`onb_pw_*`), tokens only, testTags `onb_password_*`, adaptive
+  (≤480 dp, scroll). Security (§5.3): masked, `autoCorrect=false`, no capitalization/suggestions, no
+  logging; the value is held in-memory in the flow `OnboardingViewModel` (survives navigation) —
+  at-rest handling/zeroization is deferred to the secure-storage work (Screen 8, ADR-0009). Added a
+  single `Visibility` icon to `CryptasaIcons` (eye-off variant is a follow-up).
 - **KAN-5 — ONB-1 Welcome screen.** Real `WelcomeScreen(onStart, onImport, state)` (replaces the
   placeholder): brand hero with the fixed green→blue `CryptasaBrandGradient` (new design-system
   token) + a full-width dark scrim band across the hero middle so the white hero text keeps WCAG AA
