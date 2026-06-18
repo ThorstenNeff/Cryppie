@@ -19,7 +19,9 @@ object PortfolioPerformance {
     ): Metric<Money> {
         require(currentValue.currency == costBasis.currency) { "currency mismatch" }
         require(currentValue.scale == costBasis.scale) { "scale mismatch" }
-        val pnl = Money(currentValue.minorUnits - costBasis.minorUnits, currentValue.scale, currentValue.currency)
+        // Saturating subtract (KAN-102 L1, same family as KAN-98-L1): capped/filtered-absurd inputs
+        // must never wrap a P&L figure.
+        val pnl = Money(saturatingSub(currentValue.minorUnits, costBasis.minorUnits), currentValue.scale, currentValue.currency)
         return Metric.approximate(pnl, listOf(ApproxReason.COST_BASIS_AMBIGUITY) + extraReasons)
     }
 
@@ -34,7 +36,7 @@ object PortfolioPerformance {
             val v = p.value.minorUnits
             if (v > peak) peak = v
             if (peak > 0 && v < peak) {
-                val dd = (((peak - v) * 10_000L) / peak).toInt()
+                val dd = ratioBps(peak - v, peak).toInt()
                 if (dd > maxDd) maxDd = dd
             }
         }
@@ -50,7 +52,7 @@ object PortfolioPerformance {
         if (series.size < 3) return null
         val returnsBps = (1 until series.size).mapNotNull { i ->
             val prev = series[i - 1].value.minorUnits
-            if (prev <= 0L) null else ((series[i].value.minorUnits - prev) * 10_000L) / prev
+            if (prev <= 0L) null else ratioBps(series[i].value.minorUnits - prev, prev)
         }
         if (returnsBps.size < 2) return null
         val mean = returnsBps.sum() / returnsBps.size
@@ -58,6 +60,25 @@ object PortfolioPerformance {
         val stddev = isqrt(variance)
         val sharpe = if (stddev == 0L) 0L else (mean * 1_000L) / stddev
         return Metric.approximate(sharpe, ApproxReason.INCOMPLETE_TRANSFERS, ApproxReason.COST_BASIS_AMBIGUITY)
+    }
+
+    /** Saturating subtract — clamps to Long.MIN/MAX instead of wrapping (KAN-102 L1). */
+    private fun saturatingSub(a: Long, b: Long): Long {
+        val r = a - b
+        return if ((a xor b) and (a xor r) < 0L) (if (a >= 0L) Long.MAX_VALUE else Long.MIN_VALUE) else r
+    }
+
+    /**
+     * [delta] / [base] in basis points, **overflow-safe + float-free** (KAN-102 L1): for bounded real
+     * inputs takes the exact `delta×10_000/base`; for huge (capped) inputs divides first to avoid the
+     * `×10_000` overflow, trading a little precision for safety. Sign preserved; base ≤ 0 → 0.
+     */
+    private fun ratioBps(delta: Long, base: Long): Long {
+        if (base <= 0L) return 0L
+        val ad = if (delta < 0L) -delta else delta
+        val sign = if (delta < 0L) -1L else 1L
+        val mag = if (ad <= Long.MAX_VALUE / 10_000L) ad * 10_000L / base else ad / (base / 10_000L).coerceAtLeast(1L)
+        return sign * mag
     }
 
     /** Integer square root (Newton's method) — keeps the std-dev float-free. */
