@@ -188,6 +188,7 @@ fun ShowSeedScreen(
                     checked = acknowledged,
                     onCheckedChange = { acknowledged = it },
                     label = stringResource(Res.string.onb_seedshow_ack),
+                    modifier = Modifier.testTag(OnboardingTestTags.SHOW_SEED_ACK),
                 )
             }
 

@@ -49,6 +49,7 @@ object OnboardingTestTags {
 
     // Screen 6 — Show seed (create)
     const val SHOW_SEED_REVEAL = "onb_show_seed_reveal"
+    const val SHOW_SEED_ACK = "onb_show_seed_ack" // "written it down" checkbox (added for KAN-28 device flow)
     const val SHOW_SEED_CONTINUE = "onb_show_seed_continue"
     const val SHOW_SEED_ERROR_DIALOG = "onb_show_seed_error_dialog"
 
