@@ -37,12 +37,17 @@ sealed interface WcSigningRequest {
     data class SignTypedDataV4(override val address: EvmAddress, val typedDataJson: String) : WcSigningRequest
 }
 
-/** A request bound to a live session. */
+/**
+ * A request bound to a live session, surfaced **raw** (method + JSON params). `eth_sendTransaction`
+ * cannot be fully typed here — it needs L3 completion (nonce/fees) in the app layer — so callers run
+ * [decode] and then either sign now or complete-then-sign (see [WcDecodedRequest]).
+ */
 data class WcSessionRequest(
     val requestId: Long,
     val topic: String,
     val chainId: String, // CAIP-2
-    val request: WcSigningRequest,
+    val method: String,
+    val params: String, // raw JSON-RPC params array
     val dapp: WcDappMetadata,
 )
 
