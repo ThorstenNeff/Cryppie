@@ -70,4 +70,7 @@ object OnboardingTestTags {
     const val BIOMETRIC_ENABLE = "onb_biometric_enable"
     const val BIOMETRIC_SKIP = "onb_biometric_skip"
     const val BIOMETRIC_UNAVAILABLE = "onb_biometric_unavailable"
+    const val BIOMETRIC_REG_ERROR = "onb_biometric_reg_error" // registration-failed inline hint
+    const val BIOMETRIC_PERMISSION_BANNER = "onb_biometric_permission_banner"
+    const val BIOMETRIC_LINK_DIALOG = "onb_biometric_link_dialog"
 }

@@ -22,6 +22,8 @@ dependencies {
     implementation(projects.app.shared)
 
     implementation(libs.androidx.activity.compose)
+    // FragmentActivity host required by the ONB-9 BiometricPrompt (KAN-33).
+    implementation(libs.androidx.fragment)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)

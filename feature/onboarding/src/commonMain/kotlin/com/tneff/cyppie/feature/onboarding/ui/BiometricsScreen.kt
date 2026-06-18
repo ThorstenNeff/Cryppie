@@ -144,7 +144,9 @@ fun BiometricsScreen(
                     style = CryptasaTheme.typography.helper,
                     color = colors.danger,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    modifier = Modifier
+                        .testTag(OnboardingTestTags.BIOMETRIC_REG_ERROR)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
                 )
                 BioPhase.PermissionRevoked -> CryptasaBanner(
                     title = stringResource(Res.string.onb_bio_perm_title),
@@ -152,6 +154,7 @@ fun BiometricsScreen(
                     tone = CryptasaBannerTone.Warning,
                     actionText = stringResource(Res.string.onb_bio_open_settings),
                     onActionClick = onOpenSettings,
+                    modifier = Modifier.testTag(OnboardingTestTags.BIOMETRIC_PERMISSION_BANNER),
                 )
                 else -> {}
             }
@@ -198,6 +201,7 @@ fun BiometricsScreen(
             confirmText = stringResource(Res.string.onb_bio_link_action),
             onConfirm = onFinish,
             icon = CryptasaIcons.Error,
+            modifier = Modifier.testTag(OnboardingTestTags.BIOMETRIC_LINK_DIALOG),
         )
     }
 }

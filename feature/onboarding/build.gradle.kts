@@ -45,6 +45,8 @@ kotlin {
             // L1 wallet (BIP-39 Mnemonic) + secure storage — only where they exist (no js/wasm; ADR-0008/0009).
             implementation(projects.wallet)
             implementation(projects.storage)
+            // BiometricPrompt UI for ONB-9 enrollment (Android only).
+            implementation(libs.androidx.biometric)
         }
         jvmMain.dependencies {
             implementation(projects.wallet)
