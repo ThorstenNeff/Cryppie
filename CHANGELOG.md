@@ -29,6 +29,15 @@ All notable changes to Cyppie are documented here. The format is based on
   write/send/seed/WC paths fold in later. M1 note: reads are address-based so a later web-read-only
   split is trivial (ADR-0016). Tested on **JVM and iOS** (Hardhat addresses, EIP-681, aggregation,
   missing-chain/degraded/per-token-isolation via a fake RPC).
+- **KAN-16 — ONB-7 Confirm-backup screen.** `ConfirmBackupScreen` (create flow): challenges 3 random
+  positions of the generated phrase (positions picked once per session in `OnboardingViewModel`); the
+  user re-enters those words. Only a *wrong* field is flagged (`onb_backup_err_wrong` — never reveals
+  the expected word); "confirm" is disabled until all challenge fields are filled and any flagged one
+  is corrected. From the 3rd failed attempt a `CryptasaBannerTone.Warning` banner offers "show
+  recovery phrase again" (→ ONB-6, identical phrase). Screenshots blocked (`SecureScreenEffect`), no
+  plaintext logging. Entries/positions/attempts live in the VM (survive navigation). Copy from
+  `composeResources` (`onb_backup_*`; added base `onb_backup_word_label` — needs i18n translation),
+  tokens only, testTags `onb_backup_*` (per-slot cells + error + continue).
 - **KAN-15 — ONB-6 Show-seed screen.** `ShowSeedScreen` (create flow): generates a fresh BIP-39 phrase
   once via the `:wallet` CSPRNG through the `MnemonicSupport` seam (held in `OnboardingViewModel`,
   identical across navigation). Words are **covered until tapped** (mask + eye affordance) behind a

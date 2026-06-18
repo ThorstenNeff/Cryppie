@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
+import com.tneff.cyppie.feature.onboarding.ui.ConfirmBackupScreen
 import com.tneff.cyppie.feature.onboarding.ui.ConfirmPasswordScreen
 import com.tneff.cyppie.feature.onboarding.ui.ImportSeedScreen
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
@@ -124,7 +125,19 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         )
                     }
                     entry<OnboardingNavKey.ConfirmBackup> {
-                        OnboardingPlaceholderScreen("Backup bestätigen", onBack = ::back)
+                        ConfirmBackupScreen(
+                            positions = viewModel.backupPositions,
+                            expectedWords = viewModel.seedWords,
+                            entries = viewModel.backupEntries,
+                            attempts = viewModel.backupAttempts,
+                            onEnsureChallenge = { viewModel.ensureBackupChallenge() },
+                            onWordChange = viewModel::setBackupEntry,
+                            onConfirm = { goTo(OnboardingNavKey.WalletSetup) },
+                            onFailure = { viewModel.recordBackupFailure() },
+                            // Re-show the (identical) seed = go back to ShowSeed, the previous entry.
+                            onReshowSeed = ::back,
+                            onBack = ::back,
+                        )
                     }
                     entry<OnboardingNavKey.ImportSeed> {
                         ImportSeedScreen(

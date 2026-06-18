@@ -87,6 +87,8 @@
   <!-- Screen 7 — Confirm backup -->
   <string name="onb_backup_title">Confirm your backup</string>
   <string name="onb_backup_subtitle">Enter the following words from your recovery phrase to confirm you\'ve saved it.</string>
+  <!-- KAN-16: added in base only; needs translation in ../Cryptasa/i18n (falls back to en meanwhile). -->
+  <string name="onb_backup_word_label">Word #%1$d</string>
   <string name="onb_backup_err_wrong">Word %1$d is incorrect.</string>
   <string name="onb_backup_err_incomplete">Please enter all highlighted words.</string>
   <string name="onb_backup_warn_title">Several failed attempts</string>

@@ -2,10 +2,13 @@ package com.tneff.cyppie.feature.onboarding
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
+import kotlin.random.Random
 
 /** Which onboarding branch the user picked on [OnboardingNavKey.ChoosePath]. */
 enum class OnboardingPath { Create, Import }
@@ -84,6 +87,32 @@ class OnboardingViewModel : ViewModel() {
         generateSeed(wordCount)
     }
 
+    /** Backup challenge (ONB-7): the seed positions (0-based) the user must re-enter. */
+    var backupPositions: List<Int> by mutableStateOf(emptyList())
+        private set
+
+    /** Words typed into the backup challenge, keyed by position; in-memory only. */
+    val backupEntries: SnapshotStateMap<Int, String> = mutableStateMapOf()
+
+    /** Wrong-attempt count (ONB-7); a hint banner appears from the 3rd failure. */
+    var backupAttempts: Int by mutableStateOf(0)
+        private set
+
+    /** Picks 3 distinct random positions once per session (challenge order is not a secret). */
+    fun ensureBackupChallenge() {
+        if (backupPositions.isEmpty() && seedGenerated) {
+            backupPositions = (0 until seedWordCount).shuffled(Random).take(3).sorted()
+        }
+    }
+
+    fun setBackupEntry(position: Int, word: String) {
+        backupEntries[position] = word
+    }
+
+    fun recordBackupFailure() {
+        backupAttempts++
+    }
+
     fun updateSeedWordCount(count: Int) {
         if (count == 12 || count == 24) seedWordCount = count
     }
@@ -108,5 +137,8 @@ class OnboardingViewModel : ViewModel() {
         for (i in seedWords.indices) seedWords[i] = ""
         seedGenerated = false
         seedGenerationFailed = false
+        backupPositions = emptyList()
+        backupEntries.clear()
+        backupAttempts = 0
     }
 }
