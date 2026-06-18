@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,8 +42,8 @@ import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_tagli
 import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_title
 import org.jetbrains.compose.resources.stringResource
 
-/** Brand wordmark shown in the hero. Proper noun from the design kit — non-localized. */
-private const val BRAND_WORDMARK = "Cryptasa"
+/** Brand wordmark shown in the hero — the product name (PO decision KAN-5), non-localized. */
+private const val BRAND_WORDMARK = "Cyppie"
 
 /** Welcome screen state (SPEC_ONBOARDING_SCREEN1 §KMP). */
 enum class WelcomeState { Content, StartError }
@@ -79,18 +81,20 @@ fun WelcomeScreen(
                     .background(Brush.linearGradient(CryptasaBrandGradient)),
                 contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.25f)),
-                            ),
-                        ),
-                )
+                // Local radial scrim behind the text only: white on the light-green gradient end is
+                // ~1.7:1, far below AA. A ~0.6 black scrim concentrated behind the centred text keeps
+                // the brand gradient bright at the edges while lifting the text to WCAG AA
+                // (white on the darkened mid-gradient ≈ 5:1+). Verified by the screen contrast test (KAN-9).
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(spacing.xs),
+                    modifier = Modifier
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent),
+                            ),
+                        )
+                        .padding(horizontal = spacing.xxl, vertical = spacing.xl),
                 ) {
                     Text(
                         text = BRAND_WORDMARK,
@@ -118,7 +122,11 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
-                    modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth().weight(1f),
+                    modifier = Modifier
+                        .widthIn(max = 480.dp)
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(spacing.md),
                 ) {
                     Text(
