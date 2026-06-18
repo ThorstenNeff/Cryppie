@@ -134,6 +134,7 @@ fun SetPasswordScreen(
                         if (revealed) Res.string.cd_password_hide else Res.string.cd_password_show,
                     ),
                     onTrailingIconClick = { revealed = !revealed },
+                    errorTestTag = OnboardingTestTags.PASSWORD_ERROR,
                     modifier = Modifier
                         .testTag(OnboardingTestTags.PASSWORD_INPUT)
                         .onFocusChanged { focus ->

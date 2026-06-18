@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -70,6 +71,7 @@ fun CryptasaTextField(
     trailingIcon: ImageVector? = null,
     trailingIconContentDescription: String? = null,
     onTrailingIconClick: (() -> Unit)? = null,
+    errorTestTag: String? = null,
 ) {
     val colors = CryptasaTheme.colors
     val radius = CryptasaTheme.radius
@@ -162,7 +164,8 @@ fun CryptasaTextField(
             Row(
                 modifier = Modifier
                     .padding(top = spacing.xxs)
-                    .then(if (isError) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier),
+                    .then(if (isError) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier)
+                    .then(if (isError && errorTestTag != null) Modifier.testTag(errorTestTag) else Modifier),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(spacing.xxs),
             ) {
