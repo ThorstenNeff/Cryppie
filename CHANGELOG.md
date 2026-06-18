@@ -89,6 +89,14 @@ All notable changes to Cyppie are documented here. The format is based on
   account/chain binding, signed-tx **recovers to the bound account**, insufficient-funds, ERC-20 decode,
   sign+zeroize+broadcast, node-reject); compiles iOS/Android. UI = separate story; the WalletConnect
   adapter (decode → `SendInput`, respond) folds in when `:walletconnect` merges.
+- **KAN-89 — App-shell launch routing (skeleton).** `AppRoot()` in `:app:shared` now drives the app
+  start: `walletExists()` → **onboarding** (no wallet) vs **unlock** (returning user) → hand off to
+  **Home**; `App()` renders `AppRoot()` instead of `OnboardingRoot()`. `OnboardingRoot` gained an
+  `onComplete` callback (Biometrics finish zeroizes secrets, then hands off). Decision-independent
+  skeleton: `walletExists` is a placeholder `false`, the unlock screen is a stub (real UX = KAN-92),
+  and Home is a placeholder until the live `WalletRepository` (unlocked `SeedSource` + RPC config) is
+  wired — which lands with the shared file-backed `CiphertextStore` (KAN-95, then `WalletStore` dedupe)
+  behind a non-web `expect/actual` seam (web = onboarding/read-only). Compiles on every target incl. web.
 - **KAN-82 — Reset wipes the biometric enroll (security, M1).** Unified the biometric-unlock Keystore
   alias into one shared `SEED_UNLOCK_ALIAS`: `SeedVault.store()`/`clear()` and the Android enroll
   (`AndroidSecureKeyStore.enableBiometricUnlock`) now use the **same** alias, so a wallet reset/
