@@ -289,6 +289,12 @@ All notable changes to Cyppie are documented here. The format is based on
   legacy colour palette and no longer define a competing theme.
 
 ### Fixed
+- **KAN-94 — Welcome adaptive (landscape / Medium / Expanded).** `WelcomeScreen` now branches on the
+  window size class: tall portrait keeps the brand hero / bottom-sheet design, while **short height
+  (landscape) or Medium/Expanded width** switch to a single centred, vertically-scrolling, ≤480-dp
+  column — so the body no longer overlaps the "get started" CTA on short windows and content stays
+  clamped/centred on wide ones. Hero/text/actions extracted to shared composables; both layouts scroll
+  the body. No copy/token changes.
 - **KAN-85 / KAN-84 — Onboarding QA + security fixes (pre-merge, uniform on `develop`).**
   - **FLAG_SECURE (KAN-84 + A2):** ref-counted `SecureScreenEffect` survives secure→secure nav
     (no dispose-order race); applied uniformly to the password **and** seed screens (ONB-3/4/5/6/7).

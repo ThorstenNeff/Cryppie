@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_err_s
 import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_import_link
 import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_tagline
 import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_title
+import androidx.window.core.layout.WindowSizeClass
 import org.jetbrains.compose.resources.stringResource
 
 /** Brand wordmark shown in the hero — the product name (PO decision KAN-5), non-localized. */
@@ -71,109 +73,64 @@ fun WelcomeScreen(
     val radius = CryptasaTheme.radius
     val typography = CryptasaTheme.typography
 
-    Box(modifier = modifier.fillMaxSize().background(colors.surface)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Hero — brand gradient + a11y scrim + wordmark/tagline.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.46f)
-                    // KAN-85 (landscape): cap the hero so the scrollable sheet keeps room for its
-                    // actions on short/landscape windows (body already scrolls + content capped 480).
-                    .heightIn(max = 320.dp)
-                    .background(Brush.linearGradient(CryptasaBrandGradient)),
-                contentAlignment = Alignment.Center,
-            ) {
-                // a11y scrim: white on the bright-green upper gradient is only ~1.7:1. A full-width
-                // dark band across the hero's vertical middle — where the centred wordmark+tagline
-                // sit — lifts both to WCAG AA (white on the ~0.66 black-over-gradient ≈ 4.7–6.5:1:
-                // wordmark ≥3:1 large, tagline ≥4.5:1) while keeping the gradient bright top/bottom.
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.0f to Color.Transparent,
-                                0.30f to Color.Black.copy(alpha = 0.66f),
-                                0.70f to Color.Black.copy(alpha = 0.66f),
-                                1.0f to Color.Transparent,
-                            ),
-                        ),
-                )
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
-                    modifier = Modifier.padding(horizontal = spacing.xl),
-                ) {
-                    Text(
-                        text = BRAND_WORDMARK,
-                        style = typography.titleLarge,
-                        color = colors.onPrimary,
-                        modifier = Modifier.semantics { contentDescription = BRAND_WORDMARK },
-                    )
-                    Text(
-                        text = stringResource(Res.string.onb_welcome_tagline),
-                        style = typography.body,
-                        color = colors.onPrimary,
-                    )
-                }
-            }
+    val windowSize = currentWindowAdaptiveInfo().windowSizeClass
+    // KAN-94: short height (landscape phone) or Medium/Expanded width → one centred, scrollable,
+    // ≤480-wide column (no body/actions overlap, width-clamped). Tall portrait keeps the hero/sheet
+    // design. Both share the hero + actions; both scroll the body so it never collides with the CTA.
+    val centeredLayout = !windowSize.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) ||
+        windowSize.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
-            // Bottom sheet — surface with rounded top, slightly overlapping the hero.
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.54f)
-                    .offset(y = (-24).dp)
-                    .clip(RoundedCornerShape(topStart = radius.xxl, topEnd = radius.xxl))
-                    .background(colors.surface)
-                    .padding(horizontal = spacing.xl, vertical = spacing.xl),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
+    Box(modifier = modifier.fillMaxSize().background(colors.surface)) {
+        if (centeredLayout) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                 Column(
                     modifier = Modifier
                         .widthIn(max = 480.dp)
                         .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(spacing.md),
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = spacing.xl, vertical = spacing.xxl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(spacing.lg),
                 ) {
-                    Text(
-                        text = stringResource(Res.string.onb_welcome_title),
-                        style = typography.titleLarge,
-                        color = colors.onSurface,
+                    WelcomeHero(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 160.dp, max = 280.dp)
+                            .clip(RoundedCornerShape(radius.xxl)),
                     )
-                    Text(
-                        text = stringResource(Res.string.onb_welcome_body),
-                        style = typography.body,
-                        color = colors.onSurfaceVariant,
-                    )
+                    WelcomeText()
+                    WelcomeActions(onStart = onStart, onImport = onImport, modifier = Modifier.fillMaxWidth())
                 }
-
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                WelcomeHero(modifier = Modifier.fillMaxWidth().weight(0.46f).heightIn(max = 320.dp))
+                // Bottom sheet — surface with rounded top, slightly overlapping the hero.
                 Column(
-                    modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(spacing.sm),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.54f)
+                        .offset(y = (-24).dp)
+                        .clip(RoundedCornerShape(topStart = radius.xxl, topEnd = radius.xxl))
+                        .background(colors.surface)
+                        .padding(horizontal = spacing.xl, vertical = spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    CryptasaButton(
-                        text = stringResource(Res.string.onb_welcome_cta),
-                        onClick = onStart,
-                        modifier = Modifier.testTag(OnboardingTestTags.WELCOME_START),
-                    )
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .clickableIcon(onClick = onImport)
-                            .testTag(OnboardingTestTags.WELCOME_IMPORT),
-                        contentAlignment = Alignment.Center,
+                            .widthIn(max = 480.dp)
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(spacing.md),
                     ) {
-                        Text(
-                            text = stringResource(Res.string.onb_welcome_import_link),
-                            style = typography.label,
-                            color = colors.primary,
-                            textAlign = TextAlign.Center,
-                        )
+                        WelcomeText()
                     }
+                    WelcomeActions(
+                        onStart = onStart,
+                        onImport = onImport,
+                        modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth(),
+                    )
                 }
             }
         }
@@ -186,6 +143,98 @@ fun WelcomeScreen(
                 confirmText = stringResource(Res.string.common_close),
                 onConfirm = onCloseError,
                 modifier = Modifier.testTag(OnboardingTestTags.WELCOME_START_ERROR_DIALOG),
+            )
+        }
+    }
+}
+
+/** Brand hero: green→blue gradient + a11y dark mid-band scrim (WCAG AA) + wordmark/tagline. */
+@Composable
+private fun WelcomeHero(modifier: Modifier = Modifier) {
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+    val typography = CryptasaTheme.typography
+    Box(
+        modifier = modifier.background(Brush.linearGradient(CryptasaBrandGradient)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        0.0f to Color.Transparent,
+                        0.30f to Color.Black.copy(alpha = 0.66f),
+                        0.70f to Color.Black.copy(alpha = 0.66f),
+                        1.0f to Color.Transparent,
+                    ),
+                ),
+        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.xs),
+            modifier = Modifier.padding(horizontal = spacing.xl),
+        ) {
+            Text(
+                text = BRAND_WORDMARK,
+                style = typography.titleLarge,
+                color = colors.onPrimary,
+                modifier = Modifier.semantics { contentDescription = BRAND_WORDMARK },
+            )
+            Text(
+                text = stringResource(Res.string.onb_welcome_tagline),
+                style = typography.body,
+                color = colors.onPrimary,
+            )
+        }
+    }
+}
+
+/** Headline + body copy. */
+@Composable
+private fun WelcomeText() {
+    val colors = CryptasaTheme.colors
+    val typography = CryptasaTheme.typography
+    Text(
+        text = stringResource(Res.string.onb_welcome_title),
+        style = typography.titleLarge,
+        color = colors.onSurface,
+    )
+    Text(
+        text = stringResource(Res.string.onb_welcome_body),
+        style = typography.body,
+        color = colors.onSurfaceVariant,
+    )
+}
+
+/** Primary "get started" CTA + import text-link. */
+@Composable
+private fun WelcomeActions(onStart: () -> Unit, onImport: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = CryptasaTheme.colors
+    val typography = CryptasaTheme.typography
+    val spacing = CryptasaTheme.spacing
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(spacing.sm),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CryptasaButton(
+            text = stringResource(Res.string.onb_welcome_cta),
+            onClick = onStart,
+            modifier = Modifier.fillMaxWidth().testTag(OnboardingTestTags.WELCOME_START),
+        )
+        Box(
+            modifier = Modifier
+                .heightIn(min = 48.dp)
+                .clickableIcon(onClick = onImport)
+                .testTag(OnboardingTestTags.WELCOME_IMPORT),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(Res.string.onb_welcome_import_link),
+                style = typography.label,
+                color = colors.primary,
+                textAlign = TextAlign.Center,
             )
         }
     }
