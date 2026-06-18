@@ -29,6 +29,17 @@ All notable changes to Cyppie are documented here. The format is based on
   write/send/seed/WC paths fold in later. M1 note: reads are address-based so a later web-read-only
   split is trivial (ADR-0016). Tested on **JVM and iOS** (Hardhat addresses, EIP-681, aggregation,
   missing-chain/degraded/per-token-isolation via a fake RPC).
+- **KAN-17 — ONB-8 Wallet-setup screen.** `WalletSetupScreen`: on entry, auto-encrypts the seed under
+  the app password and persists it (not cancelable, no back). Goes through a new `WalletStore`
+  `expect`/`actual` **seam** to `:storage` `SeedVault` (PBKDF2-HMAC-SHA512 → AES-GCM, ADR-0009) —
+  android/ios/jvm only (js/wasm `Unsupported`, Web read-only). The 64-byte BIP-39 seed
+  (`Mnemonic.toSeed()`) is the only thing stored — no account model / derived keys (PRD-02). Backing
+  is a dependency-free, app-private, **non-synced** file (Android `filesDir`; iOS Application Support,
+  **excluded from iCloud backup**; Desktop `~/.cyppie`). Success → "wallet ready" → zeroizes the
+  in-memory mnemonic → auto-advances to ONB-9; failures map to the spec frames — encryption / keystore
+  → blocking `CryptasaDialog` (retry / cancel-resets-flow), storage-full → danger `CryptasaBanner`
+  (retry). `ProgressRing`, live-region loading announce, copy from `composeResources` (`onb_setup_*`),
+  testTags `onb_setup_*`. (Android backup-exclusion rules + iOS `lock` icon = follow-ups.)
 - **KAN-16 — ONB-7 Confirm-backup screen.** `ConfirmBackupScreen` (create flow): challenges 3 random
   positions of the generated phrase (positions picked once per session in `OnboardingViewModel`); the
   user re-enters those words. Only a *wrong* field is flagged (`onb_backup_err_wrong` — never reveals

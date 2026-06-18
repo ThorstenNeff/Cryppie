@@ -19,6 +19,7 @@ import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
 import com.tneff.cyppie.feature.onboarding.ui.PathScreen
 import com.tneff.cyppie.feature.onboarding.ui.SetPasswordScreen
 import com.tneff.cyppie.feature.onboarding.ui.ShowSeedScreen
+import com.tneff.cyppie.feature.onboarding.ui.WalletSetupScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeState
 import org.koin.compose.viewmodel.koinViewModel
@@ -150,7 +151,18 @@ fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
                         )
                     }
                     entry<OnboardingNavKey.WalletSetup> {
-                        OnboardingPlaceholderScreen("Wallet wird eingerichtet", onBack = ::back)
+                        WalletSetupScreen(
+                            words = viewModel.seedWords.take(viewModel.seedWordCount),
+                            password = viewModel.password,
+                            onSuccess = { goTo(OnboardingNavKey.Biometrics) },
+                            onSeedPersisted = { viewModel.clearSeedMaterial() },
+                            // Cancel after a failure: nothing was persisted — reset the flow to the start.
+                            onCancel = {
+                                viewModel.reset()
+                                backStack.clear()
+                                backStack.add(OnboardingNavKey.Welcome)
+                            },
+                        )
                     }
                     entry<OnboardingNavKey.Biometrics> {
                         OnboardingPlaceholderScreen("Biometrie aktivieren", onBack = ::back)

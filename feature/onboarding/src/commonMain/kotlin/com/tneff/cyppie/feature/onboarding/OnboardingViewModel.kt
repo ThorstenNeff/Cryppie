@@ -113,6 +113,16 @@ class OnboardingViewModel : ViewModel() {
         backupAttempts++
     }
 
+    /**
+     * Zeroizes the in-memory mnemonic after it has been encrypted+persisted (ONB-8). The app
+     * password is kept for ONB-9 biometric enrollment and cleared at the end of the flow / [reset].
+     */
+    fun clearSeedMaterial() {
+        for (i in seedWords.indices) seedWords[i] = ""
+        backupEntries.clear()
+        backupPositions = emptyList()
+    }
+
     fun updateSeedWordCount(count: Int) {
         if (count == 12 || count == 24) seedWordCount = count
     }
