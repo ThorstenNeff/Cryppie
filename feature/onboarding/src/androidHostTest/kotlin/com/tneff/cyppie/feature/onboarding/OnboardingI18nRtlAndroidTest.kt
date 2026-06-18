@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ExperimentalTestApi
+// Backs the `DeviceConfigurationOverride.LayoutDirection(...)` factory below — NOT the unit enum
+// (that one is imported aliased as UiLayoutDirection). Required; removing it breaks compilation.
 import androidx.compose.ui.test.LayoutDirection
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
