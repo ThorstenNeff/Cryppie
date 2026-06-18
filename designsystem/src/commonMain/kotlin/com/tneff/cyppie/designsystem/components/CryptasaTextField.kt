@@ -2,6 +2,7 @@ package com.tneff.cyppie.designsystem.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -71,8 +74,10 @@ fun CryptasaTextField(
     trailingIcon: ImageVector? = null,
     trailingIconContentDescription: String? = null,
     onTrailingIconClick: (() -> Unit)? = null,
+    trailingIconTestTag: String? = null,
     errorTestTag: String? = null,
 ) {
+    val focusRequester = remember { FocusRequester() }
     val colors = CryptasaTheme.colors
     val radius = CryptasaTheme.radius
     val spacing = CryptasaTheme.spacing
@@ -103,6 +108,17 @@ fun CryptasaTextField(
                 .clip(shape)
                 .background(boxBackground)
                 .border(borderWidth, outlineColor, shape)
+                // Whole field area focuses the input — no dead zone around the text (KAN-12 device fix).
+                .then(
+                    if (enabled) {
+                        Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { focusRequester.requestFocus() }
+                    } else {
+                        Modifier
+                    },
+                )
                 .padding(horizontal = spacing.md)
                 .then(if (errorMessage != null) Modifier.semantics { error(errorMessage) } else Modifier),
             contentAlignment = Alignment.CenterStart,
@@ -112,6 +128,7 @@ fun CryptasaTextField(
                     BasicTextField(
                         value = value,
                         onValueChange = onValueChange,
+                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                         enabled = enabled,
                         singleLine = singleLine,
                         textStyle = CryptasaTheme.typography.body.copy(color = valueColor),
@@ -147,6 +164,9 @@ fun CryptasaTextField(
                         modifier = Modifier
                             .padding(start = spacing.xs)
                             .size(24.dp)
+                            .then(
+                                if (trailingIconTestTag != null) Modifier.testTag(trailingIconTestTag) else Modifier,
+                            )
                             .then(
                                 if (onTrailingIconClick != null && enabled) {
                                     Modifier.clickableIcon(onClick = onTrailingIconClick)

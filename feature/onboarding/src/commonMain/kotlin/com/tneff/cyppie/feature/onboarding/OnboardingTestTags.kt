@@ -26,12 +26,14 @@ object OnboardingTestTags {
 
     // Screen 3 — Set password
     const val PASSWORD_INPUT = "onb_password_input"
+    const val PASSWORD_REVEAL = "onb_password_reveal" // eye toggle (added for KAN-22 device flow)
     const val PASSWORD_STRENGTH = "onb_password_strength"
     const val PASSWORD_CONTINUE = "onb_password_continue"
     const val PASSWORD_ERROR = "onb_password_error"
 
     // Screen 4 — Confirm password
     const val CONFIRM_INPUT = "onb_confirm_input"
+    const val CONFIRM_REVEAL = "onb_confirm_reveal" // eye toggle (added for KAN-24 device flow)
     const val CONFIRM_CONTINUE = "onb_confirm_continue"
     const val CONFIRM_ERROR = "onb_confirm_error"
 

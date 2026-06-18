@@ -12,7 +12,8 @@
         <!-- No screenOrientation lock; resizable for Multi-Window/Foldables (ADR-0012). -->
         <activity
             android:exported="true"
-            android:name=".MainActivity">
+            android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
