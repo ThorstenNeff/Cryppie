@@ -56,6 +56,8 @@ compose-components-resources = { module = "org.jetbrains.compose.components:comp
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 # Compose UI testing (ADR-0011/0013) — runComposeUiTest + onNodeWithTag (multiplatform)
 compose-uiTest = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeMultiplatform" }
+# JUnit4 Compose rule + StateRestorationTester (saved-instance restore) — ADR-0013 (input-bearing screens)
+compose-uiTestJUnit4 = { module = "org.jetbrains.compose.ui:ui-test-junit4", version.ref = "composeMultiplatform" }
 # Android host (JVM) Compose UI & config-change tests via Robolectric (ADR-0013)
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-testCore" }

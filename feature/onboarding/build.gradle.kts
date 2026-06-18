@@ -91,6 +91,7 @@ kotlin {
         // (testTagsAsResourceId) on the Android renderer for KAN-10.
         getByName("androidHostTest").dependencies {
             implementation(libs.compose.uiTest)
+            implementation(libs.compose.uiTestJUnit4)
             implementation(libs.robolectric)
             implementation(libs.androidx.test.core)
             implementation(libs.androidx.activity.compose)
