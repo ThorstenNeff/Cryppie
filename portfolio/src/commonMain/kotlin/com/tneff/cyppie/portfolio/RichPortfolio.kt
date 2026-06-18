@@ -17,16 +17,22 @@ import kotlin.time.Instant
 @OptIn(ExperimentalTime::class)
 object RichPortfolio {
 
+    /** A fetched history + whether the page cap was hit (more transfers exist — [truncated]). */
+    data class AccountHistory(val transfers: List<AssetTransfer>, val truncated: Boolean)
+
     /**
      * Full transfer history for [address] — **both directions, all pages** (L2: a single page would
      * silently truncate cost-basis / series). [fetchTransfers] returns one page; this loops `pageKey`.
+     * If [maxPages] is hit while pages remain, [AccountHistory.truncated] is set so callers can flag the
+     * result `INCOMPLETE_TRANSFERS` (no silent truncation for whales).
      */
     suspend fun fullHistory(
         address: EvmAddress,
         fetchTransfers: suspend (address: EvmAddress, direction: TransferDirection, pageKey: String?) -> TransferPage,
         maxPages: Int = 50,
-    ): List<AssetTransfer> {
+    ): AccountHistory {
         val all = mutableListOf<AssetTransfer>()
+        var truncated = false
         for (direction in TransferDirection.entries) {
             var pageKey: String? = null
             var pages = 0
@@ -34,9 +40,14 @@ object RichPortfolio {
                 val page = fetchTransfers(address, direction, pageKey)
                 all += page.transfers
                 pageKey = page.nextPageKey
-            } while (pageKey != null && ++pages < maxPages)
+                pages++
+                if (pageKey != null && pages >= maxPages) {
+                    truncated = true // more pages exist but the cap was hit
+                    break
+                }
+            } while (pageKey != null)
         }
-        return all
+        return AccountHistory(all, truncated)
     }
 
     /** The price at-or-before [epoch] in a price [history] (nearest prior; first point if all later). */
@@ -50,18 +61,28 @@ object RichPortfolio {
         return chosen ?: sorted.first().price
     }
 
-    /** FIFO cost-basis for [token] held by [account], pricing each transfer at its block time. */
+    /**
+     * FIFO cost-basis for [token] held by [account], pricing each transfer at its block time. Pass
+     * [truncated] = `AccountHistory.truncated` so a page-capped history forces `INCOMPLETE_TRANSFERS`
+     * (the result is then visibly an approximation, never silently truncated — L1).
+     */
     fun tokenCostBasis(
         token: PortfolioToken,
         account: EvmAddress,
         transfers: List<AssetTransfer>,
         history: List<PricePoint>,
+        truncated: Boolean = false,
     ): CostBasisEngine.CostBasis {
         val fallbackCurrency = history.firstOrNull()?.price?.currency ?: "USD"
         val events = tokenEvents(transfers, token, account).map { (epoch, received, amount) ->
             FifoEvent(received, amount, priceAt(history, epoch) ?: Money.zero(fallbackCurrency, Valuation.PRICE_SCALE))
         }
-        return CostBasisEngine.fifo(token.decimals, events)
+        val result = CostBasisEngine.fifo(token.decimals, events)
+        return if (truncated && ApproxReason.INCOMPLETE_TRANSFERS !in result.reasons) {
+            result.copy(reasons = result.reasons + ApproxReason.INCOMPLETE_TRANSFERS)
+        } else {
+            result
+        }
     }
 
     /** Value-over-time series for [token] held by [account] across the price [history]. */

@@ -9,6 +9,8 @@ import com.tneff.cyppie.rpc.TransferPage
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -44,7 +46,23 @@ class RichPortfolioTest {
             }
         }
         val all = RichPortfolio.fullHistory(account, fetch)
-        assertEquals(3, all.size) // 1 sent + 2 received pages — none truncated
+        assertEquals(3, all.transfers.size) // 1 sent + 2 received pages — none truncated
+        assertFalse(all.truncated)
+    }
+
+    @Test
+    fun fullHistoryFlagsTruncationAtPageCapAndForcesIncomplete() = runTest {
+        // fetch always returns a non-null pageKey → the page cap is hit (whale wallet).
+        val fetch: suspend (EvmAddress, TransferDirection, String?) -> TransferPage =
+            { _, _, _ -> TransferPage(listOf(transfer(100, other, account, eth(1))), "MORE") }
+        val history = RichPortfolio.fullHistory(account, fetch, maxPages = 3)
+        assertTrue(history.truncated)
+
+        // Even with no over-disposal, a truncated history must read as approximate (no silent cut).
+        val cb = RichPortfolio.tokenCostBasis(
+            weth, account, history.transfers, listOf(PricePoint(50, usd(100))), truncated = history.truncated,
+        )
+        assertTrue(ApproxReason.INCOMPLETE_TRANSFERS in cb.reasons)
     }
 
     @Test

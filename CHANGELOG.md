@@ -37,8 +37,9 @@ All notable changes to Cyppie are documented here. The format is based on
   `kotlin.time.Instant` (Kotlin 2.4, `@OptIn(ExperimentalTime)`), so **no new dependency** and **no
   dependency-verification entry** (resolves the ADR-0018 gate without adding kotlinx-datetime). `RichPortfolio`
   E2E assembler: pulls the **full** transfer history (both directions, all `pageKey` pages — L2) and
-  prices each transfer at its block time → FIFO cost-basis + value series. 26 `:portfolio` + 14 `:rpc`
-  tests; compiles incl. web/iOS.
+  prices each transfer at its block time → FIFO cost-basis + value series; a page-cap hit sets
+  `AccountHistory.truncated` → forces `INCOMPLETE_TRANSFERS` (no silent truncation for whale wallets —
+  L1). 27 `:portfolio` + 14 `:rpc` tests; compiles incl. web/iOS.
 - **KAN-100 — Portfolio assembler + performance metrics (PRD-03, Slice 4 — part 1).** `PortfolioService`
   end-to-end assembler: fetch ERC-20 (Alchemy Data) + native (L3) across accounts × chains → price
   (native ETH via its chain's audited WETH) → `PortfolioValuator` (deps injected as functions / the
