@@ -7,7 +7,19 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
-- **KAN-13 — ONB-4 Confirm-password screen.** `ConfirmPasswordScreen(value, password, onValueChange,
+- **KAN-75 — Wallet-Core: secure seed storage / KDF (ADR-0009), core + seam.** New non-web
+  `:storage` module (android · iosArm64 · iosSimulatorArm64 · jvm; depends on `:wallet`):
+  - `SeedVault(CiphertextStore, SecureKeyStore)` — `store(seed, password)` / `unlock(password):
+    SeedSource` / `clear()`. Per-wallet 16-byte salt → **PBKDF2-HMAC-SHA512** (210k iters, OWASP-aligned)
+    derives a 256-bit KEK → **AES-GCM** encrypts the seed (random IV prepended, auth tag) via
+    cryptography-kotlin (`provider-optimal`: JDK on jvm/android, Apple on iOS). Versioned record
+    header (v1; Argon2id = future v2). No clear-seed persisted; KEK/password bytes zeroized; the
+    decrypted seed lives only inside L1's `SeedSource.withSeed`.
+  - `CiphertextStore` (persistence-agnostic seam + in-memory impl) and `SecureKeyStore` (biometric/
+    hardware convenience seam for ONB-9; `NoopSecureKeyStore` = password-primary default). Real
+    Android Keystore / iOS Keychain `actual`s are the next step within KAN-75.
+  - Audit-gate tests on **JVM and iOS**: round-trip, wrong-password & tampered-ciphertext →
+    `InvalidPassword`, bad version → `CorruptData`, not-initialized, fresh salt/IV per store. `ConfirmPasswordScreen(value, password, onValueChange,
   onNext, onBack)`: masked re-entry field (eye toggle) compared live against the ONB-3 password via
   `validateConfirmPassword` (empty / mismatch); "continue" stays visible but disabled until they
   match, errors surface on focus-loss and clear when fixed. After match it branches by the chosen
