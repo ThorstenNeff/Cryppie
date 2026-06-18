@@ -11,7 +11,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
-import com.tneff.cyppie.feature.onboarding.ui.WelcomePlaceholderScreen
+import com.tneff.cyppie.feature.onboarding.ui.WelcomeScreen
+import com.tneff.cyppie.feature.onboarding.ui.WelcomeState
 
 /**
  * Public entry point of the onboarding feature (replaces `AuthRoot` as the app's start, ADR-0004).
@@ -41,9 +42,16 @@ fun OnboardingRoot() {
                 onBack = { back() },
                 entryProvider = entryProvider {
                     entry<OnboardingNavKey.Welcome> {
-                        WelcomePlaceholderScreen(
+                        val welcomeState = remember {
+                            if (verifyAppIntegrity()) WelcomeState.Content else WelcomeState.StartError
+                        }
+                        WelcomeScreen(
+                            state = welcomeState,
                             onStart = { goTo(OnboardingNavKey.ChoosePath) },
                             onImport = { goTo(OnboardingNavKey.ImportSeed) },
+                            // Corrupted install: blocking dialog stays up; real close/exit is
+                            // platform-specific and lands with the integrity check (ADR-0009).
+                            onCloseError = {},
                         )
                     }
                     entry<OnboardingNavKey.ChoosePath> {

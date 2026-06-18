@@ -7,6 +7,14 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-5 — ONB-1 Welcome screen.** Real `WelcomeScreen(onStart, onImport, state)` (replaces the
+  placeholder): brand hero with the fixed green→blue `CryptasaBrandGradient` (new design-system
+  token) + a black 0→25 % scrim so the white hero text keeps WCAG AA, over a `surface` bottom sheet
+  (rounded top) with headline/body/CTA/import-link. All copy from `composeResources`
+  (`onb_welcome_*`, `common_close`), all values from tokens; actions tagged `WELCOME_START`/
+  `WELCOME_IMPORT`; nav start→ChoosePath, import→ImportSeed. Launch integrity check via
+  `expect/actual verifyAppIntegrity()` (stub `true` until ADR-0009); on failure a blocking,
+  non-dismissable `CryptasaDialog` (`WELCOME_START_ERROR_DIALOG`). Content capped to 480 dp (adaptive).
 - **KAN-4 — Onboarding foundations / design system.**
   - New `:designsystem` module: central `CryptasaTheme` with light/dark semantic colour, spacing,
     radius and typography tokens (CompositionLocals; System/Light/Dark mode); foundation components
