@@ -98,15 +98,13 @@ class WcagContrastTest {
         Pair("danger/dangerSurface", { it.danger }, { it.dangerSurface }, 4.5),
     )
 
-    // Status pairs in the current KAN-4 palette that fall below WCAG-AA text (4.5:1). This is a
-    // *baseline of known design findings* (flagged to UI/UX on KAN-7), NOT an acceptance: the test
-    // passes only while the failing set matches exactly. A NEW sub-AA pair (regression) OR a UI/UX
-    // fix both flip it red — prompting a token review and a baseline update. Measured 2026-06-17.
+    // Status pairs that fall below the WCAG-AA *text* bar (4.5:1). This is a baseline, NOT an
+    // acceptance: a NEW sub-AA pair (regression) OR a token fix both flip it red, prompting review.
+    // After KAN-64 (2026-06-18) the three text pairs are AA-conformant; only `warning/warningSurface`
+    // remains below 4.5 — but it is an **icon-tint / non-text** pair whose bar is 3:1, and it now
+    // measures 3.7:1 (≥ 3:1 ✓). Value confirmed by the test agent (KAN-67).
     private val knownSubAaStatusPairs = setOf(
-        "Light:onSuccess/success",       // 2.65:1
-        "Light:success/successSurface",  // 2.43:1
-        "Light:warning/warningSurface",  // 1.56:1
-        "Dark:onDanger/danger",          // 3.05:1
+        "Light:warning/warningSurface",  // 3.7:1 — icon tint, 3:1 bar (below 4.5 text by design)
     )
 
     @Test

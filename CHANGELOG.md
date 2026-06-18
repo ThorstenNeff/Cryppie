@@ -50,5 +50,6 @@ All notable changes to Cyppie are documented here. The format is based on
   `#12B82C`→`#0C7322` (white/success 6.0:1, success/successSurface 5.5:1) and `warning`
   `#FFBD00`→`#A87600` (icon-tint warning/warningSurface 3.7:1 ≥3:1, black/warning 5.3:1); Dark
   `onDanger` `#FFFFFF`→`#2A1416` (onDanger/danger 5.7:1). Only the three failing values changed;
-  conforming pairs untouched. The `WcagContrastTest` baseline (`knownSubAaStatusPairs`) update
-  follows as the test-agent subtask (KAN-67).
+  conforming pairs untouched. The `WcagContrastTest` baseline (`knownSubAaStatusPairs`) was narrowed
+  to the single remaining icon-tint pair `Light:warning/warningSurface` (3.7:1, 3:1 bar) so
+  `:designsystem:jvmTest` stays green; value confirmed by the test agent (KAN-67).
