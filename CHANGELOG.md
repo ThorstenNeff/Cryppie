@@ -16,8 +16,13 @@ All notable changes to Cyppie are documented here. The format is based on
     header (v1; Argon2id = future v2). No clear-seed persisted; KEK/password bytes zeroized; the
     decrypted seed lives only inside L1's `SeedSource.withSeed`.
   - `CiphertextStore` (persistence-agnostic seam + in-memory impl) and `SecureKeyStore` (biometric/
-    hardware convenience seam for ONB-9; `NoopSecureKeyStore` = password-primary default). Real
-    Android Keystore / iOS Keychain `actual`s are the next step within KAN-75.
+    hardware convenience seam; `NoopSecureKeyStore` = password-primary default).
+  - Platform `SecureKeyStore`s: **iOS `KeychainSecureKeyStore`** — self-contained, generic-password
+    item under `SecAccessControl(.biometryCurrentSet)` so the system drives Face/Touch ID on read,
+    no app UI. **Android `AndroidSecureKeyStore(context)`** — AES key in AndroidKeyStore
+    (`setUserAuthenticationRequired`), wrap/unwrap + wrapped-secret persistence; `retrieve`/`protect`
+    take an app-supplied biometric-authenticated `Cipher` (`CryptoObject`), so the `BiometricPrompt`
+    UI stays in ONB-9 (Dev-1) — documented cross-agent seam.
   - Audit-gate tests on **JVM and iOS**: round-trip, wrong-password & tampered-ciphertext →
     `InvalidPassword`, bad version → `CorruptData`, not-initialized, fresh salt/IV per store. `ConfirmPasswordScreen(value, password, onValueChange,
   onNext, onBack)`: masked re-entry field (eye toggle) compared live against the ONB-3 password via
