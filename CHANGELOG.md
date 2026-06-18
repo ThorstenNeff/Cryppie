@@ -43,3 +43,12 @@ All notable changes to Cyppie are documented here. The format is based on
 - Centralised the `CryptasaTheme` out of `:feature:auth` into `:designsystem` (ADR-0004). The KAN-1
   example login/registration screens remain (deferred to PRD-08) but keep only a clearly-marked
   legacy colour palette and no longer define a competing theme.
+
+### Fixed
+- **KAN-64 / KAN-66 — Status-token WCAG-AA contrast.** Updated the sub-AA status colours in
+  `:designsystem` `Color.kt` to the KAN-64 design delivery (HANDOFF §2.4): Light `success`
+  `#12B82C`→`#0C7322` (white/success 6.0:1, success/successSurface 5.5:1) and `warning`
+  `#FFBD00`→`#A87600` (icon-tint warning/warningSurface 3.7:1 ≥3:1, black/warning 5.3:1); Dark
+  `onDanger` `#FFFFFF`→`#2A1416` (onDanger/danger 5.7:1). Only the three failing values changed;
+  conforming pairs untouched. The `WcagContrastTest` baseline (`knownSubAaStatusPairs`) update
+  follows as the test-agent subtask (KAN-67).
