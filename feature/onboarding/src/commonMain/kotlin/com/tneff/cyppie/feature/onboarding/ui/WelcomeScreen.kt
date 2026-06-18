@@ -78,6 +78,9 @@ fun WelcomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(0.46f)
+                    // KAN-85 (landscape): cap the hero so the scrollable sheet keeps room for its
+                    // actions on short/landscape windows (body already scrolls + content capped 480).
+                    .heightIn(max = 320.dp)
                     .background(Brush.linearGradient(CryptasaBrandGradient)),
                 contentAlignment = Alignment.Center,
             ) {

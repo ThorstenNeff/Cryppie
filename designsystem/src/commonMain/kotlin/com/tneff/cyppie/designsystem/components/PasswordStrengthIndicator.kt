@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 
 /** Password strength level. The [score] (filled segments) and accent are derived per level. */
-enum class PasswordStrength(val score: Int) { None(0), Weak(1), Medium(2), Strong(3) }
+enum class PasswordStrength(val score: Int) { None(0), Weak(1), Medium(2), Strong(4) }
 
 /**
  * Password strength indicator (HANDOFF §3 inline patterns; used by ONB-3). Three segments fill by
@@ -32,7 +32,7 @@ fun PasswordStrengthIndicator(
 ) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
-    val segments = 3
+    val segments = 4 // KAN-85/A5: 4-segment bar (Weak 1 · Medium 2 · Strong 4) per SPEC_ONBOARDING_SCREEN3
 
     val accent: Color = when (strength) {
         PasswordStrength.None -> colors.outline

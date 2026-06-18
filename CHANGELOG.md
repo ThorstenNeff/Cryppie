@@ -225,6 +225,21 @@ All notable changes to Cyppie are documented here. The format is based on
   legacy colour palette and no longer define a competing theme.
 
 ### Fixed
+- **KAN-85 / KAN-84 — Onboarding QA + security fixes (pre-merge, uniform on `develop`).**
+  - **FLAG_SECURE (KAN-84 + A2):** ref-counted `SecureScreenEffect` survives secure→secure nav
+    (no dispose-order race); applied uniformly to the password **and** seed screens (ONB-3/4/5/6/7).
+  - **A1 top-inset:** `CryptasaTopAppBar` now insets for the status bar (edge-to-edge) so the back
+    button/title no longer overlap the status bar (ONB-2..7).
+  - **A3 system-back:** `android:enableOnBackInvokedCallback=true` so the Nav3 back handler fires on
+    Android 13+ (system back steps back through the flow instead of exiting / losing input).
+  - **A4 apostrophes:** unescaped `\'`→`'` across all 14 onboarding locales (compose-resources parses
+    XML directly; the backslash rendered literally).
+  - **A5 polish:** password strength bar is now 4 segments (Weak 1 · Medium 2 · Strong 4); visible
+    back-circle affordance on the top bar.
+  - **Welcome (landscape):** hero height capped so the (already scrollable, ≤480 dp) bottom sheet keeps
+    room for its actions on short windows.
+  - Verified: ONB-8 setup has no back/cancel (by design); `de` carries the `onb_backup_*` strings
+    (`word_label` falls back to en, tracked KAN-76); `:designsystem:jvmTest` (KAN-64 WCAG baseline) green.
 - **KAN-64 / KAN-66 — Status-token WCAG-AA contrast.** Updated the sub-AA status colours in
   `:designsystem` `Color.kt` to the KAN-64 design delivery (HANDOFF §2.4): Light `success`
   `#12B82C`→`#0C7322` (white/success 6.0:1, success/successSurface 5.5:1) and `warning`

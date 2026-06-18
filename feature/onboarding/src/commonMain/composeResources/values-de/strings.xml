@@ -16,7 +16,7 @@
   <string name="onb_welcome_tagline">Deine Wallet. Deine Schlüssel.</string>
   <string name="onb_welcome_title">Sicher starten</string>
   <string name="onb_welcome_body">Eine non-custodial Wallet: Nur du hast Zugriff auf deine Schlüssel und deine Krypto. Niemand kann sie für dich wiederherstellen.</string>
-  <string name="onb_welcome_cta">Los geht\'s</string>
+  <string name="onb_welcome_cta">Los geht's</string>
   <string name="onb_welcome_import_link">Ich habe schon eine Wallet</string>
   <string name="onb_welcome_err_start_title">App konnte nicht gestartet werden</string>
   <string name="onb_welcome_err_start_body">Die App-Installation scheint beschädigt. Bitte installiere die App neu.</string>

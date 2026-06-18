@@ -20,7 +20,7 @@
   <string name="onb_welcome_body">A non-custodial wallet: only you have access to your keys and your crypto. No one can recover them for you.</string>
   <string name="onb_welcome_cta">Get started</string>
   <string name="onb_welcome_import_link">I already have a wallet</string>
-  <string name="onb_welcome_err_start_title">Couldn\'t start the app</string>
+  <string name="onb_welcome_err_start_title">Couldn't start the app</string>
   <string name="onb_welcome_err_start_body">The app installation appears to be corrupted. Please reinstall the app.</string>
 
   <!-- Screen 2 — Choose path -->
@@ -45,7 +45,7 @@
   <string name="onb_pw_strength_strong">strong</string>
   <string name="onb_pw_err_short">Password is too short (min. 8 characters).</string>
   <string name="onb_pw_err_empty">Please enter a password.</string>
-  <string name="onb_pw_err_whitespace">The password can\'t consist only of spaces.</string>
+  <string name="onb_pw_err_whitespace">The password can't consist only of spaces.</string>
   <string name="onb_pw_err_weak">Too weak — add upper- and lowercase letters, digits and symbols.</string>
 
   <!-- Screen 4 — Confirm password -->
@@ -53,7 +53,7 @@
   <string name="onb_pwc_subtitle">Enter your app password again to rule out typos.</string>
   <string name="onb_pwc_label">Confirm password</string>
   <string name="onb_pwc_helper">Both entries must match.</string>
-  <string name="onb_pwc_err_mismatch">Passwords don\'t match.</string>
+  <string name="onb_pwc_err_mismatch">Passwords don't match.</string>
   <string name="onb_pwc_err_empty">Please re-enter the password.</string>
 
   <!-- Screen 5 — Enter recovery phrase (import) -->
@@ -79,14 +79,14 @@
   <string name="onb_seedshow_warn_title">Never share or photograph it</string>
   <string name="onb_seedshow_warn_body">Anyone who knows your phrase has full access.</string>
   <string name="onb_seedshow_copy">Copy</string>
-  <string name="onb_seedshow_ack">I\'ve safely written down the words.</string>
-  <string name="onb_seedshow_err_gen_title">Couldn\'t securely generate the recovery phrase</string>
+  <string name="onb_seedshow_ack">I've safely written down the words.</string>
+  <string name="onb_seedshow_err_gen_title">Couldn't securely generate the recovery phrase</string>
   <string name="onb_seedshow_err_gen_body">Please restart the app. If the problem persists, update your device software.</string>
   <string name="onb_seedshow_err_gen_action">Restart app</string>
 
   <!-- Screen 7 — Confirm backup -->
   <string name="onb_backup_title">Confirm your backup</string>
-  <string name="onb_backup_subtitle">Enter the following words from your recovery phrase to confirm you\'ve saved it.</string>
+  <string name="onb_backup_subtitle">Enter the following words from your recovery phrase to confirm you've saved it.</string>
   <!-- KAN-16: added in base only; needs translation in ../Cryptasa/i18n (falls back to en meanwhile). -->
   <string name="onb_backup_word_label">Word #%1$d</string>
   <string name="onb_backup_err_wrong">Word %1$d is incorrect.</string>
@@ -100,10 +100,10 @@
   <string name="onb_setup_loading_body">Your keys are being encrypted and stored securely on this device. This only takes a moment.</string>
   <string name="onb_setup_success_title">Your wallet is ready</string>
   <string name="onb_setup_success_body">Your wallet has been encrypted and stored securely on this device.</string>
-  <string name="onb_setup_err_enc_title">Couldn\'t save your wallet</string>
+  <string name="onb_setup_err_enc_title">Couldn't save your wallet</string>
   <string name="onb_setup_err_enc_body">Encryption failed. Nothing was saved. Please try again.</string>
   <string name="onb_setup_err_keystore_title">Secure storage unavailable</string>
-  <string name="onb_setup_err_keystore_body">Your device\'s secure storage is unavailable. Make sure your device is protected with a screen lock (PIN/pattern).</string>
+  <string name="onb_setup_err_keystore_body">Your device's secure storage is unavailable. Make sure your device is protected with a screen lock (PIN/pattern).</string>
   <string name="onb_setup_err_storage_title">Not enough storage</string>
   <string name="onb_setup_err_storage_body">Please free up space and try again.</string>
 
@@ -116,12 +116,12 @@
   <string name="onb_bio_later">Later</string>
   <string name="onb_bio_unavail_title">Biometrics unavailable</string>
   <string name="onb_bio_unavail_body">No biometrics are set up on this device. You can enable them later in your device settings.</string>
-  <string name="onb_bio_reg_failed">Biometric recognition wasn\'t successful.</string>
+  <string name="onb_bio_reg_failed">Biometric recognition wasn't successful.</string>
   <string name="onb_bio_skip_later">Skip, enable later</string>
   <string name="onb_bio_perm_title">Permission required</string>
   <string name="onb_bio_perm_body">Please grant permission for biometric recognition in your device settings.</string>
   <string name="onb_bio_open_settings">Open settings</string>
-  <string name="onb_bio_link_title">Couldn\'t link biometrics</string>
+  <string name="onb_bio_link_title">Couldn't link biometrics</string>
   <string name="onb_bio_link_body">You can use the app with your password for now and enable biometrics again later.</string>
   <string name="onb_bio_link_action">Continue without biometrics</string>
 </resources>

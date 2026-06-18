@@ -1,10 +1,14 @@
 package com.tneff.cyppie.designsystem.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -36,6 +40,8 @@ fun CryptasaTopAppBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            // KAN-85/A1: keep the back button/title below the status bar (app is edge-to-edge).
+            .windowInsetsPadding(WindowInsets.statusBars)
             .heightIn(min = 56.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -45,6 +51,7 @@ fun CryptasaTopAppBar(
                     .align(Alignment.CenterStart)
                     .size(48.dp)
                     .clip(CircleShape)
+                    .background(colors.surfaceVariant) // KAN-85/A5: visible back-circle affordance
                     .clickableIcon(contentDescription = backContentDescription, onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
