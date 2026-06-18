@@ -26,7 +26,7 @@ internal object Eip712 {
     private val json = Json { ignoreUnknownKeys = true }
 
     /** The 32-byte EIP-712 digest for a `eth_signTypedData_v4` payload [typedDataJson]. */
-    fun encode(typedDataJson: String): ByteArray {
+    fun encode(typedDataJson: String): ByteArray = try {
         val root = json.parseToJsonElement(typedDataJson).jsonObject
         val types = root.getValue("types").jsonObject
         val primaryType = root.getValue("primaryType").jsonPrimitive.content
@@ -34,7 +34,14 @@ internal object Eip712 {
         val message = root.getValue("message").jsonObject
         val domainSeparator = hashStruct("EIP712Domain", domain, types)
         val messageHash = hashStruct(primaryType, message, types)
-        return Keccak.keccak256(byteArrayOf(0x19, 0x01) + domainSeparator + messageHash)
+        Keccak.keccak256(byteArrayOf(0x19, 0x01) + domainSeparator + messageHash)
+    } catch (e: WalletConnectException) {
+        throw e
+    } catch (e: NoSuchElementException) {
+        throw WalletConnectException.UnsupportedRequest("Malformed EIP-712 typed data (missing field)")
+    } catch (e: IllegalArgumentException) {
+        // JsonObject/JsonArray/primitive cast failures, bad decimals, oversize values, etc. → fail-closed.
+        throw WalletConnectException.UnsupportedRequest("Malformed EIP-712 typed data: ${e.message}")
     }
 
     private fun hashStruct(type: String, data: JsonObject, types: JsonObject): ByteArray =
@@ -84,23 +91,34 @@ internal object Eip712 {
 
     private fun encodeValue(type: String, value: JsonElement, types: JsonObject): ByteArray {
         if (type.endsWith("]")) { // array: keccak of concatenated element encodings
-            val elementType = type.substring(0, type.lastIndexOf('['))
+            val open = type.lastIndexOf('[')
+            val elementType = type.substring(0, open)
+            val fixedSize = type.substring(open + 1, type.length - 1) // "" for dynamic [], "n" for [n]
+            val elements = value.jsonArray
+            if (fixedSize.isNotEmpty() && elements.size != fixedSize.toInt()) {
+                throw WalletConnectException.UnsupportedRequest(
+                    "Array $type expects $fixedSize elements, got ${elements.size}",
+                )
+            }
             var enc = ByteArray(0)
-            for (e in value.jsonArray) enc += encodeValue(elementType, e, types)
+            for (e in elements) enc += encodeValue(elementType, e, types)
             return Keccak.keccak256(enc)
         }
         if (types[type] != null) return hashStruct(type, value.jsonObject, types) // nested struct
         return when {
             type == "string" -> Keccak.keccak256(value.jsonPrimitive.content.encodeToByteArray())
-            type == "bytes" -> Keccak.keccak256(Hex.decodeOrNull(value.jsonPrimitive.content) ?: ByteArray(0))
+            type == "bytes" -> Keccak.keccak256(decodeHexOrThrow(value.jsonPrimitive.content))
             type == "bool" -> ByteArray(32).also { it[31] = if (value.jsonPrimitive.boolean) 1 else 0 }
             type == "address" -> leftPad32(decodeAddress(value.jsonPrimitive.content))
             type.startsWith("uint") -> uintTo32(value.jsonPrimitive.content)
             type.startsWith("int") -> intTo32(value.jsonPrimitive.content)
-            type.startsWith("bytes") -> rightPad32(Hex.decodeOrNull(value.jsonPrimitive.content) ?: ByteArray(0))
+            type.startsWith("bytes") -> rightPad32(decodeHexOrThrow(value.jsonPrimitive.content))
             else -> throw WalletConnectException.UnsupportedRequest("Unsupported EIP-712 type: $type")
         }
     }
+
+    private fun decodeHexOrThrow(hex: String): ByteArray =
+        Hex.decodeOrNull(hex) ?: throw WalletConnectException.UnsupportedRequest("Invalid hex value: $hex")
 
     private fun decodeAddress(hex: String): ByteArray {
         val bytes = Hex.decodeOrNull(hex) ?: throw WalletConnectException.UnsupportedRequest("Bad address: $hex")

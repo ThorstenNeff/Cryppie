@@ -8,6 +8,7 @@ import com.tneff.cyppie.wallet.RecoverableSignature
 import com.tneff.cyppie.wallet.SeedSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class Eip712Test {
@@ -54,6 +55,14 @@ class Eip712Test {
             "be609aee343fb3c4b28e1df9e632fca64fcfaede20f02e86244efddf30957bd2",
             Hex.encode(Eip712.encode(mailTypedData)),
         )
+    }
+
+    @Test
+    fun malformedTypedDataFailsClosed() {
+        // Missing "primaryType" → fail-closed with a wrapped exception (L1), not a raw NoSuchElementException.
+        assertFailsWith<WalletConnectException.UnsupportedRequest> {
+            Eip712.encode("""{"types":{"EIP712Domain":[]},"domain":{},"message":{}}""")
+        }
     }
 
     @Test
