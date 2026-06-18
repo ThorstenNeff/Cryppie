@@ -7,6 +7,16 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-96 — Portfolio logic foundation (`:portfolio`, PRD-03 / ADR-0017).** New **web-capable** module
+  (android/ios/jvm + **js/wasm** — the first fully web feature, FR-7; depends `:rpc` + `:evm` only, takes
+  account addresses as input, no key derivation). Stage-1 foundation: the **FR-9 metric-confidence core**
+  — `Metric<T>(value, MetricConfidence: Robust | Approximate(reasons))` with `ApproxReason`
+  (cost-basis-ambiguity / incomplete-transfers / unverified-tokens / wallet-predates-tracking /
+  stale-prices), so a value and its "≈" caveat never get separated — plus domain models (`Money`
+  fixed-point fiat, `PortfolioToken`, `Holding`, `AllocationSlice`, `Portfolio`) and the migratable
+  `PriceSource` abstraction (Q4 Alchemy-now) with `TokenPrice` staleness (Q8 TTL 60s prices / 30s
+  balances). Tested on JVM; compiles incl. web. Stages 2 (valuation/allocation) / 3 (balances + history)
+  / 4 (FIFO cost-basis + P&L/Sharpe/drawdown, all `Approximate`) = separate stories.
 - **KAN-90 — TokenCatalog authoritative address audit (pre-release security gate).** Cross-checked
   every curated `TokenCatalog` entry's address + symbol + decimals against Etherscan / BaseScan and
   pinned them in `TokenCatalogAuditTest`: a fixture audit (catches a typo to *another valid* address —
