@@ -16,6 +16,14 @@ All notable changes to Cyppie are documented here. The format is based on
   `WELCOME_IMPORT`; nav start→ChoosePath, import→ImportSeed. Launch integrity check via
   `expect/actual verifyAppIntegrity()` (stub `true` until ADR-0009); on failure a blocking,
   non-dismissable `CryptasaDialog` (`WELCOME_START_ERROR_DIALOG`). Content capped to 480 dp (adaptive).
+- **KAN-11 — ONB-2 Choose-path screen.** `PathScreen(onCreate, onImport, onBack, isOffline)`: back
+  bar, title/subtitle, two navigation `SelectionCard`s (create/import, icon badge + chevron) and a
+  reactive offline `CryptasaBanner` (creating stays enabled). Copy from `composeResources`
+  (`onb_path_*`), tokens only, `onb_path_*` testTags, adaptive (≤480 dp, scroll). The chosen path is
+  persisted in the Koin `OnboardingViewModel`; connectivity via
+  `expect/actual observeConnectivity(): Flow<Boolean>` (stub online until platform monitors land).
+  Design-system: `SelectionCard` upgraded to a `Role.Button` navigation card with icon badge + optional
+  trailing icon; added `AddCircle`/`Download`/`ChevronRight` (RTL-mirrored) to `CryptasaIcons`.
 - **KAN-4 — Onboarding foundations / design system.**
   - New `:designsystem` module: central `CryptasaTheme` with light/dark semantic colour, spacing,
     radius and typography tokens (CompositionLocals; System/Light/Dark mode); foundation components

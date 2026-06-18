@@ -32,7 +32,7 @@ class OnboardingTestTagsAndroidTest {
 
     @Test
     fun rootEnablesTestTagsAsResourceId() = runComposeUiTest {
-        setContent { OnboardingRoot() }
+        setContent { OnboardingRoot(viewModel = OnboardingViewModel()) }
         val nodes = onAllNodes(
             SemanticsMatcher.expectValue(SemanticsPropertiesAndroid.TestTagsAsResourceId, true),
             useUnmergedTree = true,
@@ -45,7 +45,7 @@ class OnboardingTestTagsAndroidTest {
 
     @Test
     fun welcomeContractTagsAreExposedAndClickable() = runComposeUiTest {
-        setContent { OnboardingRoot() }
+        setContent { OnboardingRoot(viewModel = OnboardingViewModel()) }
         onNodeWithTag(OnboardingTestTags.WELCOME_START).assertExists().assertIsEnabled().assertHasClickAction()
         onNodeWithTag(OnboardingTestTags.WELCOME_IMPORT).assertExists().assertIsEnabled().assertHasClickAction()
     }

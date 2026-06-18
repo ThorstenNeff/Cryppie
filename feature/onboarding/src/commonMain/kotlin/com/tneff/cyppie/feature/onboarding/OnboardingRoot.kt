@@ -3,6 +3,8 @@ package com.tneff.cyppie.feature.onboarding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.mutableStateListOf
@@ -11,8 +13,10 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.ui.OnboardingPlaceholderScreen
+import com.tneff.cyppie.feature.onboarding.ui.PathScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeScreen
 import com.tneff.cyppie.feature.onboarding.ui.WelcomeState
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Public entry point of the onboarding feature (replaces `AuthRoot` as the app's start, ADR-0004).
@@ -20,11 +24,11 @@ import com.tneff.cyppie.feature.onboarding.ui.WelcomeState
  * `testTagsAsResourceId` once at the root so every `testTag` becomes a resource-id for Maestro
  * (§5.1 / KAN-10).
  *
- * The Koin-provided [OnboardingViewModel] (flow state, e.g. Create/Import) is injected by the first
- * screen that needs it — wired in with ONB-2 (KAN-11). The module is already registered (ADR-0007).
+ * The Koin-provided [OnboardingViewModel] holds the cross-screen flow state (Create/Import path),
+ * set on ONB-2 and consumed by the later branch (ADR-0007).
  */
 @Composable
-fun OnboardingRoot() {
+fun OnboardingRoot(viewModel: OnboardingViewModel = koinViewModel()) {
     CryptasaTheme {
         val backStack: SnapshotStateList<OnboardingNavKey> =
             remember { mutableStateListOf(OnboardingNavKey.Welcome) }
@@ -55,7 +59,20 @@ fun OnboardingRoot() {
                         )
                     }
                     entry<OnboardingNavKey.ChoosePath> {
-                        OnboardingPlaceholderScreen("Pfad wählen", onBack = ::back)
+                        val connectivity = remember { observeConnectivity() }
+                        val online by connectivity.collectAsState(initial = true)
+                        PathScreen(
+                            isOffline = !online,
+                            onBack = ::back,
+                            onCreate = {
+                                viewModel.choosePath(OnboardingPath.Create)
+                                goTo(OnboardingNavKey.SetPassword)
+                            },
+                            onImport = {
+                                viewModel.choosePath(OnboardingPath.Import)
+                                goTo(OnboardingNavKey.SetPassword)
+                            },
+                        )
                     }
                     entry<OnboardingNavKey.SetPassword> {
                         OnboardingPlaceholderScreen("App-Passwort", onBack = ::back)

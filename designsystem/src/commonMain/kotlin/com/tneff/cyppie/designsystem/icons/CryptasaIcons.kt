@@ -123,6 +123,66 @@ object CryptasaIcons {
             close()
         }
     }
+
+    /** Create / "new" affordance (ONB-2 create-wallet card). */
+    val AddCircle: ImageVector by lazy {
+        materialVector("Cryptasa.AddCircle") {
+            moveTo(12.0f, 2.0f)
+            curveTo(6.48f, 2.0f, 2.0f, 6.48f, 2.0f, 12.0f)
+            reflectiveCurveToRelative(4.48f, 10.0f, 10.0f, 10.0f)
+            reflectiveCurveToRelative(10.0f, -4.48f, 10.0f, -10.0f)
+            reflectiveCurveTo(17.52f, 2.0f, 12.0f, 2.0f)
+            close()
+            moveToRelative(5.0f, 11.0f)
+            horizontalLineToRelative(-4.0f)
+            verticalLineToRelative(4.0f)
+            horizontalLineToRelative(-2.0f)
+            verticalLineToRelative(-4.0f)
+            horizontalLineTo(7.0f)
+            verticalLineToRelative(-2.0f)
+            horizontalLineToRelative(4.0f)
+            verticalLineTo(7.0f)
+            horizontalLineToRelative(2.0f)
+            verticalLineToRelative(4.0f)
+            horizontalLineToRelative(4.0f)
+            verticalLineToRelative(2.0f)
+            close()
+        }
+    }
+
+    /** Import / download affordance (ONB-2 import-wallet card). */
+    val Download: ImageVector by lazy {
+        materialVector("Cryptasa.Download") {
+            moveTo(19.0f, 9.0f)
+            horizontalLineToRelative(-4.0f)
+            verticalLineTo(3.0f)
+            horizontalLineTo(9.0f)
+            verticalLineToRelative(6.0f)
+            horizontalLineTo(5.0f)
+            lineToRelative(7.0f, 7.0f)
+            lineToRelative(7.0f, -7.0f)
+            close()
+            moveTo(5.0f, 18.0f)
+            verticalLineToRelative(2.0f)
+            horizontalLineToRelative(14.0f)
+            verticalLineToRelative(-2.0f)
+            horizontalLineTo(5.0f)
+            close()
+        }
+    }
+
+    /** Trailing affordance on navigation cards; auto-mirrored for RTL (points left in `ar`). */
+    val ChevronRight: ImageVector by lazy {
+        materialVector("Cryptasa.ChevronRight", autoMirror = true) {
+            moveTo(10.0f, 6.0f)
+            lineTo(8.59f, 7.41f)
+            lineTo(13.17f, 12.0f)
+            lineToRelative(-4.58f, 4.59f)
+            lineTo(10.0f, 18.0f)
+            lineToRelative(6.0f, -6.0f)
+            close()
+        }
+    }
 }
 
 private inline fun materialVector(
