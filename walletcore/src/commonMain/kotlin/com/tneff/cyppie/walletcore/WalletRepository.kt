@@ -83,6 +83,10 @@ class WalletRepository(
      * - [TokenResolution.Resolved] when both reads decode to a sane ERC-20.
      * - [TokenResolution.NotErc20] when the address has no ERC-20 there (revert / EOA / undecodable).
      * - [TokenResolution.NetworkError] when no provider could be reached (retryable).
+     *
+     * L2 (consistency note): unlike the balance reads (which **throw** on a missing/failed provider),
+     * resolution returns a retryable [TokenResolution.NetworkError] — by design: add-token is a
+     * user-driven action the screen surfaces with a retry, not a background read that should crash.
      */
     suspend fun resolveErc20(address: EvmAddress, chain: EvmChain): TokenResolution {
         val client = rpcByChain[chain.chainId] ?: return TokenResolution.NetworkError

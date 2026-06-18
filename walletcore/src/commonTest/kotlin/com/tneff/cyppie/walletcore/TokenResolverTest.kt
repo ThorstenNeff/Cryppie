@@ -40,6 +40,17 @@ class TokenResolverTest {
     private fun bytes32(s: String) = ByteArray(32).also { s.encodeToByteArray().copyInto(it) }
     private fun uint256(n: Int) = ByteArray(32).also { it[31] = n.toByte() }
 
+    /** Standard ABI dynamic `string` return: [offset=0x20][length][utf8 padded to 32]. */
+    private fun dynString(s: String): ByteArray {
+        val bytes = s.encodeToByteArray()
+        val padded = (bytes.size + 31) / 32 * 32
+        return ByteArray(64 + padded).also {
+            it[31] = 0x20 // offset
+            it[63] = bytes.size.toByte() // length (< 256 for test strings)
+            bytes.copyInto(it, 64)
+        }
+    }
+
     @Test
     fun resolvesSymbolAndDecimals() = runTest {
         val rpc = TokenRpc { selector ->
@@ -54,6 +65,46 @@ class TokenResolverTest {
         assertEquals("USDC", result.token.symbol)
         assertEquals(6, result.token.decimals)
         assertEquals(token, result.token.address)
+    }
+
+    @Test
+    fun resolvesDynamicStringSymbol() = runTest {
+        // Standard ABI dynamic-string symbol (most ERC-20s), not the bytes32 legacy form.
+        val rpc = TokenRpc { selector ->
+            when {
+                selector.contentEquals(Erc20Abi.SYMBOL_SELECTOR) -> dynString("DAI")
+                selector.contentEquals(Erc20Abi.DECIMALS_SELECTOR) -> uint256(18)
+                else -> throw NotImplementedError()
+            }
+        }
+        val result = repo(rpc).resolveErc20(token, EvmChain.ETHEREUM)
+        assertIs<TokenResolution.Resolved>(result)
+        assertEquals("DAI", result.token.symbol)
+        assertEquals(18, result.token.decimals)
+    }
+
+    @Test
+    fun emptySymbolIsNotErc20() = runTest {
+        val rpc = TokenRpc { selector ->
+            when {
+                selector.contentEquals(Erc20Abi.SYMBOL_SELECTOR) -> dynString("")
+                selector.contentEquals(Erc20Abi.DECIMALS_SELECTOR) -> uint256(6)
+                else -> throw NotImplementedError()
+            }
+        }
+        assertEquals(TokenResolution.NotErc20, repo(rpc).resolveErc20(token, EvmChain.ETHEREUM))
+    }
+
+    @Test
+    fun implausibleDecimalsIsNotErc20() = runTest {
+        val rpc = TokenRpc { selector ->
+            when {
+                selector.contentEquals(Erc20Abi.SYMBOL_SELECTOR) -> bytes32("WAT")
+                selector.contentEquals(Erc20Abi.DECIMALS_SELECTOR) -> uint256(40) // > 36
+                else -> throw NotImplementedError()
+            }
+        }
+        assertEquals(TokenResolution.NotErc20, repo(rpc).resolveErc20(token, EvmChain.ETHEREUM))
     }
 
     @Test
