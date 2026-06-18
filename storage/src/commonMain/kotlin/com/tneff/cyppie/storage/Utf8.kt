@@ -26,6 +26,13 @@ internal object Utf8 {
                     tmp[n++] = (0x80 or ((cp shr 6) and 0x3F)).toByte()
                     tmp[n++] = (0x80 or (cp and 0x3F)).toByte()
                 }
+                c in 0xD800..0xDFFF -> {
+                    // Unpaired surrogate (lone high without a low, or a stray low) → U+FFFD,
+                    // not raw WTF-8 (N1). Matches String.encodeToByteArray's replacement behaviour.
+                    tmp[n++] = 0xEF.toByte()
+                    tmp[n++] = 0xBF.toByte()
+                    tmp[n++] = 0xBD.toByte()
+                }
                 else -> {
                     tmp[n++] = (0xE0 or (c shr 12)).toByte()
                     tmp[n++] = (0x80 or ((c shr 6) and 0x3F)).toByte()
