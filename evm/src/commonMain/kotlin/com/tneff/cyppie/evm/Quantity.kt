@@ -89,6 +89,34 @@ class Quantity private constructor(private val magnitude: ByteArray) : Comparabl
         return ofBytes(bytes)
     }
 
+    /**
+     * Truncating integer division by 10^[exp] (exp ≥ 0) — for turning a `weiBalance × price` product
+     * into a fixed-point fiat value without floating point (KAN-98 valuation). Exact, big-int-safe.
+     */
+    fun divPow10(exp: Int): Quantity {
+        require(exp >= 0) { "exp must be ≥ 0" }
+        var result = this
+        var remaining = exp
+        while (remaining > 0 && !result.magnitude.isEmpty()) {
+            val step = if (remaining > 9) 9 else remaining // ≤10^9 per pass keeps intermediates in Long
+            result = result.divBySmall(POW10[step])
+            remaining -= step
+        }
+        return result
+    }
+
+    /** Long division of the big-endian magnitude by [divisor] (≤ 10^9); quotient digit stays < 256. */
+    private fun divBySmall(divisor: Long): Quantity {
+        val out = ByteArray(magnitude.size)
+        var rem = 0L
+        for (i in magnitude.indices) {
+            val cur = (rem shl 8) or (magnitude[i].toLong() and 0xFF)
+            out[i] = (cur / divisor).toByte()
+            rem = cur % divisor
+        }
+        return ofBytes(out)
+    }
+
     override fun equals(other: Any?): Boolean =
         this === other || (other is Quantity && magnitude.contentEquals(other.magnitude))
 
@@ -98,6 +126,10 @@ class Quantity private constructor(private val magnitude: ByteArray) : Comparabl
 
     companion object {
         val ZERO: Quantity = Quantity(ByteArray(0))
+
+        private val POW10 = longArrayOf(
+            1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000, 1_000_000_000,
+        )
 
         /** From a non-negative [Long]. */
         fun of(value: Long): Quantity {

@@ -7,6 +7,18 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-98 — Portfolio balances + valuation + allocation (`:portfolio` / `:rpc`, PRD-03 P1+P2).**
+  **Stage A:** `:rpc` Alchemy **Data API** (`tokens/by-address` — multi-chain ERC-20 balances + metadata
+  per holder) + **Prices API** (`tokens/by-address`) REST clients — web-capable, MockEngine-tested.
+  **Stage B:** the valuation core — big-int-safe `Quantity.divPow10` + `Valuation` (`rawBalance(wei) ×
+  price / 10^…` → fiat cents; no float → deterministic FR-6; >64-bit intermediate, Long result, capped
+  on absurd inputs); `Money.plus` guards currency + scale (+ `atScale`); `AlchemyPriceSource`
+  (`PriceSource` impl, decimal → fixed-point `Money` @ scale 8); `PortfolioValuator` → total value +
+  allocation (sums to exactly 10_000 bps, FR-6), a **robust** total that flips to
+  `Approximate(STALE_PRICES)` on a stale price (Q8), and the spam/curation filter (catalog-known-good-in
+  OR ≥ dust threshold, Q5 — not a strict allowlist). Tested on JVM (parse/value KATs incl. a >Long
+  product, total / allocation-100% / stale / dust); compiles incl. web. The end-to-end fetch→value
+  assembler (incl. native-ETH priced via WETH) wires in with the Portfolio VM; 24h + rich metrics = P4.
 - **KAN-96 — Portfolio logic foundation (`:portfolio`, PRD-03 / ADR-0017).** New **web-capable** module
   (android/ios/jvm + **js/wasm** — the first fully web feature, FR-7; depends `:rpc` + `:evm` only, takes
   account addresses as input, no key derivation). Stage-1 foundation: the **FR-9 metric-confidence core**
