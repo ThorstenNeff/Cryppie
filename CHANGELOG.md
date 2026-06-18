@@ -25,7 +25,11 @@ All notable changes to Cyppie are documented here. The format is based on
   feed for the FIFO holdings-over-time reconstruction. Folded the KAN-100 review-low (defensive):
   `PortfolioPerformance.unrealizedPnl` now uses a **saturating subtract**, and the drawdown / Sharpe
   ratios are computed **overflow-safe + float-free** (same saturating-discipline family as KAN-98-L1).
-  Remaining: FIFO cost-basis reconstruction + historical prices (`priceHistory`) → value series + 24h.
+  Stage 2: `CostBasisEngine` — **FIFO** cost-basis / realized-P&L reconstruction over a token's
+  time-ordered acquire/dispose events (deterministic, float-free; disposing more than tracked →
+  zero-cost + `INCOMPLETE_TRANSFERS` / `WALLET_PREDATES_TRACKING` flags, FR-9). Added `Quantity.minus`
+  (256-bit, for FIFO lot consumption). Reference-vector tested. Remaining: historical prices
+  (`priceHistory`) → the value series + 24h.
 - **KAN-100 — Portfolio assembler + performance metrics (PRD-03, Slice 4 — part 1).** `PortfolioService`
   end-to-end assembler: fetch ERC-20 (Alchemy Data) + native (L3) across accounts × chains → price
   (native ETH via its chain's audited WETH) → `PortfolioValuator` (deps injected as functions / the

@@ -67,6 +67,29 @@ class Quantity private constructor(private val magnitude: ByteArray) : Comparabl
         return ofBytes(out)
     }
 
+    /** Subtraction; requires `this >= other` (no negative quantities). Used by FIFO lot consumption. */
+    operator fun minus(other: Quantity): Quantity {
+        require(this >= other) { "Quantity underflow: $this - $other" }
+        val a = magnitude
+        val b = other.magnitude
+        val n = maxOf(a.size, b.size)
+        val out = ByteArray(n)
+        var borrow = 0
+        for (i in 0 until n) {
+            val av = if (i < a.size) a[a.size - 1 - i].toInt() and 0xFF else 0
+            val bv = if (i < b.size) b[b.size - 1 - i].toInt() and 0xFF else 0
+            var diff = av - bv - borrow
+            if (diff < 0) {
+                diff += 256
+                borrow = 1
+            } else {
+                borrow = 0
+            }
+            out[n - 1 - i] = diff.toByte()
+        }
+        return ofBytes(out)
+    }
+
     /** Exact 256-bit multiplication; throws on overflow (a result > 2^256-1). */
     operator fun times(other: Quantity): Quantity {
         val a = magnitude
