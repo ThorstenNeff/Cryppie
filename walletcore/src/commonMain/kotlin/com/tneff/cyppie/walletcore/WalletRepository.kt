@@ -1,8 +1,11 @@
 package com.tneff.cyppie.walletcore
 
 import com.tneff.cyppie.evm.EvmAddress
+import com.tneff.cyppie.evm.EvmException
 import com.tneff.cyppie.evm.Quantity
+import com.tneff.cyppie.evm.abi.Erc20Abi
 import com.tneff.cyppie.rpc.EvmRpcClient
+import com.tneff.cyppie.rpc.RpcException
 import com.tneff.cyppie.wallet.EvmAccount
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -74,9 +77,40 @@ class WalletRepository(
             .filterKeys { rpcByChain.containsKey(it.chainId) }
             .map { (chain, tokens) -> chainBalances(accountIndex, chain, tokens) }
 
+    /**
+     * Resolves an ERC-20 token by contract [address] on [chain] (KAN-83 / KAN-49 add-token): reads
+     * `symbol()` + `decimals()` via `eth_call`. [address] is already EIP-55-valid (an [EvmAddress]).
+     * - [TokenResolution.Resolved] when both reads decode to a sane ERC-20.
+     * - [TokenResolution.NotErc20] when the address has no ERC-20 there (revert / EOA / undecodable).
+     * - [TokenResolution.NetworkError] when no provider could be reached (retryable).
+     */
+    suspend fun resolveErc20(address: EvmAddress, chain: EvmChain): TokenResolution {
+        val client = rpcByChain[chain.chainId] ?: return TokenResolution.NetworkError
+        return try {
+            val symbol = Erc20Abi.decodeString(client.call(address, Erc20Abi.symbol())).trim()
+            val decimals = Erc20Abi.decodeUint8(client.call(address, Erc20Abi.decimals()))
+            if (symbol.isEmpty() || decimals > MAX_ERC20_DECIMALS) {
+                TokenResolution.NotErc20
+            } else {
+                TokenResolution.Resolved(Erc20Token(address, chain, symbol, decimals))
+            }
+        } catch (e: RpcException.Node) {
+            TokenResolution.NotErc20 // execution revert / invalid params — not an ERC-20 at this address
+        } catch (e: EvmException) {
+            TokenResolution.NotErc20 // returned data isn't ERC-20-shaped (e.g. an EOA / empty result)
+        } catch (e: RpcException) {
+            TokenResolution.NetworkError // transport / all-providers-failed / decoding
+        }
+    }
+
     /** True if any configured provider for [chain] is currently degraded (on a fallback). */
     fun isDegraded(chain: EvmChain): Boolean = rpcByChain[chain.chainId]?.degraded ?: false
 
     private fun rpc(chain: EvmChain): EvmRpcClient =
         rpcByChain[chain.chainId] ?: throw IllegalArgumentException("No RPC configured for ${chain.displayName}")
+
+    private companion object {
+        // Sanity bound; real ERC-20s are ≤ 18 (a few legacy tokens up to 36). Above → treat as non-ERC-20.
+        const val MAX_ERC20_DECIMALS = 36
+    }
 }

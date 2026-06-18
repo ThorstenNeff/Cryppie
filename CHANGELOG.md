@@ -20,6 +20,12 @@ All notable changes to Cyppie are documented here. The format is based on
   (unlock), and `disableBiometricUnlock()`. The alias-parameter wrap/unwrap helpers are now private;
   the `BiometricPrompt` UI stays in ONB-9 (Dev-1) via the `CryptoObject` cipher. iOS Keychain
   unchanged. Robolectric androidHostTest round-trips enroll→unlock and disable with a fake-HW Cipher.
+- **KAN-83 — Token add/list (Stage 1: ERC-20 resolver).** `WalletRepository.resolveErc20(address, chain)`
+  → `TokenResolution` (Resolved/NotErc20/NetworkError): reads `symbol()` + `decimals()` via `eth_call`
+  (`Erc20Abi`, bytes32-symbol fallback), mapping `Node`-revert / undecodable → not-ERC-20 and
+  transport / all-providers-failed → network-error. EIP-55 enforced by the `EvmAddress` param. Added
+  `Erc20Token` / `TokenResolution` models. Tested on JVM (resolve, revert, EOA/empty, transport,
+  no-provider). Stages 2 (`AddTokenScreen`) + 3 (curated `TokenCatalog`) follow.
 - **KAN-78 — Wallet D2: Receive screen (`:feature:wallet`).** New Compose-MP feature module
   (android/ios/jvm; depends `:designsystem`+`:walletcore`), modeled on `:feature:onboarding`, with
   `ReceiveScreen(address, onBack)` (KAN-47): segmented chain selector (Ethereum/Base — **same EVM
