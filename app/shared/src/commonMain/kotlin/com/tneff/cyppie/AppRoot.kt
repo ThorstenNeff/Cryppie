@@ -23,6 +23,7 @@ import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.OnboardingRoot
 import com.tneff.cyppie.feature.onboarding.UnlockSupport
+import com.tneff.cyppie.feature.onboarding.enableTestTagsAsResourceId
 import com.tneff.cyppie.feature.onboarding.ui.UnlockScreen
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -76,7 +77,10 @@ fun AppRoot() {
             }
         }
 
-        when (destination) {
+        // Expose every screen's testTag as an Android resource-id so Maestro `id:` can query the
+        // unlock/home E2E flows (Android-only; no-op iOS) — mirrors OnboardingRoot (KAN-103 test-fix).
+        Box(modifier = Modifier.fillMaxSize().enableTestTagsAsResourceId()) {
+            when (destination) {
             AppDestination.Resolving -> Centered { ProgressRing(diameter = 48.dp) }
             AppDestination.Onboarding -> OnboardingRoot(onComplete = { destination = AppDestination.Home })
             AppDestination.Unlock -> UnlockScreen(
@@ -92,6 +96,7 @@ fun AppRoot() {
                     destination = AppDestination.Unlock
                 },
             )
+            }
         }
     }
 }
