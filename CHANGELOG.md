@@ -28,9 +28,13 @@ All notable changes to Cyppie are documented here. The format is based on
   no-provider).
   - **Stage 2 (`AddTokenScreen`, KAN-49):** add an ERC-20 by contract address — LTR contract field
     (EIP-55 validated locally), resolve → token card (`Symbol · Decimals` + check) / `NotErc20` field
-    error / `NetworkError` retry banner; Add CTA disabled until resolved. `token_*` testTags/i18n,
-    tokens-only, adaptive. Desktop `runComposeUiTest` covers resolved/invalid/network. Stage 3
-    (curated `TokenCatalog`) follows.
+    error / `NetworkError` retry banner; Add CTA disabled until resolved; resolution announced as a
+    `liveRegion` (a11y). Dedup is the host's job ([onAdd]), not the screen. `token_*` testTags/i18n,
+    tokens-only, adaptive. Desktop `runComposeUiTest` covers resolved / not-ERC-20 / invalid / network
+    + retry. (Generic invalid-address copy + 12 locales → KAN-76.)
+  - **Stage 3 (`TokenCatalog`):** bundled, curated default token list for Ethereum + Base (USDC/USDT/
+    DAI/WETH majors) embedded in-code (no network fetch — supply-chain-safe), canonical EIP-55,
+    `forChain` / `find`. Tested on JVM.
 - **KAN-78 — Wallet D2: Receive screen (`:feature:wallet`).** New Compose-MP feature module
   (android/ios/jvm; depends `:designsystem`+`:walletcore`), modeled on `:feature:onboarding`, with
   `ReceiveScreen(address, onBack)` (KAN-47): segmented chain selector (Ethereum/Base — **same EVM

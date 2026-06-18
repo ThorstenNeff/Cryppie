@@ -29,6 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.LayoutDirection
@@ -74,6 +77,10 @@ private sealed interface AddTokenUiState {
  * ([EvmAddress.parse]); a valid address is resolved via [onResolve] (`symbol`/`decimals`) into the
  * Resolved / NotErc20 / NetworkError states. The Add CTA stays disabled until an ERC-20 resolves.
  * Stateless wrt the wallet: [onResolve] is wired to `WalletRepository.resolveErc20`.
+ *
+ * Duplicate detection is **not** done here (L3): [onAdd] is the host's hook to persist the token, and
+ * the host de-duplicates against the already-added set (a token may legitimately re-resolve). The
+ * screen only resolves + emits.
  */
 @Composable
 fun AddTokenScreen(
@@ -152,19 +159,22 @@ fun AddTokenScreen(
                     )
                 }
 
-                when (current) {
-                    AddTokenUiState.Resolving ->
-                        CircularProgressIndicator(color = colors.primary, modifier = Modifier.size(28.dp))
-                    is AddTokenUiState.Resolved -> ResolvedCard(current.token)
-                    AddTokenUiState.NetworkError -> CryptasaBanner(
-                        title = stringResource(Res.string.token_err_network_title),
-                        description = stringResource(Res.string.token_err_network_body),
-                        tone = CryptasaBannerTone.Danger,
-                        actionText = stringResource(Res.string.common_retry),
-                        onActionClick = { retryTick++ },
-                        modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.TOKEN_NETWORK),
-                    )
-                    else -> Unit
+                // Resolution outcome — announced to screen readers as it changes (L2 a11y).
+                Column(modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
+                    when (current) {
+                        AddTokenUiState.Resolving ->
+                            CircularProgressIndicator(color = colors.primary, modifier = Modifier.size(28.dp))
+                        is AddTokenUiState.Resolved -> ResolvedCard(current.token)
+                        AddTokenUiState.NetworkError -> CryptasaBanner(
+                            title = stringResource(Res.string.token_err_network_title),
+                            description = stringResource(Res.string.token_err_network_body),
+                            tone = CryptasaBannerTone.Danger,
+                            actionText = stringResource(Res.string.common_retry),
+                            onActionClick = { retryTick++ },
+                            modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.TOKEN_NETWORK),
+                        )
+                        else -> Unit
+                    }
                 }
             }
 

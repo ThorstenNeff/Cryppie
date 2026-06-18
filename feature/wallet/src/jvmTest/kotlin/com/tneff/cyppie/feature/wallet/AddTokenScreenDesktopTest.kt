@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
@@ -43,6 +44,38 @@ class AddTokenScreenDesktopTest {
         onNodeWithTag(WalletTestTags.TOKEN_ADD).assertIsEnabled().performClick()
         assertEquals("USDC", added?.symbol)
         assertEquals(6, added?.decimals)
+    }
+
+    @Test
+    fun notErc20ShowsErrorAndAddDisabled() = runComposeUiTest {
+        // Valid EIP-55 address, but the resolver says it's not an ERC-20 (distinct from invalid input).
+        setContent {
+            CryptasaTheme(ThemeMode.Light) {
+                AddTokenScreen(EvmChain.ETHEREUM, { _, _ -> TokenResolution.NotErc20 }, {}, {})
+            }
+        }
+        onNode(hasSetTextAction()).performTextInput(usdc)
+        onNodeWithTag(WalletTestTags.TOKEN_ERROR).assertIsDisplayed()
+        onNodeWithTag(WalletTestTags.TOKEN_ADD).assertIsNotEnabled()
+    }
+
+    @Test
+    fun retryAfterNetworkErrorResolves() = runComposeUiTest {
+        var calls = 0
+        setContent {
+            CryptasaTheme(ThemeMode.Light) {
+                AddTokenScreen(
+                    chain = EvmChain.ETHEREUM,
+                    onResolve = { _, _ -> if (calls++ == 0) TokenResolution.NetworkError else TokenResolution.Resolved(token) },
+                    onAdd = {},
+                    onBack = {},
+                )
+            }
+        }
+        onNode(hasSetTextAction()).performTextInput(usdc)
+        onNodeWithTag(WalletTestTags.TOKEN_NETWORK).assertIsDisplayed() // 1st resolve → network error
+        onNodeWithText("Try again").performClick() // retry (retryTick++)
+        onNodeWithTag(WalletTestTags.TOKEN_RESOLVED).assertIsDisplayed() // 2nd resolve → resolved
     }
 
     @Test
