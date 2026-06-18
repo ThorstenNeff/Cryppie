@@ -53,5 +53,25 @@ class Mnemonic private constructor(words: List<String>) {
         /** True iff [words] are a valid BIP-39 phrase. */
         fun isValid(words: List<String>): Boolean =
             EvmCrypto.isValidMnemonic(words.map { it.trim().lowercase() }.filter { it.isNotEmpty() })
+
+        // ---- BIP-39 wordlist (single source for ONB-5 per-word validation + autocomplete) ----
+
+        /** The 2048-word BIP-39 English wordlist (alphabetical), exposed so the UI never duplicates it. */
+        val wordlist: List<String> get() = englishWordlist
+        private val englishWordlist: List<String> by lazy { EvmCrypto.bip39EnglishWordlist() }
+        private val wordSet: Set<String> by lazy { englishWordlist.toHashSet() }
+
+        /** True iff [word] is in the BIP-39 English wordlist (trimmed, case-insensitive). */
+        fun isWord(word: String): Boolean = word.trim().lowercase() in wordSet
+
+        /**
+         * Up to [limit] wordlist entries starting with [prefix] (trimmed, case-insensitive),
+         * in alphabetical order — for seed-entry autocomplete. Empty prefix or limit ≤ 0 → empty.
+         */
+        fun suggestions(prefix: String, limit: Int = 5): List<String> {
+            val p = prefix.trim().lowercase()
+            if (p.isEmpty() || limit <= 0) return emptyList()
+            return englishWordlist.asSequence().filter { it.startsWith(p) }.take(limit).toList()
+        }
     }
 }

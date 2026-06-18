@@ -43,4 +43,9 @@ internal expect object EvmCrypto {
 
     /** [size] cryptographically-secure random bytes (CryptographyRandom, ADR-0008) for BIP-39 entropy. */
     fun secureRandomBytes(size: Int): ByteArray
+
+    // ---- BIP-39 wordlist ----
+
+    /** The canonical 2048-word BIP-39 English wordlist (from bitcoin-kmp) — single source of truth. */
+    fun bip39EnglishWordlist(): List<String>
 }

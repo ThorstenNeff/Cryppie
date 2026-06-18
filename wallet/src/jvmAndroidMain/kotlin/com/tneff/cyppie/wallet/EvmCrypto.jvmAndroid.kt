@@ -51,4 +51,6 @@ internal actual object EvmCrypto {
         Secp256k1.ecdsaRecover(signature.r + signature.s, hash, signature.recId)
 
     actual fun secureRandomBytes(size: Int): ByteArray = CryptographyRandom.nextBytes(size)
+
+    actual fun bip39EnglishWordlist(): List<String> = MnemonicCode.englishWordlist
 }

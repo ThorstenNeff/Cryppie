@@ -36,6 +36,31 @@ class MnemonicTest {
     }
 
     @Test
+    fun wordlistIsTheCanonical2048() {
+        assertEquals(2048, Mnemonic.wordlist.size)
+        assertEquals("abandon", Mnemonic.wordlist.first())
+        assertEquals("zoo", Mnemonic.wordlist.last())
+    }
+
+    @Test
+    fun isWordValidatesAgainstWordlist() {
+        assertTrue(Mnemonic.isWord("abandon"))
+        assertTrue(Mnemonic.isWord("  Zoo "))   // trimmed + case-insensitive
+        assertFalse(Mnemonic.isWord("notaword"))
+        assertFalse(Mnemonic.isWord(""))
+    }
+
+    @Test
+    fun suggestionsReturnAlphabeticalPrefixMatches() {
+        assertEquals(listOf("abandon"), Mnemonic.suggestions("aban"))         // only word with this prefix
+        assertEquals(listOf("abandon", "ability", "able"), Mnemonic.suggestions("ab", limit = 3))
+        assertTrue(Mnemonic.suggestions("zz").isEmpty())                       // no matches
+        assertTrue(Mnemonic.suggestions("ab", limit = 0).isEmpty())           // limit guard
+        assertTrue(Mnemonic.suggestions("").isEmpty())                         // empty prefix
+        assertTrue(Mnemonic.suggestions("ZO").all { it.startsWith("zo") })     // case-insensitive
+    }
+
+    @Test
     fun acceptsValidPhrase() {
         assertTrue(Mnemonic.isValid("test test test test test test test test test test test junk".split(" ")))
     }
