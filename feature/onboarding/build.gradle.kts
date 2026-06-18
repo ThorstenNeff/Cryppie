@@ -50,6 +50,7 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
@@ -82,4 +83,12 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
     }
+}
+
+// i18n (ADR-0004 / SPEC §5.5): generate a stable, public Res class for the onboarding strings
+// (composeResources/values*/strings.xml imported from ../Cryptasa/i18n).
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.tneff.cyppie.feature.onboarding.generated.resources"
+    generateResClass = always
 }

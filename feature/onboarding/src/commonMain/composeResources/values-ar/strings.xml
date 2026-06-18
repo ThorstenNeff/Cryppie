@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Arabic (ar, RTL). Compose Multiplatform: composeResources/values-ar/strings.xml
+     ⚠️ ÜBERSETZUNGS-ENTWURF (MSA): muss von Muttersprachler:in geprüft werden, besonders Krypto-/Sicherheitsbegriffe
+        (z. B. „recovery phrase" = عبارة الاسترداد, „non-custodial" = غير وصائية).
+     RTL: Layout spiegelt automatisch. LTR-Inseln (Adressen/Hashes/Beträge/Seed-Wörter) NICHT übersetzen, LTR isolieren. -->
+<resources>
+
+  <string name="common_continue">متابعة</string>
+  <string name="common_confirm">تأكيد</string>
+  <string name="common_retry">إعادة المحاولة</string>
+  <string name="common_cancel">إلغاء</string>
+  <string name="common_close">إغلاق</string>
+  <string name="common_skip">تخطٍّ</string>
+  <string name="cd_back">رجوع</string>
+  <string name="cd_password_show">إظهار كلمة المرور</string>
+  <string name="cd_password_hide">إخفاء كلمة المرور</string>
+
+  <string name="onb_welcome_tagline">محفظتك. مفاتيحك.</string>
+  <string name="onb_welcome_title">ابدأ بأمان</string>
+  <string name="onb_welcome_body">محفظة غير وصائية: أنت وحدك من يملك الوصول إلى مفاتيحك وعملاتك المشفّرة. لا يمكن لأحد استعادتها نيابةً عنك.</string>
+  <string name="onb_welcome_cta">هيا نبدأ</string>
+  <string name="onb_welcome_import_link">لديّ محفظة بالفعل</string>
+  <string name="onb_welcome_err_start_title">تعذّر تشغيل التطبيق</string>
+  <string name="onb_welcome_err_start_body">يبدو أن تثبيت التطبيق تالف. يُرجى إعادة تثبيت التطبيق.</string>
+
+  <string name="onb_path_title">كيف تريد أن تبدأ؟</string>
+  <string name="onb_path_subtitle">يمكنك إنشاء محفظة جديدة أو استيراد محفظة قائمة باستخدام عبارة الاسترداد.</string>
+  <string name="onb_path_create_title">إنشاء محفظة جديدة</string>
+  <string name="onb_path_create_sub">تُنشئ عبارة استرداد جديدة على هذا الجهاز.</string>
+  <string name="onb_path_import_title">استيراد محفظة قائمة</string>
+  <string name="onb_path_import_sub">الاستعادة باستخدام 12 أو 24 كلمة.</string>
+  <string name="onb_path_offline_title">لا يوجد اتصال بالإنترنت</string>
+  <string name="onb_path_offline_body">الإنشاء يعمل دون اتصال؛ وقد يتطلب الاستيراد اتصالاً بالإنترنت.</string>
+
+  <string name="onb_pw_title">تعيين كلمة مرور التطبيق</string>
+  <string name="onb_pw_subtitle">تحمي كلمة المرور هذه محفظتك محليًا على هذا الجهاز. لا يمكن إعادة تعيينها.</string>
+  <string name="onb_pw_label">كلمة مرور التطبيق</string>
+  <string name="onb_pw_placeholder">أدخل كلمة المرور</string>
+  <string name="onb_pw_helper_minlen">‏8 أحرف على الأقل.</string>
+  <string name="onb_pw_strength_label">قوة كلمة المرور: %1$s</string>
+  <string name="onb_pw_strength_weak">ضعيفة</string>
+  <string name="onb_pw_strength_medium">متوسطة</string>
+  <string name="onb_pw_strength_strong">قوية</string>
+  <string name="onb_pw_err_short">كلمة المرور قصيرة جدًا (‏8 أحرف على الأقل).</string>
+  <string name="onb_pw_err_empty">يُرجى إدخال كلمة مرور.</string>
+  <string name="onb_pw_err_whitespace">لا يمكن أن تتكوّن كلمة المرور من مسافات فقط.</string>
+  <string name="onb_pw_err_weak">ضعيفة جدًا — أضف أحرفًا كبيرة وصغيرة وأرقامًا ورموزًا.</string>
+
+  <string name="onb_pwc_title">تأكيد كلمة المرور</string>
+  <string name="onb_pwc_subtitle">أعد إدخال كلمة مرور التطبيق لتجنّب الأخطاء المطبعية.</string>
+  <string name="onb_pwc_label">تأكيد كلمة المرور</string>
+  <string name="onb_pwc_helper">يجب أن يتطابق الإدخالان.</string>
+  <string name="onb_pwc_err_mismatch">كلمتا المرور غير متطابقتين.</string>
+  <string name="onb_pwc_err_empty">يُرجى إعادة إدخال كلمة المرور.</string>
+
+  <string name="onb_seedin_title">أدخل عبارة الاسترداد</string>
+  <string name="onb_seedin_subtitle">أدخل كلمات الاسترداد بالترتيب الصحيح.</string>
+  <string name="onb_seedin_seg_12">‏12 كلمة</string>
+  <string name="onb_seedin_seg_24">‏24 كلمة</string>
+  <string name="onb_seedin_paste">لصق من الحافظة</string>
+  <string name="onb_seedin_cta">استيراد المحفظة</string>
+  <string name="onb_word_label">الكلمة %1$d</string>
+  <string name="onb_seedin_err_invalidword">كلمة غير صالحة.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="zero">يُرجى إدخال جميع الكلمات.</item>
+    <item quantity="one">يُرجى إدخال الكلمة.</item>
+    <item quantity="two">يُرجى إدخال الكلمتين.</item>
+    <item quantity="few">يُرجى إدخال كل الكلمات الـ%1$d.</item>
+    <item quantity="many">يُرجى إدخال كل الكلمات الـ%1$d.</item>
+    <item quantity="other">يُرجى إدخال كل الكلمات الـ%1$d.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">عبارة الاسترداد التي أدخلتها غير صالحة. يُرجى التحقق من الكلمات وترتيبها.</string>
+  <string name="onb_seedin_err_pastecount">تم لصق %1$d كلمة؛ المتوقع %2$d.</string>
+  <string name="onb_seedin_err_chars">يُسمح بالأحرف فقط.</string>
+
+  <string name="onb_seedshow_title">دوّن عبارة الاسترداد</string>
+  <string name="onb_seedshow_subtitle">هذه الكلمات الـ12 هي الطريقة الوحيدة لاستعادة محفظتك.</string>
+  <string name="onb_seedshow_warn_title">لا تشاركها أو تصوّرها أبدًا</string>
+  <string name="onb_seedshow_warn_body">أي شخص يعرف عبارتك يملك وصولاً كاملاً.</string>
+  <string name="onb_seedshow_copy">نسخ</string>
+  <string name="onb_seedshow_ack">لقد دوّنت الكلمات بأمان.</string>
+  <string name="onb_seedshow_err_gen_title">تعذّر إنشاء عبارة الاسترداد بأمان</string>
+  <string name="onb_seedshow_err_gen_body">يُرجى إعادة تشغيل التطبيق. وإذا استمرت المشكلة، فحدّث نظام جهازك.</string>
+  <string name="onb_seedshow_err_gen_action">إعادة تشغيل التطبيق</string>
+
+  <string name="onb_backup_title">أكّد نسختك الاحتياطية</string>
+  <string name="onb_backup_subtitle">أدخل الكلمات التالية من عبارة الاسترداد لتأكيد أنك حفظتها.</string>
+  <string name="onb_backup_err_wrong">الكلمة %1$d غير صحيحة.</string>
+  <string name="onb_backup_err_incomplete">يُرجى إدخال جميع الكلمات المحددة.</string>
+  <string name="onb_backup_warn_title">عدة محاولات فاشلة</string>
+  <string name="onb_backup_warn_body">نصيحة: تحقق من ترتيب كلماتك المدوّنة. يمكنك الرجوع وعرضها مرة أخرى.</string>
+  <string name="onb_backup_reshow">عرض عبارة الاسترداد مرة أخرى</string>
+
+  <string name="onb_setup_loading_title">يتم إعداد محفظتك</string>
+  <string name="onb_setup_loading_body">يتم تشفير مفاتيحك وتخزينها بأمان على هذا الجهاز. لن يستغرق ذلك سوى لحظة.</string>
+  <string name="onb_setup_success_title">محفظتك جاهزة</string>
+  <string name="onb_setup_success_body">تم تشفير محفظتك وتخزينها بأمان على هذا الجهاز.</string>
+  <string name="onb_setup_err_enc_title">تعذّر حفظ محفظتك</string>
+  <string name="onb_setup_err_enc_body">فشل التشفير. لم يتم حفظ أي شيء. يُرجى المحاولة مرة أخرى.</string>
+  <string name="onb_setup_err_keystore_title">التخزين الآمن غير متوفر</string>
+  <string name="onb_setup_err_keystore_body">التخزين الآمن في جهازك غير متوفر. تأكد من حماية جهازك برمز قفل الشاشة (PIN/نمط).</string>
+  <string name="onb_setup_err_storage_title">مساحة التخزين غير كافية</string>
+  <string name="onb_setup_err_storage_body">يُرجى تحرير مساحة والمحاولة مرة أخرى.</string>
+
+  <string name="onb_bio_title">افتح القفل بشكل أسرع</string>
+  <string name="onb_bio_body">افتح قفل محفظتك باستخدام %1$s من الآن فصاعدًا. تبقى كلمة مرور التطبيق متاحة كخيار احتياطي في أي وقت.</string>
+  <string name="onb_bio_method_android">بصمة الإصبع أو التعرّف على الوجه</string>
+  <string name="onb_bio_method_ios">Face ID أو Touch ID</string>
+  <string name="onb_bio_cta">تفعيل الآن</string>
+  <string name="onb_bio_later">لاحقًا</string>
+  <string name="onb_bio_unavail_title">القياسات الحيوية غير متوفرة</string>
+  <string name="onb_bio_unavail_body">لا توجد قياسات حيوية مُعدّة على هذا الجهاز. يمكنك تفعيلها لاحقًا من إعدادات الجهاز.</string>
+  <string name="onb_bio_reg_failed">لم ينجح التعرّف على القياس الحيوي.</string>
+  <string name="onb_bio_skip_later">تخطٍّ، التفعيل لاحقًا</string>
+  <string name="onb_bio_perm_title">الإذن مطلوب</string>
+  <string name="onb_bio_perm_body">يُرجى منح إذن التعرّف على القياسات الحيوية من إعدادات الجهاز.</string>
+  <string name="onb_bio_open_settings">فتح الإعدادات</string>
+  <string name="onb_bio_link_title">تعذّر ربط القياسات الحيوية</string>
+  <string name="onb_bio_link_body">يمكنك استخدام التطبيق بكلمة المرور الآن وتفعيل القياسات الحيوية لاحقًا.</string>
+  <string name="onb_bio_link_action">المتابعة بدون قياسات حيوية</string>
+
+</resources>

@@ -28,6 +28,14 @@ All notable changes to Cyppie are documented here. The format is based on
   IDs applied by their screen tickets, KAN-5+). Robolectric Compose test verifies the root sets
   `testTagsAsResourceId=true` (Android resource-id) and the welcome tags are selectable; iOS exposes
   `testTag` as `accessibilityIdentifier` automatically (no bridge needed).
+- **KAN-35 — i18n + RTL bootstrap.** Wired Compose `composeResources` in `:feature:onboarding` and
+  imported all **14 locales** from `../Cryptasa/i18n` (en base + de · fr · pl · sv · da · no · es ·
+  pt-rBR · ru · tr · vi · zh-rCN + **ar** RTL; untranslated keys fall through to the base). Strings
+  are exposed via the generated `Res` (`com.tneff.cyppie.feature.onboarding.generated.resources`,
+  key scheme `onb_*`/`common_*`/`cd_*`, positional placeholders). The welcome sample now renders
+  entirely from string resources (no raw text, §5.5). Robolectric tests verify the Arabic CTA
+  resolves under locale `ar` and the adaptive scaffold mirrors its brand column under
+  `LayoutDirection.Rtl`. Device-level RTL Maestro smoke stays with the test agent.
 
 ### Changed
 - `app:shared` `App()` now renders the wallet onboarding flow (`OnboardingRoot()`) instead of

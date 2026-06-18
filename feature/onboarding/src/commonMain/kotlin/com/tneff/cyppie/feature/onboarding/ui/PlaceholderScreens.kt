@@ -11,12 +11,18 @@ import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.OnboardingScaffold
 import com.tneff.cyppie.feature.onboarding.OnboardingTestTags
+import com.tneff.cyppie.feature.onboarding.generated.resources.Res
+import com.tneff.cyppie.feature.onboarding.generated.resources.cd_back
+import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_body
+import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_cta
+import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_import_link
+import com.tneff.cyppie.feature.onboarding.generated.resources.onb_welcome_title
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Foundation placeholder for the welcome screen so the app is runnable end-to-end. The real ONB-1
- * screen lands in KAN-5 and its copy moves to string resources in KAN-35; the inline strings here
- * are intentional throwaway scaffolding. The two actions already carry their contract `testTag`s
- * ([OnboardingTestTags.WELCOME_START] / [OnboardingTestTags.WELCOME_IMPORT], KAN-10).
+ * screen lands in KAN-5. All user-facing text comes from `composeResources` (no raw strings, §5.5);
+ * the two actions carry their contract `testTag`s ([OnboardingTestTags], KAN-10).
  */
 @Composable
 fun WelcomePlaceholderScreen(
@@ -25,17 +31,17 @@ fun WelcomePlaceholderScreen(
     modifier: Modifier = Modifier,
 ) {
     OnboardingScaffold(
-        title = "Cyppie",
+        title = stringResource(Res.string.onb_welcome_title),
         modifier = modifier,
         primaryBar = {
             Column(verticalArrangement = Arrangement.spacedBy(CryptasaTheme.spacing.sm)) {
                 CryptasaButton(
-                    text = "Neue Wallet erstellen",
+                    text = stringResource(Res.string.onb_welcome_cta),
                     onClick = onStart,
                     modifier = Modifier.testTag(OnboardingTestTags.WELCOME_START),
                 )
                 CryptasaButton(
-                    text = "Wallet importieren",
+                    text = stringResource(Res.string.onb_welcome_import_link),
                     onClick = onImport,
                     style = CryptasaButtonStyle.Secondary,
                     modifier = Modifier.testTag(OnboardingTestTags.WELCOME_IMPORT),
@@ -44,8 +50,7 @@ fun WelcomePlaceholderScreen(
         },
     ) {
         Text(
-            text = "Onboarding-Foundations stehen (Theme, Komponenten, adaptiver Scaffold, Nav3, Koin). " +
-                "Die echten Screens folgen ab KAN-5.",
+            text = stringResource(Res.string.onb_welcome_body),
             style = CryptasaTheme.typography.body,
             color = CryptasaTheme.colors.onSurfaceVariant,
         )
@@ -54,9 +59,10 @@ fun WelcomePlaceholderScreen(
 
 /**
  * Generic placeholder for the not-yet-built onboarding screens (2–9). These carry **no** contract
- * `testTag`s on purpose — their `onb_<screen>_<element>` IDs ([OnboardingTestTags]) are wired to the
- * real interactive elements when each screen is built in its ONB-* ticket (KAN-5+). The back action
- * is scaffold-only navigation.
+ * `testTag`s on purpose — their `onb_<screen>_<element>` IDs ([OnboardingTestTags]) and final copy
+ * (string resources) are wired when each screen is built in its ONB-* ticket (KAN-5+). The [title]
+ * passed by the navigation host is a transient scaffold label; the back action uses the shared
+ * [Res.string.cd_back] resource.
  */
 @Composable
 fun OnboardingPlaceholderScreen(
@@ -70,17 +76,12 @@ fun OnboardingPlaceholderScreen(
         primaryBar = onBack?.let {
             {
                 CryptasaButton(
-                    text = "Zurück",
+                    text = stringResource(Res.string.cd_back),
                     onClick = it,
                     style = CryptasaButtonStyle.Secondary,
                 )
             }
         },
-    ) {
-        Text(
-            text = "Platzhalter — wird in der jeweiligen ONB-Story implementiert.",
-            style = CryptasaTheme.typography.body,
-            color = CryptasaTheme.colors.onSurfaceVariant,
-        )
-    }
+        content = {},
+    )
 }

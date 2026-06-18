@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Tiếng Việt (vi, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig. Plural: nur "other". -->
+<resources>
+
+  <string name="common_continue">Tiếp tục</string>
+  <string name="common_confirm">Xác nhận</string>
+  <string name="common_retry">Thử lại</string>
+  <string name="common_cancel">Hủy</string>
+  <string name="common_close">Đóng</string>
+  <string name="common_skip">Bỏ qua</string>
+  <string name="cd_back">Quay lại</string>
+  <string name="cd_password_show">Hiện mật khẩu</string>
+  <string name="cd_password_hide">Ẩn mật khẩu</string>
+
+  <string name="onb_welcome_tagline">Ví của bạn. Khóa của bạn.</string>
+  <string name="onb_welcome_title">Bắt đầu an toàn</string>
+  <string name="onb_welcome_body">Ví không lưu ký: chỉ bạn mới có quyền truy cập khóa và tiền mã hóa của mình. Không ai có thể khôi phục chúng thay bạn.</string>
+  <string name="onb_welcome_cta">Bắt đầu</string>
+  <string name="onb_welcome_import_link">Tôi đã có ví</string>
+  <string name="onb_welcome_err_start_title">Không thể khởi động ứng dụng</string>
+  <string name="onb_welcome_err_start_body">Bản cài đặt ứng dụng có vẻ bị hỏng. Vui lòng cài đặt lại ứng dụng.</string>
+
+  <string name="onb_path_title">Bạn muốn bắt đầu thế nào?</string>
+  <string name="onb_path_subtitle">Bạn có thể tạo ví mới hoặc nhập ví hiện có bằng cụm từ khôi phục.</string>
+  <string name="onb_path_create_title">Tạo ví mới</string>
+  <string name="onb_path_create_sub">Tạo cụm từ khôi phục mới trên thiết bị này.</string>
+  <string name="onb_path_import_title">Nhập ví hiện có</string>
+  <string name="onb_path_import_sub">Khôi phục bằng 12 hoặc 24 từ.</string>
+  <string name="onb_path_offline_title">Không có kết nối internet</string>
+  <string name="onb_path_offline_body">Việc tạo hoạt động ngoại tuyến; việc nhập có thể cần kết nối.</string>
+
+  <string name="onb_pw_title">Đặt mật khẩu ứng dụng</string>
+  <string name="onb_pw_subtitle">Mật khẩu này bảo vệ ví của bạn cục bộ trên thiết bị này. Không thể đặt lại.</string>
+  <string name="onb_pw_label">Mật khẩu ứng dụng</string>
+  <string name="onb_pw_placeholder">Nhập mật khẩu</string>
+  <string name="onb_pw_helper_minlen">Ít nhất 8 ký tự.</string>
+  <string name="onb_pw_strength_label">Độ mạnh mật khẩu: %1$s</string>
+  <string name="onb_pw_strength_weak">yếu</string>
+  <string name="onb_pw_strength_medium">trung bình</string>
+  <string name="onb_pw_strength_strong">mạnh</string>
+  <string name="onb_pw_err_short">Mật khẩu quá ngắn (tối thiểu 8 ký tự).</string>
+  <string name="onb_pw_err_empty">Vui lòng nhập mật khẩu.</string>
+  <string name="onb_pw_err_whitespace">Mật khẩu không thể chỉ gồm khoảng trắng.</string>
+  <string name="onb_pw_err_weak">Quá yếu — thêm chữ hoa, chữ thường, chữ số và ký hiệu.</string>
+
+  <string name="onb_pwc_title">Xác nhận mật khẩu</string>
+  <string name="onb_pwc_subtitle">Nhập lại mật khẩu ứng dụng để tránh lỗi gõ.</string>
+  <string name="onb_pwc_label">Xác nhận mật khẩu</string>
+  <string name="onb_pwc_helper">Cả hai mục nhập phải khớp nhau.</string>
+  <string name="onb_pwc_err_mismatch">Mật khẩu không khớp.</string>
+  <string name="onb_pwc_err_empty">Vui lòng nhập lại mật khẩu.</string>
+
+  <string name="onb_seedin_title">Nhập cụm từ khôi phục</string>
+  <string name="onb_seedin_subtitle">Nhập các từ khôi phục theo đúng thứ tự.</string>
+  <string name="onb_seedin_seg_12">12 từ</string>
+  <string name="onb_seedin_seg_24">24 từ</string>
+  <string name="onb_seedin_paste">Dán từ bộ nhớ tạm</string>
+  <string name="onb_seedin_cta">Nhập ví</string>
+  <string name="onb_word_label">Từ %1$d</string>
+  <string name="onb_seedin_err_invalidword">Từ không hợp lệ.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="other">Vui lòng nhập đủ %1$d từ.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">Cụm từ khôi phục bạn đã nhập không hợp lệ. Vui lòng kiểm tra các từ và thứ tự của chúng.</string>
+  <string name="onb_seedin_err_pastecount">Đã dán %1$d từ; cần %2$d.</string>
+  <string name="onb_seedin_err_chars">Chỉ cho phép chữ cái.</string>
+
+  <string name="onb_seedshow_title">Ghi lại cụm từ khôi phục</string>
+  <string name="onb_seedshow_subtitle">12 từ này là cách duy nhất để khôi phục ví của bạn.</string>
+  <string name="onb_seedshow_warn_title">Không bao giờ chia sẻ hoặc chụp ảnh</string>
+  <string name="onb_seedshow_warn_body">Bất kỳ ai biết cụm từ của bạn đều có toàn quyền truy cập.</string>
+  <string name="onb_seedshow_copy">Sao chép</string>
+  <string name="onb_seedshow_ack">Tôi đã ghi lại các từ một cách an toàn.</string>
+  <string name="onb_seedshow_err_gen_title">Không thể tạo cụm từ khôi phục một cách an toàn</string>
+  <string name="onb_seedshow_err_gen_body">Vui lòng khởi động lại ứng dụng. Nếu sự cố vẫn tiếp diễn, hãy cập nhật phần mềm thiết bị.</string>
+  <string name="onb_seedshow_err_gen_action">Khởi động lại ứng dụng</string>
+
+  <string name="onb_backup_title">Xác nhận bản sao lưu</string>
+  <string name="onb_backup_subtitle">Nhập các từ sau từ cụm từ khôi phục để xác nhận bạn đã lưu nó.</string>
+  <string name="onb_backup_err_wrong">Từ %1$d không đúng.</string>
+  <string name="onb_backup_err_incomplete">Vui lòng nhập tất cả các từ được đánh dấu.</string>
+  <string name="onb_backup_warn_title">Nhiều lần thử thất bại</string>
+  <string name="onb_backup_warn_body">Mẹo: kiểm tra thứ tự các từ bạn đã ghi. Bạn có thể quay lại và xem lại chúng.</string>
+  <string name="onb_backup_reshow">Hiển thị lại cụm từ khôi phục</string>
+
+  <string name="onb_setup_loading_title">Đang thiết lập ví của bạn</string>
+  <string name="onb_setup_loading_body">Khóa của bạn đang được mã hóa và lưu trữ an toàn trên thiết bị này. Việc này chỉ mất một chút.</string>
+  <string name="onb_setup_success_title">Ví của bạn đã sẵn sàng</string>
+  <string name="onb_setup_success_body">Ví của bạn đã được mã hóa và lưu trữ an toàn trên thiết bị này.</string>
+  <string name="onb_setup_err_enc_title">Không thể lưu ví của bạn</string>
+  <string name="onb_setup_err_enc_body">Mã hóa thất bại. Không có gì được lưu. Vui lòng thử lại.</string>
+  <string name="onb_setup_err_keystore_title">Bộ nhớ an toàn không khả dụng</string>
+  <string name="onb_setup_err_keystore_body">Bộ nhớ an toàn của thiết bị không khả dụng. Hãy đảm bảo thiết bị của bạn được bảo vệ bằng khóa màn hình (PIN/hình mở khóa).</string>
+  <string name="onb_setup_err_storage_title">Không đủ dung lượng</string>
+  <string name="onb_setup_err_storage_body">Vui lòng giải phóng dung lượng và thử lại.</string>
+
+  <string name="onb_bio_title">Mở khóa nhanh hơn</string>
+  <string name="onb_bio_body">Từ giờ hãy mở khóa ví bằng %1$s. Mật khẩu ứng dụng vẫn luôn khả dụng như phương án dự phòng.</string>
+  <string name="onb_bio_method_android">vân tay hoặc nhận diện khuôn mặt</string>
+  <string name="onb_bio_method_ios">Face ID hoặc Touch ID</string>
+  <string name="onb_bio_cta">Bật ngay</string>
+  <string name="onb_bio_later">Để sau</string>
+  <string name="onb_bio_unavail_title">Sinh trắc học không khả dụng</string>
+  <string name="onb_bio_unavail_body">Thiết bị này chưa thiết lập sinh trắc học. Bạn có thể bật sau trong cài đặt thiết bị.</string>
+  <string name="onb_bio_reg_failed">Nhận diện sinh trắc học không thành công.</string>
+  <string name="onb_bio_skip_later">Bỏ qua, bật sau</string>
+  <string name="onb_bio_perm_title">Cần cấp quyền</string>
+  <string name="onb_bio_perm_body">Vui lòng cấp quyền nhận diện sinh trắc học trong cài đặt thiết bị.</string>
+  <string name="onb_bio_open_settings">Mở cài đặt</string>
+  <string name="onb_bio_link_title">Không thể liên kết sinh trắc học</string>
+  <string name="onb_bio_link_body">Hiện tại bạn có thể dùng ứng dụng bằng mật khẩu và bật lại sinh trắc học sau.</string>
+  <string name="onb_bio_link_action">Tiếp tục không dùng sinh trắc học</string>
+
+</resources>

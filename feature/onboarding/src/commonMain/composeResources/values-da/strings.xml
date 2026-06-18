@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Dansk (da, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig. -->
+<resources>
+
+  <string name="common_continue">Fortsæt</string>
+  <string name="common_confirm">Bekræft</string>
+  <string name="common_retry">Prøv igen</string>
+  <string name="common_cancel">Annuller</string>
+  <string name="common_close">Luk</string>
+  <string name="common_skip">Spring over</string>
+  <string name="cd_back">Tilbage</string>
+  <string name="cd_password_show">Vis adgangskode</string>
+  <string name="cd_password_hide">Skjul adgangskode</string>
+
+  <string name="onb_welcome_tagline">Din wallet. Dine nøgler.</string>
+  <string name="onb_welcome_title">Kom sikkert i gang</string>
+  <string name="onb_welcome_body">En non-custodial wallet: kun du har adgang til dine nøgler og din krypto. Ingen kan gendanne dem for dig.</string>
+  <string name="onb_welcome_cta">Kom i gang</string>
+  <string name="onb_welcome_import_link">Jeg har allerede en wallet</string>
+  <string name="onb_welcome_err_start_title">Appen kunne ikke startes</string>
+  <string name="onb_welcome_err_start_body">App-installationen ser ud til at være beskadiget. Geninstaller appen.</string>
+
+  <string name="onb_path_title">Hvordan vil du starte?</string>
+  <string name="onb_path_subtitle">Du kan oprette en ny wallet eller importere en eksisterende med din gendannelsesfrase.</string>
+  <string name="onb_path_create_title">Opret ny wallet</string>
+  <string name="onb_path_create_sub">Genererer en ny gendannelsesfrase på denne enhed.</string>
+  <string name="onb_path_import_title">Importer eksisterende</string>
+  <string name="onb_path_import_sub">Gendan med 12 eller 24 ord.</string>
+  <string name="onb_path_offline_title">Ingen internetforbindelse</string>
+  <string name="onb_path_offline_body">Oprettelse fungerer offline; import kan kræve forbindelse.</string>
+
+  <string name="onb_pw_title">Angiv app-adgangskode</string>
+  <string name="onb_pw_subtitle">Denne adgangskode beskytter din wallet lokalt på denne enhed. Den kan ikke nulstilles.</string>
+  <string name="onb_pw_label">App-adgangskode</string>
+  <string name="onb_pw_placeholder">Indtast adgangskode</string>
+  <string name="onb_pw_helper_minlen">Mindst 8 tegn.</string>
+  <string name="onb_pw_strength_label">Adgangskodens styrke: %1$s</string>
+  <string name="onb_pw_strength_weak">svag</string>
+  <string name="onb_pw_strength_medium">middel</string>
+  <string name="onb_pw_strength_strong">stærk</string>
+  <string name="onb_pw_err_short">Adgangskoden er for kort (mindst 8 tegn).</string>
+  <string name="onb_pw_err_empty">Indtast en adgangskode.</string>
+  <string name="onb_pw_err_whitespace">Adgangskoden må ikke kun bestå af mellemrum.</string>
+  <string name="onb_pw_err_weak">For svag – tilføj store og små bogstaver, tal og symboler.</string>
+
+  <string name="onb_pwc_title">Bekræft adgangskode</string>
+  <string name="onb_pwc_subtitle">Indtast app-adgangskoden igen for at undgå tastefejl.</string>
+  <string name="onb_pwc_label">Bekræft adgangskode</string>
+  <string name="onb_pwc_helper">Begge indtastninger skal være ens.</string>
+  <string name="onb_pwc_err_mismatch">Adgangskoderne er ikke ens.</string>
+  <string name="onb_pwc_err_empty">Indtast adgangskoden igen.</string>
+
+  <string name="onb_seedin_title">Indtast gendannelsesfrase</string>
+  <string name="onb_seedin_subtitle">Indtast dine gendannelsesord i den rigtige rækkefølge.</string>
+  <string name="onb_seedin_seg_12">12 ord</string>
+  <string name="onb_seedin_seg_24">24 ord</string>
+  <string name="onb_seedin_paste">Indsæt fra udklipsholder</string>
+  <string name="onb_seedin_cta">Importer wallet</string>
+  <string name="onb_word_label">Ord %1$d</string>
+  <string name="onb_seedin_err_invalidword">Ugyldigt ord.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Indtast ordet.</item>
+    <item quantity="other">Indtast alle %1$d ord.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">Den indtastede gendannelsesfrase er ugyldig. Kontroller ordene og deres rækkefølge.</string>
+  <string name="onb_seedin_err_pastecount">%1$d ord blev indsat; %2$d forventet.</string>
+  <string name="onb_seedin_err_chars">Kun bogstaver er tilladt.</string>
+
+  <string name="onb_seedshow_title">Skriv din gendannelsesfrase ned</string>
+  <string name="onb_seedshow_subtitle">Disse 12 ord er den eneste måde at gendanne din wallet på.</string>
+  <string name="onb_seedshow_warn_title">Del eller fotografer den aldrig</string>
+  <string name="onb_seedshow_warn_body">Alle, der kender din frase, har fuld adgang.</string>
+  <string name="onb_seedshow_copy">Kopier</string>
+  <string name="onb_seedshow_ack">Jeg har skrevet ordene sikkert ned.</string>
+  <string name="onb_seedshow_err_gen_title">Gendannelsesfrasen kunne ikke genereres sikkert</string>
+  <string name="onb_seedshow_err_gen_body">Genstart appen. Hvis problemet fortsætter, skal du opdatere enhedens software.</string>
+  <string name="onb_seedshow_err_gen_action">Genstart appen</string>
+
+  <string name="onb_backup_title">Bekræft din sikkerhedskopi</string>
+  <string name="onb_backup_subtitle">Indtast følgende ord fra din gendannelsesfrase for at bekræfte, at du har gemt den.</string>
+  <string name="onb_backup_err_wrong">Ord %1$d er forkert.</string>
+  <string name="onb_backup_err_incomplete">Indtast alle markerede ord.</string>
+  <string name="onb_backup_warn_title">Flere mislykkede forsøg</string>
+  <string name="onb_backup_warn_body">Tip: kontroller rækkefølgen af dine nedskrevne ord. Du kan gå tilbage og se dem igen.</string>
+  <string name="onb_backup_reshow">Vis gendannelsesfrasen igen</string>
+
+  <string name="onb_setup_loading_title">Konfigurerer din wallet</string>
+  <string name="onb_setup_loading_body">Dine nøgler krypteres og gemmes sikkert på denne enhed. Det tager kun et øjeblik.</string>
+  <string name="onb_setup_success_title">Din wallet er klar</string>
+  <string name="onb_setup_success_body">Din wallet er blevet krypteret og gemt sikkert på denne enhed.</string>
+  <string name="onb_setup_err_enc_title">Din wallet kunne ikke gemmes</string>
+  <string name="onb_setup_err_enc_body">Krypteringen mislykkedes. Intet blev gemt. Prøv igen.</string>
+  <string name="onb_setup_err_keystore_title">Sikker lagring er ikke tilgængelig</string>
+  <string name="onb_setup_err_keystore_body">Enhedens sikre lagring er ikke tilgængelig. Sørg for, at din enhed er beskyttet med en skærmlås (PIN/mønster).</string>
+  <string name="onb_setup_err_storage_title">Ikke nok lagerplads</string>
+  <string name="onb_setup_err_storage_body">Frigør plads, og prøv igen.</string>
+
+  <string name="onb_bio_title">Lås hurtigere op</string>
+  <string name="onb_bio_body">Lås din wallet op med %1$s fra nu af. Din app-adgangskode er altid tilgængelig som reserve.</string>
+  <string name="onb_bio_method_android">fingeraftryk eller ansigtsgenkendelse</string>
+  <string name="onb_bio_method_ios">Face ID eller Touch ID</string>
+  <string name="onb_bio_cta">Aktivér nu</string>
+  <string name="onb_bio_later">Senere</string>
+  <string name="onb_bio_unavail_title">Biometri ikke tilgængelig</string>
+  <string name="onb_bio_unavail_body">Der er ikke konfigureret biometri på denne enhed. Du kan aktivere det senere i enhedens indstillinger.</string>
+  <string name="onb_bio_reg_failed">Den biometriske genkendelse lykkedes ikke.</string>
+  <string name="onb_bio_skip_later">Spring over, aktivér senere</string>
+  <string name="onb_bio_perm_title">Tilladelse påkrævet</string>
+  <string name="onb_bio_perm_body">Giv tilladelse til biometrisk genkendelse i enhedens indstillinger.</string>
+  <string name="onb_bio_open_settings">Åbn indstillinger</string>
+  <string name="onb_bio_link_title">Biometri kunne ikke tilknyttes</string>
+  <string name="onb_bio_link_body">Du kan bruge appen med din adgangskode indtil videre og aktivere biometri igen senere.</string>
+  <string name="onb_bio_link_action">Fortsæt uden biometri</string>
+
+</resources>

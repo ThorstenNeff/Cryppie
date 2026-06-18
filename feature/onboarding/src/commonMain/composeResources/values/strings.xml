@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — BASE locale (English). Compose Multiplatform: composeResources/values/strings.xml
+     Key scheme: onb_<screen>_<element> + common_*. Placeholders positional (%1$s / %1$d). -->
+<resources>
+
+  <!-- Common / components -->
+  <string name="common_continue">Continue</string>
+  <string name="common_confirm">Confirm</string>
+  <string name="common_retry">Try again</string>
+  <string name="common_cancel">Cancel</string>
+  <string name="common_close">Close</string>
+  <string name="common_skip">Skip</string>
+  <string name="cd_back">Back</string>
+  <string name="cd_password_show">Show password</string>
+  <string name="cd_password_hide">Hide password</string>
+
+  <!-- Screen 1 — Welcome -->
+  <string name="onb_welcome_tagline">Your wallet. Your keys.</string>
+  <string name="onb_welcome_title">Start securely</string>
+  <string name="onb_welcome_body">A non-custodial wallet: only you have access to your keys and your crypto. No one can recover them for you.</string>
+  <string name="onb_welcome_cta">Get started</string>
+  <string name="onb_welcome_import_link">I already have a wallet</string>
+  <string name="onb_welcome_err_start_title">Couldn\'t start the app</string>
+  <string name="onb_welcome_err_start_body">The app installation appears to be corrupted. Please reinstall the app.</string>
+
+  <!-- Screen 2 — Choose path -->
+  <string name="onb_path_title">How would you like to start?</string>
+  <string name="onb_path_subtitle">You can create a new wallet or import an existing one with your recovery phrase.</string>
+  <string name="onb_path_create_title">Create new wallet</string>
+  <string name="onb_path_create_sub">Generates a new recovery phrase on this device.</string>
+  <string name="onb_path_import_title">Import existing</string>
+  <string name="onb_path_import_sub">Restore with 12 or 24 words.</string>
+  <string name="onb_path_offline_title">No internet connection</string>
+  <string name="onb_path_offline_body">Creating works offline; importing may require a connection.</string>
+
+  <!-- Screen 3 — Set app password -->
+  <string name="onb_pw_title">Set app password</string>
+  <string name="onb_pw_subtitle">This password protects your wallet locally on this device. It cannot be reset.</string>
+  <string name="onb_pw_label">App password</string>
+  <string name="onb_pw_placeholder">Enter password</string>
+  <string name="onb_pw_helper_minlen">At least 8 characters.</string>
+  <string name="onb_pw_strength_label">Password strength: %1$s</string>
+  <string name="onb_pw_strength_weak">weak</string>
+  <string name="onb_pw_strength_medium">medium</string>
+  <string name="onb_pw_strength_strong">strong</string>
+  <string name="onb_pw_err_short">Password is too short (min. 8 characters).</string>
+  <string name="onb_pw_err_empty">Please enter a password.</string>
+  <string name="onb_pw_err_whitespace">The password can\'t consist only of spaces.</string>
+  <string name="onb_pw_err_weak">Too weak — add upper- and lowercase letters, digits and symbols.</string>
+
+  <!-- Screen 4 — Confirm password -->
+  <string name="onb_pwc_title">Confirm password</string>
+  <string name="onb_pwc_subtitle">Enter your app password again to rule out typos.</string>
+  <string name="onb_pwc_label">Confirm password</string>
+  <string name="onb_pwc_helper">Both entries must match.</string>
+  <string name="onb_pwc_err_mismatch">Passwords don\'t match.</string>
+  <string name="onb_pwc_err_empty">Please re-enter the password.</string>
+
+  <!-- Screen 5 — Enter recovery phrase (import) -->
+  <string name="onb_seedin_title">Enter recovery phrase</string>
+  <string name="onb_seedin_subtitle">Enter your recovery words in the correct order.</string>
+  <string name="onb_seedin_seg_12">12 words</string>
+  <string name="onb_seedin_seg_24">24 words</string>
+  <string name="onb_seedin_paste">Paste from clipboard</string>
+  <string name="onb_seedin_cta">Import wallet</string>
+  <string name="onb_word_label">Word %1$d</string>
+  <string name="onb_seedin_err_invalidword">Not a valid word.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Please enter the word.</item>
+    <item quantity="other">Please enter all %1$d words.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">The recovery phrase you entered is invalid. Please check the words and their order.</string>
+  <string name="onb_seedin_err_pastecount">%1$d words were pasted; %2$d expected.</string>
+  <string name="onb_seedin_err_chars">Only letters allowed.</string>
+
+  <!-- Screen 6 — Show recovery phrase (create) -->
+  <string name="onb_seedshow_title">Write down your recovery phrase</string>
+  <string name="onb_seedshow_subtitle">These 12 words are the only way to recover your wallet.</string>
+  <string name="onb_seedshow_warn_title">Never share or photograph it</string>
+  <string name="onb_seedshow_warn_body">Anyone who knows your phrase has full access.</string>
+  <string name="onb_seedshow_copy">Copy</string>
+  <string name="onb_seedshow_ack">I\'ve safely written down the words.</string>
+  <string name="onb_seedshow_err_gen_title">Couldn\'t securely generate the recovery phrase</string>
+  <string name="onb_seedshow_err_gen_body">Please restart the app. If the problem persists, update your device software.</string>
+  <string name="onb_seedshow_err_gen_action">Restart app</string>
+
+  <!-- Screen 7 — Confirm backup -->
+  <string name="onb_backup_title">Confirm your backup</string>
+  <string name="onb_backup_subtitle">Enter the following words from your recovery phrase to confirm you\'ve saved it.</string>
+  <string name="onb_backup_err_wrong">Word %1$d is incorrect.</string>
+  <string name="onb_backup_err_incomplete">Please enter all highlighted words.</string>
+  <string name="onb_backup_warn_title">Several failed attempts</string>
+  <string name="onb_backup_warn_body">Tip: check the order of your written-down words. You can go back and view them again.</string>
+  <string name="onb_backup_reshow">Show recovery phrase again</string>
+
+  <!-- Screen 8 — Setting up wallet -->
+  <string name="onb_setup_loading_title">Setting up your wallet</string>
+  <string name="onb_setup_loading_body">Your keys are being encrypted and stored securely on this device. This only takes a moment.</string>
+  <string name="onb_setup_success_title">Your wallet is ready</string>
+  <string name="onb_setup_success_body">Your wallet has been encrypted and stored securely on this device.</string>
+  <string name="onb_setup_err_enc_title">Couldn\'t save your wallet</string>
+  <string name="onb_setup_err_enc_body">Encryption failed. Nothing was saved. Please try again.</string>
+  <string name="onb_setup_err_keystore_title">Secure storage unavailable</string>
+  <string name="onb_setup_err_keystore_body">Your device\'s secure storage is unavailable. Make sure your device is protected with a screen lock (PIN/pattern).</string>
+  <string name="onb_setup_err_storage_title">Not enough storage</string>
+  <string name="onb_setup_err_storage_body">Please free up space and try again.</string>
+
+  <!-- Screen 9 — Enable biometrics -->
+  <string name="onb_bio_title">Unlock faster</string>
+  <string name="onb_bio_body">Unlock your wallet with %1$s from now on. Your app password remains available as a fallback at any time.</string>
+  <string name="onb_bio_method_android">fingerprint or face recognition</string>
+  <string name="onb_bio_method_ios">Face ID or Touch ID</string>
+  <string name="onb_bio_cta">Enable now</string>
+  <string name="onb_bio_later">Later</string>
+  <string name="onb_bio_unavail_title">Biometrics unavailable</string>
+  <string name="onb_bio_unavail_body">No biometrics are set up on this device. You can enable them later in your device settings.</string>
+  <string name="onb_bio_reg_failed">Biometric recognition wasn\'t successful.</string>
+  <string name="onb_bio_skip_later">Skip, enable later</string>
+  <string name="onb_bio_perm_title">Permission required</string>
+  <string name="onb_bio_perm_body">Please grant permission for biometric recognition in your device settings.</string>
+  <string name="onb_bio_open_settings">Open settings</string>
+  <string name="onb_bio_link_title">Couldn\'t link biometrics</string>
+  <string name="onb_bio_link_body">You can use the app with your password for now and enable biometrics again later.</string>
+  <string name="onb_bio_link_action">Continue without biometrics</string>
+
+  <!-- KAN-46 Wallet-Home + Account-Switcher (testTag = key) -->
+  <string name="wallet_total_label">Total balance</string>
+  <string name="wallet_account_switch_title">Accounts</string>
+  <string name="wallet_account_add">Add account</string>
+  <string name="wallet_action_receive">Receive</string>
+  <string name="wallet_action_send">Send</string>
+  <string name="wallet_action_connect">Connect</string>
+  <string name="wallet_section_chains">Chains</string>
+  <string name="wallet_chain_eth">Ethereum</string>
+  <string name="wallet_chain_base">Base</string>
+  <string name="wallet_empty_title">No balance yet</string>
+  <string name="wallet_empty_body">Receive crypto on Ethereum or Base to get started.</string>
+  <string name="wallet_error_title">Network unavailable</string>
+  <string name="wallet_error_body">Balances may be out of date.</string>
+  <string name="wallet_readonly_badge">Web · read-only</string>
+  <string name="wallet_cd_copy_address">Copy address</string>
+
+  <!-- KAN-47 Receive (testTag = key) -->
+  <string name="receive_chain">Network</string>
+  <string name="receive_address_label">Your %1$s address</string>
+  <string name="receive_copy">Copy address</string>
+  <string name="receive_copied">Copied</string>
+  <string name="receive_warning">Only send Ethereum &amp; Base assets to this address. Other networks will result in loss.</string>
+  <string name="receive_qr_cd">QR code of your receiving address</string>
+
+  <!-- KAN-48 Send-Flow (testTag = key) -->
+  <string name="send_title">Send</string>
+  <string name="send_review_title">Review</string>
+  <string name="send_asset_select_title">Select asset</string>
+  <string name="send_available">Available: %1$s</string>
+  <string name="send_max">Max</string>
+  <string name="send_recipient_label">To (address)</string>
+  <string name="send_recipient_placeholder">Paste or scan 0x…</string>
+  <string name="send_resolved_preview">Resolved address (ENS) — later</string>
+  <string name="send_fee_label">Network fee (EIP-1559)</string>
+  <string name="send_continue">Continue</string>
+  <string name="send_disclosure_network">Network</string>
+  <string name="send_disclosure_fee">Network fee (max.)</string>
+  <string name="send_disclosure_total">Total</string>
+  <string name="send_confirm_note">Check the recipient and amount. After signing, the transaction is irreversible. No blind signing.</string>
+  <string name="send_sign">Send &amp; sign</string>
+  <string name="send_status_pending_title">Transaction sent</string>
+  <string name="send_status_pending_body">Confirming on the network…</string>
+  <string name="send_status_confirmed_title">Confirmed</string>
+  <string name="send_status_failed_title">Failed</string>
+  <string name="send_status_failed_body">The transaction was not executed. Only network fees were charged.</string>
+  <string name="send_explorer">View in explorer</string>
+  <string name="send_done">Done</string>
+  <string name="send_err_insufficient">Insufficient balance (max. %1$s).</string>
+  <string name="send_err_invalid_address">Not a valid address (EIP-55 checksum failed).</string>
+  <string name="send_err_network_title">Network unavailable</string>
+  <string name="send_err_network_body">The fee cannot be estimated.</string>
+  <string name="send_err_feespike_title">Network fees are high</string>
+  <string name="send_err_feespike_body">The network fee is unusually high right now. You can wait or send anyway.</string>
+
+  <!-- KAN-49 Add token (ERC-20) (testTag = key) -->
+  <string name="token_add_title">Add token</string>
+  <string name="token_add_subtitle">Add an ERC-20 token by contract address (Ethereum or Base).</string>
+  <string name="token_contract_label">Contract address</string>
+  <string name="token_contract_placeholder">0x… contract address</string>
+  <string name="token_contract_helper">Paste the ERC-20 token address.</string>
+  <string name="token_resolved_detail">Symbol: %1$s · Decimals: %2$d</string>
+  <string name="token_add_cta">Add token</string>
+  <string name="token_err_invalid">Not a valid address (EIP-55 checksum failed).</string>
+  <string name="token_err_not_erc20">No ERC-20 token at this address.</string>
+  <string name="token_err_network_title">Network unavailable</string>
+  <string name="token_err_network_body">The token could not be verified.</string>
+
+  <!-- KAN-50 WalletConnect (Android/iOS only) (testTag = key) -->
+  <string name="wc_pairing_title">Connect to dApp</string>
+  <string name="wc_pairing_scan">Scan</string>
+  <string name="wc_pairing_paste">Paste</string>
+  <string name="wc_pairing_scan_hint">Scan the dApp\'s WalletConnect QR code.</string>
+  <string name="wc_pairing_paste_placeholder">Paste wc: … URI</string>
+  <string name="wc_proposal_title">Connection request</string>
+  <string name="wc_verify_verified">Verified</string>
+  <string name="wc_verify_unknown">Unknown origin</string>
+  <string name="wc_verify_invalid">Invalid origin</string>
+  <string name="wc_chains_label">Requested networks</string>
+  <string name="wc_methods_label">Requested methods</string>
+  <string name="wc_proposal_note">Only connect if you expect this dApp. Connecting allows signing requests — nothing is approved automatically.</string>
+  <string name="wc_approve">Connect</string>
+  <string name="wc_reject">Reject</string>
+  <string name="wc_req_sendtx_title">Sign transaction</string>
+  <string name="wc_req_sign_title">Sign message</string>
+  <string name="wc_req_typed_title">Sign data (EIP-712)</string>
+  <string name="wc_req_method">Method: %1$s</string>
+  <string name="wc_req_decoded">ERC-20 transfer (decoded)</string>
+  <string name="wc_req_raw">Show raw data</string>
+  <string name="wc_req_approve_send">Sign &amp; send</string>
+  <string name="wc_req_approve_sign">Sign</string>
+  <string name="wc_sign_warning">Signing proves control of your address. Never sign messages that look like a transaction.</string>
+  <string name="wc_typed_warning">This signature can grant a token allowance (permit). Check spender and amount carefully.</string>
+
+  <!-- KAN-51 NFT grid (read-only) (testTag = key) -->
+  <string name="nft_title">NFTs</string>
+  <string name="nft_empty_title">No NFTs yet</string>
+  <string name="nft_empty_body">NFTs on Ethereum and Base will appear here automatically.</string>
+  <string name="nft_error_title">Couldn\'t load NFTs</string>
+  <string name="nft_error_body">Network unavailable.</string>
+  <string name="nft_cd_item">%1$s from collection %2$s</string>
+
+</resources>

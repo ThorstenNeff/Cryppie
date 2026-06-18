@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Norsk (Bokmål) (no/nb, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig.
+     Hinweis: Compose-/Android-Locale-Code "no" (bzw. "nb"). -->
+<resources>
+
+  <string name="common_continue">Fortsett</string>
+  <string name="common_confirm">Bekreft</string>
+  <string name="common_retry">Prøv igjen</string>
+  <string name="common_cancel">Avbryt</string>
+  <string name="common_close">Lukk</string>
+  <string name="common_skip">Hopp over</string>
+  <string name="cd_back">Tilbake</string>
+  <string name="cd_password_show">Vis passord</string>
+  <string name="cd_password_hide">Skjul passord</string>
+
+  <string name="onb_welcome_tagline">Din lommebok. Dine nøkler.</string>
+  <string name="onb_welcome_title">Kom trygt i gang</string>
+  <string name="onb_welcome_body">En ikke-forvaltet lommebok: bare du har tilgang til nøklene dine og kryptoen din. Ingen kan gjenopprette dem for deg.</string>
+  <string name="onb_welcome_cta">Kom i gang</string>
+  <string name="onb_welcome_import_link">Jeg har allerede en lommebok</string>
+  <string name="onb_welcome_err_start_title">Kunne ikke starte appen</string>
+  <string name="onb_welcome_err_start_body">Appinstallasjonen ser ut til å være skadet. Installer appen på nytt.</string>
+
+  <string name="onb_path_title">Hvordan vil du starte?</string>
+  <string name="onb_path_subtitle">Du kan opprette en ny lommebok eller importere en eksisterende med gjenopprettingsfrasen din.</string>
+  <string name="onb_path_create_title">Opprett ny lommebok</string>
+  <string name="onb_path_create_sub">Genererer en ny gjenopprettingsfrase på denne enheten.</string>
+  <string name="onb_path_import_title">Importer eksisterende</string>
+  <string name="onb_path_import_sub">Gjenopprett med 12 eller 24 ord.</string>
+  <string name="onb_path_offline_title">Ingen internettforbindelse</string>
+  <string name="onb_path_offline_body">Oppretting fungerer offline; import kan kreve tilkobling.</string>
+
+  <string name="onb_pw_title">Angi app-passord</string>
+  <string name="onb_pw_subtitle">Dette passordet beskytter lommeboken din lokalt på denne enheten. Det kan ikke tilbakestilles.</string>
+  <string name="onb_pw_label">App-passord</string>
+  <string name="onb_pw_placeholder">Skriv inn passord</string>
+  <string name="onb_pw_helper_minlen">Minst 8 tegn.</string>
+  <string name="onb_pw_strength_label">Passordstyrke: %1$s</string>
+  <string name="onb_pw_strength_weak">svakt</string>
+  <string name="onb_pw_strength_medium">middels</string>
+  <string name="onb_pw_strength_strong">sterkt</string>
+  <string name="onb_pw_err_short">Passordet er for kort (minst 8 tegn).</string>
+  <string name="onb_pw_err_empty">Skriv inn et passord.</string>
+  <string name="onb_pw_err_whitespace">Passordet kan ikke bare bestå av mellomrom.</string>
+  <string name="onb_pw_err_weak">For svakt – legg til store og små bokstaver, tall og symboler.</string>
+
+  <string name="onb_pwc_title">Bekreft passord</string>
+  <string name="onb_pwc_subtitle">Skriv inn app-passordet på nytt for å unngå skrivefeil.</string>
+  <string name="onb_pwc_label">Bekreft passord</string>
+  <string name="onb_pwc_helper">Begge oppføringene må være like.</string>
+  <string name="onb_pwc_err_mismatch">Passordene er ikke like.</string>
+  <string name="onb_pwc_err_empty">Skriv inn passordet på nytt.</string>
+
+  <string name="onb_seedin_title">Skriv inn gjenopprettingsfrase</string>
+  <string name="onb_seedin_subtitle">Skriv inn gjenopprettingsordene i riktig rekkefølge.</string>
+  <string name="onb_seedin_seg_12">12 ord</string>
+  <string name="onb_seedin_seg_24">24 ord</string>
+  <string name="onb_seedin_paste">Lim inn fra utklippstavlen</string>
+  <string name="onb_seedin_cta">Importer lommebok</string>
+  <string name="onb_word_label">Ord %1$d</string>
+  <string name="onb_seedin_err_invalidword">Ugyldig ord.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Skriv inn ordet.</item>
+    <item quantity="other">Skriv inn alle %1$d ordene.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">Gjenopprettingsfrasen du skrev inn, er ugyldig. Kontroller ordene og rekkefølgen deres.</string>
+  <string name="onb_seedin_err_pastecount">%1$d ord ble limt inn; %2$d forventet.</string>
+  <string name="onb_seedin_err_chars">Bare bokstaver er tillatt.</string>
+
+  <string name="onb_seedshow_title">Skriv ned gjenopprettingsfrasen din</string>
+  <string name="onb_seedshow_subtitle">Disse 12 ordene er den eneste måten å gjenopprette lommeboken din på.</string>
+  <string name="onb_seedshow_warn_title">Del eller fotografer den aldri</string>
+  <string name="onb_seedshow_warn_body">Alle som kjenner frasen din, har full tilgang.</string>
+  <string name="onb_seedshow_copy">Kopier</string>
+  <string name="onb_seedshow_ack">Jeg har skrevet ned ordene på en sikker måte.</string>
+  <string name="onb_seedshow_err_gen_title">Gjenopprettingsfrasen kunne ikke genereres sikkert</string>
+  <string name="onb_seedshow_err_gen_body">Start appen på nytt. Hvis problemet vedvarer, oppdater enhetens programvare.</string>
+  <string name="onb_seedshow_err_gen_action">Start appen på nytt</string>
+
+  <string name="onb_backup_title">Bekreft sikkerhetskopien din</string>
+  <string name="onb_backup_subtitle">Skriv inn følgende ord fra gjenopprettingsfrasen din for å bekrefte at du har lagret den.</string>
+  <string name="onb_backup_err_wrong">Ord %1$d er feil.</string>
+  <string name="onb_backup_err_incomplete">Skriv inn alle markerte ord.</string>
+  <string name="onb_backup_warn_title">Flere mislykkede forsøk</string>
+  <string name="onb_backup_warn_body">Tips: kontroller rekkefølgen på ordene du har skrevet ned. Du kan gå tilbake og vise dem igjen.</string>
+  <string name="onb_backup_reshow">Vis gjenopprettingsfrasen igjen</string>
+
+  <string name="onb_setup_loading_title">Konfigurerer lommeboken din</string>
+  <string name="onb_setup_loading_body">Nøklene dine krypteres og lagres sikkert på denne enheten. Det tar bare et øyeblikk.</string>
+  <string name="onb_setup_success_title">Lommeboken din er klar</string>
+  <string name="onb_setup_success_body">Lommeboken din er kryptert og lagret sikkert på denne enheten.</string>
+  <string name="onb_setup_err_enc_title">Kunne ikke lagre lommeboken din</string>
+  <string name="onb_setup_err_enc_body">Krypteringen mislyktes. Ingenting ble lagret. Prøv igjen.</string>
+  <string name="onb_setup_err_keystore_title">Sikker lagring er ikke tilgjengelig</string>
+  <string name="onb_setup_err_keystore_body">Enhetens sikre lagring er ikke tilgjengelig. Sørg for at enheten din er beskyttet med en skjermlås (PIN/mønster).</string>
+  <string name="onb_setup_err_storage_title">Ikke nok lagringsplass</string>
+  <string name="onb_setup_err_storage_body">Frigjør plass, og prøv igjen.</string>
+
+  <string name="onb_bio_title">Lås opp raskere</string>
+  <string name="onb_bio_body">Lås opp lommeboken din med %1$s fra nå av. App-passordet ditt er alltid tilgjengelig som reserve.</string>
+  <string name="onb_bio_method_android">fingeravtrykk eller ansiktsgjenkjenning</string>
+  <string name="onb_bio_method_ios">Face ID eller Touch ID</string>
+  <string name="onb_bio_cta">Aktiver nå</string>
+  <string name="onb_bio_later">Senere</string>
+  <string name="onb_bio_unavail_title">Biometri ikke tilgjengelig</string>
+  <string name="onb_bio_unavail_body">Det er ikke konfigurert biometri på denne enheten. Du kan aktivere det senere i enhetsinnstillingene.</string>
+  <string name="onb_bio_reg_failed">Den biometriske gjenkjenningen mislyktes.</string>
+  <string name="onb_bio_skip_later">Hopp over, aktiver senere</string>
+  <string name="onb_bio_perm_title">Tillatelse kreves</string>
+  <string name="onb_bio_perm_body">Gi tillatelse til biometrisk gjenkjenning i enhetsinnstillingene.</string>
+  <string name="onb_bio_open_settings">Åpne innstillinger</string>
+  <string name="onb_bio_link_title">Kunne ikke koble til biometri</string>
+  <string name="onb_bio_link_body">Du kan bruke appen med passordet ditt inntil videre og aktivere biometri igjen senere.</string>
+  <string name="onb_bio_link_action">Fortsett uten biometri</string>
+
+</resources>

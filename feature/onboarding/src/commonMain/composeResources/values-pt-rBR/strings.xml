@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Português (Brasil) (pt-BR, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig.
+     Hinweis: Compose-Resources-Ordner i. d. R. "values-pt-rBR" (Android-Konvention) bzw. "values-pt_BR". -->
+<resources>
+
+  <string name="common_continue">Continuar</string>
+  <string name="common_confirm">Confirmar</string>
+  <string name="common_retry">Tentar novamente</string>
+  <string name="common_cancel">Cancelar</string>
+  <string name="common_close">Fechar</string>
+  <string name="common_skip">Pular</string>
+  <string name="cd_back">Voltar</string>
+  <string name="cd_password_show">Mostrar senha</string>
+  <string name="cd_password_hide">Ocultar senha</string>
+
+  <string name="onb_welcome_tagline">Sua carteira. Suas chaves.</string>
+  <string name="onb_welcome_title">Comece com segurança</string>
+  <string name="onb_welcome_body">Uma carteira não custodial: só você tem acesso às suas chaves e às suas criptos. Ninguém pode recuperá-las por você.</string>
+  <string name="onb_welcome_cta">Começar</string>
+  <string name="onb_welcome_import_link">Já tenho uma carteira</string>
+  <string name="onb_welcome_err_start_title">Não foi possível iniciar o app</string>
+  <string name="onb_welcome_err_start_body">A instalação do app parece corrompida. Reinstale o app.</string>
+
+  <string name="onb_path_title">Como você quer começar?</string>
+  <string name="onb_path_subtitle">Você pode criar uma nova carteira ou importar uma existente com sua frase de recuperação.</string>
+  <string name="onb_path_create_title">Criar nova carteira</string>
+  <string name="onb_path_create_sub">Gera uma nova frase de recuperação neste dispositivo.</string>
+  <string name="onb_path_import_title">Importar existente</string>
+  <string name="onb_path_import_sub">Restaure com 12 ou 24 palavras.</string>
+  <string name="onb_path_offline_title">Sem conexão com a internet</string>
+  <string name="onb_path_offline_body">A criação funciona offline; a importação pode exigir conexão.</string>
+
+  <string name="onb_pw_title">Defina a senha do app</string>
+  <string name="onb_pw_subtitle">Esta senha protege sua carteira localmente neste dispositivo. Ela não pode ser redefinida.</string>
+  <string name="onb_pw_label">Senha do app</string>
+  <string name="onb_pw_placeholder">Digite a senha</string>
+  <string name="onb_pw_helper_minlen">Pelo menos 8 caracteres.</string>
+  <string name="onb_pw_strength_label">Força da senha: %1$s</string>
+  <string name="onb_pw_strength_weak">fraca</string>
+  <string name="onb_pw_strength_medium">média</string>
+  <string name="onb_pw_strength_strong">forte</string>
+  <string name="onb_pw_err_short">A senha é muito curta (mín. 8 caracteres).</string>
+  <string name="onb_pw_err_empty">Digite uma senha.</string>
+  <string name="onb_pw_err_whitespace">A senha não pode conter apenas espaços.</string>
+  <string name="onb_pw_err_weak">Muito fraca — adicione letras maiúsculas e minúsculas, números e símbolos.</string>
+
+  <string name="onb_pwc_title">Confirme a senha</string>
+  <string name="onb_pwc_subtitle">Digite a senha do app novamente para evitar erros de digitação.</string>
+  <string name="onb_pwc_label">Confirmar senha</string>
+  <string name="onb_pwc_helper">As duas entradas devem coincidir.</string>
+  <string name="onb_pwc_err_mismatch">As senhas não coincidem.</string>
+  <string name="onb_pwc_err_empty">Digite a senha novamente.</string>
+
+  <string name="onb_seedin_title">Insira a frase de recuperação</string>
+  <string name="onb_seedin_subtitle">Insira suas palavras de recuperação na ordem correta.</string>
+  <string name="onb_seedin_seg_12">12 palavras</string>
+  <string name="onb_seedin_seg_24">24 palavras</string>
+  <string name="onb_seedin_paste">Colar da área de transferência</string>
+  <string name="onb_seedin_cta">Importar carteira</string>
+  <string name="onb_word_label">Palavra %1$d</string>
+  <string name="onb_seedin_err_invalidword">Palavra inválida.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Insira a palavra.</item>
+    <item quantity="other">Insira todas as %1$d palavras.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">A frase de recuperação inserida é inválida. Verifique as palavras e a ordem delas.</string>
+  <string name="onb_seedin_err_pastecount">%1$d palavras foram coladas; %2$d são esperadas.</string>
+  <string name="onb_seedin_err_chars">Apenas letras são permitidas.</string>
+
+  <string name="onb_seedshow_title">Anote sua frase de recuperação</string>
+  <string name="onb_seedshow_subtitle">Estas 12 palavras são a única forma de recuperar sua carteira.</string>
+  <string name="onb_seedshow_warn_title">Nunca compartilhe nem fotografe</string>
+  <string name="onb_seedshow_warn_body">Qualquer pessoa que saiba sua frase tem acesso total.</string>
+  <string name="onb_seedshow_copy">Copiar</string>
+  <string name="onb_seedshow_ack">Anotei as palavras com segurança.</string>
+  <string name="onb_seedshow_err_gen_title">Não foi possível gerar a frase de recuperação com segurança</string>
+  <string name="onb_seedshow_err_gen_body">Reinicie o app. Se o problema persistir, atualize o software do dispositivo.</string>
+  <string name="onb_seedshow_err_gen_action">Reiniciar o app</string>
+
+  <string name="onb_backup_title">Confirme seu backup</string>
+  <string name="onb_backup_subtitle">Insira as palavras a seguir da sua frase de recuperação para confirmar que você a salvou.</string>
+  <string name="onb_backup_err_wrong">A palavra %1$d está incorreta.</string>
+  <string name="onb_backup_err_incomplete">Insira todas as palavras destacadas.</string>
+  <string name="onb_backup_warn_title">Várias tentativas falharam</string>
+  <string name="onb_backup_warn_body">Dica: verifique a ordem das palavras anotadas. Você pode voltar e vê-las novamente.</string>
+  <string name="onb_backup_reshow">Mostrar a frase de recuperação novamente</string>
+
+  <string name="onb_setup_loading_title">Configurando sua carteira</string>
+  <string name="onb_setup_loading_body">Suas chaves estão sendo criptografadas e armazenadas com segurança neste dispositivo. Isso leva só um momento.</string>
+  <string name="onb_setup_success_title">Sua carteira está pronta</string>
+  <string name="onb_setup_success_body">Sua carteira foi criptografada e armazenada com segurança neste dispositivo.</string>
+  <string name="onb_setup_err_enc_title">Não foi possível salvar sua carteira</string>
+  <string name="onb_setup_err_enc_body">A criptografia falhou. Nada foi salvo. Tente novamente.</string>
+  <string name="onb_setup_err_keystore_title">Armazenamento seguro indisponível</string>
+  <string name="onb_setup_err_keystore_body">O armazenamento seguro do seu dispositivo está indisponível. Verifique se o dispositivo está protegido com bloqueio de tela (PIN/padrão).</string>
+  <string name="onb_setup_err_storage_title">Espaço insuficiente</string>
+  <string name="onb_setup_err_storage_body">Libere espaço e tente novamente.</string>
+
+  <string name="onb_bio_title">Desbloqueie mais rápido</string>
+  <string name="onb_bio_body">Desbloqueie sua carteira com %1$s de agora em diante. Sua senha do app continua disponível como alternativa a qualquer momento.</string>
+  <string name="onb_bio_method_android">impressão digital ou reconhecimento facial</string>
+  <string name="onb_bio_method_ios">Face ID ou Touch ID</string>
+  <string name="onb_bio_cta">Ativar agora</string>
+  <string name="onb_bio_later">Mais tarde</string>
+  <string name="onb_bio_unavail_title">Biometria indisponível</string>
+  <string name="onb_bio_unavail_body">Não há biometria configurada neste dispositivo. Você pode ativá-la mais tarde nas configurações do dispositivo.</string>
+  <string name="onb_bio_reg_failed">O reconhecimento biométrico não foi bem-sucedido.</string>
+  <string name="onb_bio_skip_later">Pular, ativar mais tarde</string>
+  <string name="onb_bio_perm_title">Permissão necessária</string>
+  <string name="onb_bio_perm_body">Conceda a permissão de reconhecimento biométrico nas configurações do dispositivo.</string>
+  <string name="onb_bio_open_settings">Abrir configurações</string>
+  <string name="onb_bio_link_title">Não foi possível vincular a biometria</string>
+  <string name="onb_bio_link_body">Você pode usar o app com sua senha por enquanto e ativar a biometria novamente mais tarde.</string>
+  <string name="onb_bio_link_action">Continuar sem biometria</string>
+
+</resources>

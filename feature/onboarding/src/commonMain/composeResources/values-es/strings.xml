@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Español (es, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig (Krypto-/Sicherheitsbegriffe). -->
+<resources>
+
+  <string name="common_continue">Continuar</string>
+  <string name="common_confirm">Confirmar</string>
+  <string name="common_retry">Reintentar</string>
+  <string name="common_cancel">Cancelar</string>
+  <string name="common_close">Cerrar</string>
+  <string name="common_skip">Omitir</string>
+  <string name="cd_back">Atrás</string>
+  <string name="cd_password_show">Mostrar contraseña</string>
+  <string name="cd_password_hide">Ocultar contraseña</string>
+
+  <string name="onb_welcome_tagline">Tu monedero. Tus claves.</string>
+  <string name="onb_welcome_title">Empieza con seguridad</string>
+  <string name="onb_welcome_body">Un monedero no custodial: solo tú tienes acceso a tus claves y tus criptos. Nadie puede recuperarlas por ti.</string>
+  <string name="onb_welcome_cta">Empezar</string>
+  <string name="onb_welcome_import_link">Ya tengo un monedero</string>
+  <string name="onb_welcome_err_start_title">No se pudo iniciar la app</string>
+  <string name="onb_welcome_err_start_body">La instalación de la app parece dañada. Reinstala la app.</string>
+
+  <string name="onb_path_title">¿Cómo quieres empezar?</string>
+  <string name="onb_path_subtitle">Puedes crear un monedero nuevo o importar uno existente con tu frase de recuperación.</string>
+  <string name="onb_path_create_title">Crear monedero nuevo</string>
+  <string name="onb_path_create_sub">Genera una nueva frase de recuperación en este dispositivo.</string>
+  <string name="onb_path_import_title">Importar existente</string>
+  <string name="onb_path_import_sub">Restaura con 12 o 24 palabras.</string>
+  <string name="onb_path_offline_title">Sin conexión a internet</string>
+  <string name="onb_path_offline_body">Crear funciona sin conexión; importar puede requerir conexión.</string>
+
+  <string name="onb_pw_title">Establece la contraseña de la app</string>
+  <string name="onb_pw_subtitle">Esta contraseña protege tu monedero localmente en este dispositivo. No se puede restablecer.</string>
+  <string name="onb_pw_label">Contraseña de la app</string>
+  <string name="onb_pw_placeholder">Introduce la contraseña</string>
+  <string name="onb_pw_helper_minlen">Al menos 8 caracteres.</string>
+  <string name="onb_pw_strength_label">Seguridad de la contraseña: %1$s</string>
+  <string name="onb_pw_strength_weak">débil</string>
+  <string name="onb_pw_strength_medium">media</string>
+  <string name="onb_pw_strength_strong">fuerte</string>
+  <string name="onb_pw_err_short">La contraseña es demasiado corta (mín. 8 caracteres).</string>
+  <string name="onb_pw_err_empty">Introduce una contraseña.</string>
+  <string name="onb_pw_err_whitespace">La contraseña no puede contener solo espacios.</string>
+  <string name="onb_pw_err_weak">Demasiado débil: añade mayúsculas, minúsculas, números y símbolos.</string>
+
+  <string name="onb_pwc_title">Confirma la contraseña</string>
+  <string name="onb_pwc_subtitle">Vuelve a introducir la contraseña de la app para evitar errores de escritura.</string>
+  <string name="onb_pwc_label">Confirmar contraseña</string>
+  <string name="onb_pwc_helper">Ambas entradas deben coincidir.</string>
+  <string name="onb_pwc_err_mismatch">Las contraseñas no coinciden.</string>
+  <string name="onb_pwc_err_empty">Vuelve a introducir la contraseña.</string>
+
+  <string name="onb_seedin_title">Introduce la frase de recuperación</string>
+  <string name="onb_seedin_subtitle">Introduce tus palabras de recuperación en el orden correcto.</string>
+  <string name="onb_seedin_seg_12">12 palabras</string>
+  <string name="onb_seedin_seg_24">24 palabras</string>
+  <string name="onb_seedin_paste">Pegar del portapapeles</string>
+  <string name="onb_seedin_cta">Importar monedero</string>
+  <string name="onb_word_label">Palabra %1$d</string>
+  <string name="onb_seedin_err_invalidword">Palabra no válida.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Introduce la palabra.</item>
+    <item quantity="other">Introduce las %1$d palabras.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">La frase de recuperación introducida no es válida. Comprueba las palabras y su orden.</string>
+  <string name="onb_seedin_err_pastecount">Se pegaron %1$d palabras; se esperaban %2$d.</string>
+  <string name="onb_seedin_err_chars">Solo se permiten letras.</string>
+
+  <string name="onb_seedshow_title">Anota tu frase de recuperación</string>
+  <string name="onb_seedshow_subtitle">Estas 12 palabras son la única forma de recuperar tu monedero.</string>
+  <string name="onb_seedshow_warn_title">Nunca la compartas ni la fotografíes</string>
+  <string name="onb_seedshow_warn_body">Cualquiera que conozca tu frase tiene acceso total.</string>
+  <string name="onb_seedshow_copy">Copiar</string>
+  <string name="onb_seedshow_ack">He anotado las palabras de forma segura.</string>
+  <string name="onb_seedshow_err_gen_title">No se pudo generar la frase de recuperación de forma segura</string>
+  <string name="onb_seedshow_err_gen_body">Reinicia la app. Si el problema persiste, actualiza el software del dispositivo.</string>
+  <string name="onb_seedshow_err_gen_action">Reiniciar la app</string>
+
+  <string name="onb_backup_title">Confirma tu copia de seguridad</string>
+  <string name="onb_backup_subtitle">Introduce las siguientes palabras de tu frase de recuperación para confirmar que la has guardado.</string>
+  <string name="onb_backup_err_wrong">La palabra %1$d no es correcta.</string>
+  <string name="onb_backup_err_incomplete">Introduce todas las palabras marcadas.</string>
+  <string name="onb_backup_warn_title">Varios intentos fallidos</string>
+  <string name="onb_backup_warn_body">Consejo: comprueba el orden de tus palabras anotadas. Puedes volver atrás y verlas de nuevo.</string>
+  <string name="onb_backup_reshow">Ver la frase de recuperación otra vez</string>
+
+  <string name="onb_setup_loading_title">Configurando tu monedero</string>
+  <string name="onb_setup_loading_body">Tus claves se están cifrando y guardando de forma segura en este dispositivo. Solo tardará un momento.</string>
+  <string name="onb_setup_success_title">Tu monedero está listo</string>
+  <string name="onb_setup_success_body">Tu monedero se ha cifrado y guardado de forma segura en este dispositivo.</string>
+  <string name="onb_setup_err_enc_title">No se pudo guardar tu monedero</string>
+  <string name="onb_setup_err_enc_body">El cifrado falló. No se guardó nada. Inténtalo de nuevo.</string>
+  <string name="onb_setup_err_keystore_title">Almacenamiento seguro no disponible</string>
+  <string name="onb_setup_err_keystore_body">El almacenamiento seguro de tu dispositivo no está disponible. Asegúrate de que tu dispositivo está protegido con un bloqueo de pantalla (PIN/patrón).</string>
+  <string name="onb_setup_err_storage_title">Espacio insuficiente</string>
+  <string name="onb_setup_err_storage_body">Libera espacio e inténtalo de nuevo.</string>
+
+  <string name="onb_bio_title">Desbloquea más rápido</string>
+  <string name="onb_bio_body">Desbloquea tu monedero con %1$s a partir de ahora. Tu contraseña de la app sigue disponible como alternativa en cualquier momento.</string>
+  <string name="onb_bio_method_android">huella o reconocimiento facial</string>
+  <string name="onb_bio_method_ios">Face ID o Touch ID</string>
+  <string name="onb_bio_cta">Activar ahora</string>
+  <string name="onb_bio_later">Más tarde</string>
+  <string name="onb_bio_unavail_title">Biometría no disponible</string>
+  <string name="onb_bio_unavail_body">Este dispositivo no tiene biometría configurada. Puedes activarla más tarde en los ajustes del dispositivo.</string>
+  <string name="onb_bio_reg_failed">El reconocimiento biométrico no se realizó correctamente.</string>
+  <string name="onb_bio_skip_later">Omitir, activar más tarde</string>
+  <string name="onb_bio_perm_title">Permiso necesario</string>
+  <string name="onb_bio_perm_body">Concede el permiso de reconocimiento biométrico en los ajustes del dispositivo.</string>
+  <string name="onb_bio_open_settings">Abrir ajustes</string>
+  <string name="onb_bio_link_title">No se pudo vincular la biometría</string>
+  <string name="onb_bio_link_body">Puedes usar la app con tu contraseña por ahora y volver a activar la biometría más tarde.</string>
+  <string name="onb_bio_link_action">Continuar sin biometría</string>
+
+</resources>

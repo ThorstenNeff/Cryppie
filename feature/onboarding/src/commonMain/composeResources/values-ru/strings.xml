@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Русский (ru, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig. Plurale: one/few/many/other. -->
+<resources>
+
+  <string name="common_continue">Продолжить</string>
+  <string name="common_confirm">Подтвердить</string>
+  <string name="common_retry">Повторить</string>
+  <string name="common_cancel">Отмена</string>
+  <string name="common_close">Закрыть</string>
+  <string name="common_skip">Пропустить</string>
+  <string name="cd_back">Назад</string>
+  <string name="cd_password_show">Показать пароль</string>
+  <string name="cd_password_hide">Скрыть пароль</string>
+
+  <string name="onb_welcome_tagline">Ваш кошелёк. Ваши ключи.</string>
+  <string name="onb_welcome_title">Безопасное начало</string>
+  <string name="onb_welcome_body">Некастодиальный кошелёк: только вы имеете доступ к своим ключам и криптовалюте. Никто не сможет восстановить их за вас.</string>
+  <string name="onb_welcome_cta">Начать</string>
+  <string name="onb_welcome_import_link">У меня уже есть кошелёк</string>
+  <string name="onb_welcome_err_start_title">Не удалось запустить приложение</string>
+  <string name="onb_welcome_err_start_body">Похоже, установка приложения повреждена. Переустановите приложение.</string>
+
+  <string name="onb_path_title">С чего хотите начать?</string>
+  <string name="onb_path_subtitle">Вы можете создать новый кошелёк или импортировать существующий с помощью секретной фразы.</string>
+  <string name="onb_path_create_title">Создать новый кошелёк</string>
+  <string name="onb_path_create_sub">Создаёт новую секретную фразу на этом устройстве.</string>
+  <string name="onb_path_import_title">Импортировать существующий</string>
+  <string name="onb_path_import_sub">Восстановление с помощью 12 или 24 слов.</string>
+  <string name="onb_path_offline_title">Нет подключения к интернету</string>
+  <string name="onb_path_offline_body">Создание работает офлайн; для импорта может потребоваться подключение.</string>
+
+  <string name="onb_pw_title">Задайте пароль приложения</string>
+  <string name="onb_pw_subtitle">Этот пароль защищает ваш кошелёк локально на этом устройстве. Его нельзя сбросить.</string>
+  <string name="onb_pw_label">Пароль приложения</string>
+  <string name="onb_pw_placeholder">Введите пароль</string>
+  <string name="onb_pw_helper_minlen">Не менее 8 символов.</string>
+  <string name="onb_pw_strength_label">Надёжность пароля: %1$s</string>
+  <string name="onb_pw_strength_weak">слабый</string>
+  <string name="onb_pw_strength_medium">средний</string>
+  <string name="onb_pw_strength_strong">надёжный</string>
+  <string name="onb_pw_err_short">Пароль слишком короткий (не менее 8 символов).</string>
+  <string name="onb_pw_err_empty">Введите пароль.</string>
+  <string name="onb_pw_err_whitespace">Пароль не может состоять только из пробелов.</string>
+  <string name="onb_pw_err_weak">Слишком слабый — добавьте заглавные и строчные буквы, цифры и символы.</string>
+
+  <string name="onb_pwc_title">Подтвердите пароль</string>
+  <string name="onb_pwc_subtitle">Введите пароль приложения ещё раз, чтобы исключить опечатки.</string>
+  <string name="onb_pwc_label">Подтвердите пароль</string>
+  <string name="onb_pwc_helper">Оба значения должны совпадать.</string>
+  <string name="onb_pwc_err_mismatch">Пароли не совпадают.</string>
+  <string name="onb_pwc_err_empty">Введите пароль ещё раз.</string>
+
+  <string name="onb_seedin_title">Введите секретную фразу</string>
+  <string name="onb_seedin_subtitle">Введите слова восстановления в правильном порядке.</string>
+  <string name="onb_seedin_seg_12">12 слов</string>
+  <string name="onb_seedin_seg_24">24 слова</string>
+  <string name="onb_seedin_paste">Вставить из буфера обмена</string>
+  <string name="onb_seedin_cta">Импортировать кошелёк</string>
+  <string name="onb_word_label">Слово %1$d</string>
+  <string name="onb_seedin_err_invalidword">Недопустимое слово.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Введите %1$d слово.</item>
+    <item quantity="few">Введите все %1$d слова.</item>
+    <item quantity="many">Введите все %1$d слов.</item>
+    <item quantity="other">Введите все %1$d слова.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">Введённая секретная фраза недействительна. Проверьте слова и их порядок.</string>
+  <string name="onb_seedin_err_pastecount">Вставлено слов: %1$d; ожидается: %2$d.</string>
+  <string name="onb_seedin_err_chars">Допускаются только буквы.</string>
+
+  <string name="onb_seedshow_title">Запишите свою секретную фразу</string>
+  <string name="onb_seedshow_subtitle">Эти 12 слов — единственный способ восстановить ваш кошелёк.</string>
+  <string name="onb_seedshow_warn_title">Никогда не делитесь и не фотографируйте</string>
+  <string name="onb_seedshow_warn_body">Любой, кто знает вашу фразу, получает полный доступ.</string>
+  <string name="onb_seedshow_copy">Копировать</string>
+  <string name="onb_seedshow_ack">Я надёжно записал(а) слова.</string>
+  <string name="onb_seedshow_err_gen_title">Не удалось безопасно создать секретную фразу</string>
+  <string name="onb_seedshow_err_gen_body">Перезапустите приложение. Если проблема сохраняется, обновите ПО устройства.</string>
+  <string name="onb_seedshow_err_gen_action">Перезапустить приложение</string>
+
+  <string name="onb_backup_title">Подтвердите резервную копию</string>
+  <string name="onb_backup_subtitle">Введите следующие слова из вашей секретной фразы, чтобы подтвердить, что вы её сохранили.</string>
+  <string name="onb_backup_err_wrong">Слово %1$d неверное.</string>
+  <string name="onb_backup_err_incomplete">Введите все отмеченные слова.</string>
+  <string name="onb_backup_warn_title">Несколько неудачных попыток</string>
+  <string name="onb_backup_warn_body">Совет: проверьте порядок записанных слов. Вы можете вернуться и просмотреть их снова.</string>
+  <string name="onb_backup_reshow">Показать секретную фразу снова</string>
+
+  <string name="onb_setup_loading_title">Настройка кошелька</string>
+  <string name="onb_setup_loading_body">Ваши ключи шифруются и надёжно сохраняются на этом устройстве. Это займёт всего мгновение.</string>
+  <string name="onb_setup_success_title">Ваш кошелёк готов</string>
+  <string name="onb_setup_success_body">Ваш кошелёк зашифрован и надёжно сохранён на этом устройстве.</string>
+  <string name="onb_setup_err_enc_title">Не удалось сохранить кошелёк</string>
+  <string name="onb_setup_err_enc_body">Сбой шифрования. Ничего не сохранено. Повторите попытку.</string>
+  <string name="onb_setup_err_keystore_title">Защищённое хранилище недоступно</string>
+  <string name="onb_setup_err_keystore_body">Защищённое хранилище устройства недоступно. Убедитесь, что устройство защищено блокировкой экрана (PIN/графический ключ).</string>
+  <string name="onb_setup_err_storage_title">Недостаточно памяти</string>
+  <string name="onb_setup_err_storage_body">Освободите место и повторите попытку.</string>
+
+  <string name="onb_bio_title">Разблокируйте быстрее</string>
+  <string name="onb_bio_body">Разблокируйте кошелёк с помощью %1$s. Пароль приложения всегда остаётся доступным как резервный вариант.</string>
+  <string name="onb_bio_method_android">отпечатка пальца или распознавания лица</string>
+  <string name="onb_bio_method_ios">Face ID или Touch ID</string>
+  <string name="onb_bio_cta">Включить сейчас</string>
+  <string name="onb_bio_later">Позже</string>
+  <string name="onb_bio_unavail_title">Биометрия недоступна</string>
+  <string name="onb_bio_unavail_body">На этом устройстве не настроена биометрия. Вы можете включить её позже в настройках устройства.</string>
+  <string name="onb_bio_reg_failed">Биометрическое распознавание не удалось.</string>
+  <string name="onb_bio_skip_later">Пропустить, включить позже</string>
+  <string name="onb_bio_perm_title">Требуется разрешение</string>
+  <string name="onb_bio_perm_body">Предоставьте разрешение на биометрическое распознавание в настройках устройства.</string>
+  <string name="onb_bio_open_settings">Открыть настройки</string>
+  <string name="onb_bio_link_title">Не удалось привязать биометрию</string>
+  <string name="onb_bio_link_body">Пока вы можете пользоваться приложением с паролем и включить биометрию позже.</string>
+  <string name="onb_bio_link_action">Продолжить без биометрии</string>
+
+</resources>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Polski (pl, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig. Plurale: one/few/many/other. -->
+<resources>
+
+  <string name="common_continue">Kontynuuj</string>
+  <string name="common_confirm">Potwierdź</string>
+  <string name="common_retry">Spróbuj ponownie</string>
+  <string name="common_cancel">Anuluj</string>
+  <string name="common_close">Zamknij</string>
+  <string name="common_skip">Pomiń</string>
+  <string name="cd_back">Wstecz</string>
+  <string name="cd_password_show">Pokaż hasło</string>
+  <string name="cd_password_hide">Ukryj hasło</string>
+
+  <string name="onb_welcome_tagline">Twój portfel. Twoje klucze.</string>
+  <string name="onb_welcome_title">Zacznij bezpiecznie</string>
+  <string name="onb_welcome_body">Portfel niepowierniczy: tylko Ty masz dostęp do swoich kluczy i kryptowalut. Nikt nie odzyska ich za Ciebie.</string>
+  <string name="onb_welcome_cta">Zaczynajmy</string>
+  <string name="onb_welcome_import_link">Mam już portfel</string>
+  <string name="onb_welcome_err_start_title">Nie można uruchomić aplikacji</string>
+  <string name="onb_welcome_err_start_body">Instalacja aplikacji wygląda na uszkodzoną. Zainstaluj aplikację ponownie.</string>
+
+  <string name="onb_path_title">Jak chcesz zacząć?</string>
+  <string name="onb_path_subtitle">Możesz utworzyć nowy portfel lub zaimportować istniejący za pomocą frazy odzyskiwania.</string>
+  <string name="onb_path_create_title">Utwórz nowy portfel</string>
+  <string name="onb_path_create_sub">Generuje nową frazę odzyskiwania na tym urządzeniu.</string>
+  <string name="onb_path_import_title">Zaimportuj istniejący</string>
+  <string name="onb_path_import_sub">Przywróć za pomocą 12 lub 24 słów.</string>
+  <string name="onb_path_offline_title">Brak połączenia z internetem</string>
+  <string name="onb_path_offline_body">Tworzenie działa offline; import może wymagać połączenia.</string>
+
+  <string name="onb_pw_title">Ustaw hasło aplikacji</string>
+  <string name="onb_pw_subtitle">To hasło chroni Twój portfel lokalnie na tym urządzeniu. Nie można go zresetować.</string>
+  <string name="onb_pw_label">Hasło aplikacji</string>
+  <string name="onb_pw_placeholder">Wprowadź hasło</string>
+  <string name="onb_pw_helper_minlen">Co najmniej 8 znaków.</string>
+  <string name="onb_pw_strength_label">Siła hasła: %1$s</string>
+  <string name="onb_pw_strength_weak">słabe</string>
+  <string name="onb_pw_strength_medium">średnie</string>
+  <string name="onb_pw_strength_strong">silne</string>
+  <string name="onb_pw_err_short">Hasło jest za krótkie (min. 8 znaków).</string>
+  <string name="onb_pw_err_empty">Wprowadź hasło.</string>
+  <string name="onb_pw_err_whitespace">Hasło nie może składać się wyłącznie ze spacji.</string>
+  <string name="onb_pw_err_weak">Za słabe — dodaj wielkie i małe litery, cyfry oraz symbole.</string>
+
+  <string name="onb_pwc_title">Potwierdź hasło</string>
+  <string name="onb_pwc_subtitle">Wprowadź hasło aplikacji ponownie, aby wykluczyć literówki.</string>
+  <string name="onb_pwc_label">Potwierdź hasło</string>
+  <string name="onb_pwc_helper">Oba wpisy muszą być takie same.</string>
+  <string name="onb_pwc_err_mismatch">Hasła nie są zgodne.</string>
+  <string name="onb_pwc_err_empty">Wprowadź hasło ponownie.</string>
+
+  <string name="onb_seedin_title">Wprowadź frazę odzyskiwania</string>
+  <string name="onb_seedin_subtitle">Wprowadź słowa odzyskiwania we właściwej kolejności.</string>
+  <string name="onb_seedin_seg_12">12 słów</string>
+  <string name="onb_seedin_seg_24">24 słowa</string>
+  <string name="onb_seedin_paste">Wklej ze schowka</string>
+  <string name="onb_seedin_cta">Importuj portfel</string>
+  <string name="onb_word_label">Słowo %1$d</string>
+  <string name="onb_seedin_err_invalidword">Nieprawidłowe słowo.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Wprowadź %1$d słowo.</item>
+    <item quantity="few">Wprowadź wszystkie %1$d słowa.</item>
+    <item quantity="many">Wprowadź wszystkie %1$d słów.</item>
+    <item quantity="other">Wprowadź wszystkie %1$d słowa.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">Wprowadzona fraza odzyskiwania jest nieprawidłowa. Sprawdź słowa i ich kolejność.</string>
+  <string name="onb_seedin_err_pastecount">Wklejono słów: %1$d; oczekiwano: %2$d.</string>
+  <string name="onb_seedin_err_chars">Dozwolone są tylko litery.</string>
+
+  <string name="onb_seedshow_title">Zapisz swoją frazę odzyskiwania</string>
+  <string name="onb_seedshow_subtitle">Te 12 słów to jedyny sposób na odzyskanie portfela.</string>
+  <string name="onb_seedshow_warn_title">Nigdy nie udostępniaj ani nie fotografuj</string>
+  <string name="onb_seedshow_warn_body">Każdy, kto zna Twoją frazę, ma pełny dostęp.</string>
+  <string name="onb_seedshow_copy">Kopiuj</string>
+  <string name="onb_seedshow_ack">Bezpiecznie zapisałem(-am) słowa.</string>
+  <string name="onb_seedshow_err_gen_title">Nie udało się bezpiecznie wygenerować frazy odzyskiwania</string>
+  <string name="onb_seedshow_err_gen_body">Uruchom aplikację ponownie. Jeśli problem będzie się powtarzał, zaktualizuj oprogramowanie urządzenia.</string>
+  <string name="onb_seedshow_err_gen_action">Uruchom ponownie</string>
+
+  <string name="onb_backup_title">Potwierdź kopię zapasową</string>
+  <string name="onb_backup_subtitle">Wprowadź poniższe słowa z frazy odzyskiwania, aby potwierdzić, że ją zapisałeś.</string>
+  <string name="onb_backup_err_wrong">Słowo %1$d jest nieprawidłowe.</string>
+  <string name="onb_backup_err_incomplete">Wprowadź wszystkie zaznaczone słowa.</string>
+  <string name="onb_backup_warn_title">Kilka nieudanych prób</string>
+  <string name="onb_backup_warn_body">Wskazówka: sprawdź kolejność zapisanych słów. Możesz wrócić i wyświetlić je ponownie.</string>
+  <string name="onb_backup_reshow">Pokaż frazę odzyskiwania ponownie</string>
+
+  <string name="onb_setup_loading_title">Konfigurowanie portfela</string>
+  <string name="onb_setup_loading_body">Twoje klucze są szyfrowane i bezpiecznie zapisywane na tym urządzeniu. To potrwa tylko chwilę.</string>
+  <string name="onb_setup_success_title">Twój portfel jest gotowy</string>
+  <string name="onb_setup_success_body">Twój portfel został zaszyfrowany i bezpiecznie zapisany na tym urządzeniu.</string>
+  <string name="onb_setup_err_enc_title">Nie udało się zapisać portfela</string>
+  <string name="onb_setup_err_enc_body">Szyfrowanie nie powiodło się. Nic nie zostało zapisane. Spróbuj ponownie.</string>
+  <string name="onb_setup_err_keystore_title">Bezpieczny magazyn niedostępny</string>
+  <string name="onb_setup_err_keystore_body">Bezpieczny magazyn urządzenia jest niedostępny. Upewnij się, że urządzenie jest chronione blokadą ekranu (PIN/wzór).</string>
+  <string name="onb_setup_err_storage_title">Za mało miejsca</string>
+  <string name="onb_setup_err_storage_body">Zwolnij miejsce i spróbuj ponownie.</string>
+
+  <string name="onb_bio_title">Odblokowuj szybciej</string>
+  <string name="onb_bio_body">Odblokowuj portfel za pomocą %1$s. Hasło aplikacji pozostaje dostępne jako opcja awaryjna w każdej chwili.</string>
+  <string name="onb_bio_method_android">odcisku palca lub rozpoznawania twarzy</string>
+  <string name="onb_bio_method_ios">Face ID lub Touch ID</string>
+  <string name="onb_bio_cta">Włącz teraz</string>
+  <string name="onb_bio_later">Później</string>
+  <string name="onb_bio_unavail_title">Biometria niedostępna</string>
+  <string name="onb_bio_unavail_body">Na tym urządzeniu nie skonfigurowano biometrii. Możesz włączyć ją później w ustawieniach urządzenia.</string>
+  <string name="onb_bio_reg_failed">Rozpoznawanie biometryczne nie powiodło się.</string>
+  <string name="onb_bio_skip_later">Pomiń, włącz później</string>
+  <string name="onb_bio_perm_title">Wymagane uprawnienie</string>
+  <string name="onb_bio_perm_body">Przyznaj uprawnienie do rozpoznawania biometrycznego w ustawieniach urządzenia.</string>
+  <string name="onb_bio_open_settings">Otwórz ustawienia</string>
+  <string name="onb_bio_link_title">Nie udało się powiązać biometrii</string>
+  <string name="onb_bio_link_body">Na razie możesz korzystać z aplikacji za pomocą hasła i włączyć biometrię ponownie później.</string>
+  <string name="onb_bio_link_action">Kontynuuj bez biometrii</string>
+
+</resources>

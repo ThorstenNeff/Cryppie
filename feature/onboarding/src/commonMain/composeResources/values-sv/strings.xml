@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cryptasa Onboarding — Svenska (sv, LTR). ⚠️ Übersetzungs-ENTWURF: Muttersprachler-Review nötig. -->
+<resources>
+
+  <string name="common_continue">Fortsätt</string>
+  <string name="common_confirm">Bekräfta</string>
+  <string name="common_retry">Försök igen</string>
+  <string name="common_cancel">Avbryt</string>
+  <string name="common_close">Stäng</string>
+  <string name="common_skip">Hoppa över</string>
+  <string name="cd_back">Tillbaka</string>
+  <string name="cd_password_show">Visa lösenord</string>
+  <string name="cd_password_hide">Dölj lösenord</string>
+
+  <string name="onb_welcome_tagline">Din plånbok. Dina nycklar.</string>
+  <string name="onb_welcome_title">Börja säkert</string>
+  <string name="onb_welcome_body">En icke-förvarande plånbok: bara du har tillgång till dina nycklar och din krypto. Ingen kan återställa dem åt dig.</string>
+  <string name="onb_welcome_cta">Kom igång</string>
+  <string name="onb_welcome_import_link">Jag har redan en plånbok</string>
+  <string name="onb_welcome_err_start_title">Det gick inte att starta appen</string>
+  <string name="onb_welcome_err_start_body">Appinstallationen verkar skadad. Installera om appen.</string>
+
+  <string name="onb_path_title">Hur vill du börja?</string>
+  <string name="onb_path_subtitle">Du kan skapa en ny plånbok eller importera en befintlig med din återställningsfras.</string>
+  <string name="onb_path_create_title">Skapa ny plånbok</string>
+  <string name="onb_path_create_sub">Skapar en ny återställningsfras på den här enheten.</string>
+  <string name="onb_path_import_title">Importera befintlig</string>
+  <string name="onb_path_import_sub">Återställ med 12 eller 24 ord.</string>
+  <string name="onb_path_offline_title">Ingen internetanslutning</string>
+  <string name="onb_path_offline_body">Att skapa fungerar offline; import kan kräva anslutning.</string>
+
+  <string name="onb_pw_title">Ange applösenord</string>
+  <string name="onb_pw_subtitle">Det här lösenordet skyddar din plånbok lokalt på den här enheten. Det kan inte återställas.</string>
+  <string name="onb_pw_label">Applösenord</string>
+  <string name="onb_pw_placeholder">Ange lösenord</string>
+  <string name="onb_pw_helper_minlen">Minst 8 tecken.</string>
+  <string name="onb_pw_strength_label">Lösenordsstyrka: %1$s</string>
+  <string name="onb_pw_strength_weak">svagt</string>
+  <string name="onb_pw_strength_medium">medel</string>
+  <string name="onb_pw_strength_strong">starkt</string>
+  <string name="onb_pw_err_short">Lösenordet är för kort (minst 8 tecken).</string>
+  <string name="onb_pw_err_empty">Ange ett lösenord.</string>
+  <string name="onb_pw_err_whitespace">Lösenordet kan inte bara bestå av mellanslag.</string>
+  <string name="onb_pw_err_weak">För svagt – lägg till stora och små bokstäver, siffror och symboler.</string>
+
+  <string name="onb_pwc_title">Bekräfta lösenord</string>
+  <string name="onb_pwc_subtitle">Ange applösenordet igen för att undvika stavfel.</string>
+  <string name="onb_pwc_label">Bekräfta lösenord</string>
+  <string name="onb_pwc_helper">Båda inmatningarna måste stämma överens.</string>
+  <string name="onb_pwc_err_mismatch">Lösenorden stämmer inte överens.</string>
+  <string name="onb_pwc_err_empty">Ange lösenordet igen.</string>
+
+  <string name="onb_seedin_title">Ange återställningsfras</string>
+  <string name="onb_seedin_subtitle">Ange dina återställningsord i rätt ordning.</string>
+  <string name="onb_seedin_seg_12">12 ord</string>
+  <string name="onb_seedin_seg_24">24 ord</string>
+  <string name="onb_seedin_paste">Klistra in från urklipp</string>
+  <string name="onb_seedin_cta">Importera plånbok</string>
+  <string name="onb_word_label">Ord %1$d</string>
+  <string name="onb_seedin_err_invalidword">Ogiltigt ord.</string>
+  <plurals name="onb_seedin_err_toofew">
+    <item quantity="one">Ange ordet.</item>
+    <item quantity="other">Ange alla %1$d ord.</item>
+  </plurals>
+  <string name="onb_seedin_err_checksum">Återställningsfrasen du angav är ogiltig. Kontrollera orden och deras ordning.</string>
+  <string name="onb_seedin_err_pastecount">%1$d ord klistrades in; %2$d förväntades.</string>
+  <string name="onb_seedin_err_chars">Endast bokstäver tillåts.</string>
+
+  <string name="onb_seedshow_title">Skriv ner din återställningsfras</string>
+  <string name="onb_seedshow_subtitle">De här 12 orden är det enda sättet att återställa din plånbok.</string>
+  <string name="onb_seedshow_warn_title">Dela eller fotografera den aldrig</string>
+  <string name="onb_seedshow_warn_body">Alla som känner till din fras har full åtkomst.</string>
+  <string name="onb_seedshow_copy">Kopiera</string>
+  <string name="onb_seedshow_ack">Jag har skrivit ner orden på ett säkert sätt.</string>
+  <string name="onb_seedshow_err_gen_title">Det gick inte att skapa återställningsfrasen säkert</string>
+  <string name="onb_seedshow_err_gen_body">Starta om appen. Om problemet kvarstår, uppdatera enhetens programvara.</string>
+  <string name="onb_seedshow_err_gen_action">Starta om appen</string>
+
+  <string name="onb_backup_title">Bekräfta din säkerhetskopia</string>
+  <string name="onb_backup_subtitle">Ange följande ord från din återställningsfras för att bekräfta att du har sparat den.</string>
+  <string name="onb_backup_err_wrong">Ord %1$d är felaktigt.</string>
+  <string name="onb_backup_err_incomplete">Ange alla markerade ord.</string>
+  <string name="onb_backup_warn_title">Flera misslyckade försök</string>
+  <string name="onb_backup_warn_body">Tips: kontrollera ordningen på dina nedskrivna ord. Du kan gå tillbaka och visa dem igen.</string>
+  <string name="onb_backup_reshow">Visa återställningsfrasen igen</string>
+
+  <string name="onb_setup_loading_title">Konfigurerar din plånbok</string>
+  <string name="onb_setup_loading_body">Dina nycklar krypteras och lagras säkert på den här enheten. Det tar bara ett ögonblick.</string>
+  <string name="onb_setup_success_title">Din plånbok är klar</string>
+  <string name="onb_setup_success_body">Din plånbok har krypterats och lagrats säkert på den här enheten.</string>
+  <string name="onb_setup_err_enc_title">Det gick inte att spara din plånbok</string>
+  <string name="onb_setup_err_enc_body">Krypteringen misslyckades. Inget sparades. Försök igen.</string>
+  <string name="onb_setup_err_keystore_title">Säker lagring är inte tillgänglig</string>
+  <string name="onb_setup_err_keystore_body">Enhetens säkra lagring är inte tillgänglig. Se till att enheten är skyddad med ett skärmlås (PIN/mönster).</string>
+  <string name="onb_setup_err_storage_title">Inte tillräckligt med lagringsutrymme</string>
+  <string name="onb_setup_err_storage_body">Frigör utrymme och försök igen.</string>
+
+  <string name="onb_bio_title">Lås upp snabbare</string>
+  <string name="onb_bio_body">Lås upp din plånbok med %1$s från och med nu. Ditt applösenord är alltid tillgängligt som reserv.</string>
+  <string name="onb_bio_method_android">fingeravtryck eller ansiktsigenkänning</string>
+  <string name="onb_bio_method_ios">Face ID eller Touch ID</string>
+  <string name="onb_bio_cta">Aktivera nu</string>
+  <string name="onb_bio_later">Senare</string>
+  <string name="onb_bio_unavail_title">Biometri inte tillgänglig</string>
+  <string name="onb_bio_unavail_body">Ingen biometri är konfigurerad på den här enheten. Du kan aktivera den senare i enhetens inställningar.</string>
+  <string name="onb_bio_reg_failed">Den biometriska igenkänningen lyckades inte.</string>
+  <string name="onb_bio_skip_later">Hoppa över, aktivera senare</string>
+  <string name="onb_bio_perm_title">Behörighet krävs</string>
+  <string name="onb_bio_perm_body">Bevilja behörighet för biometrisk igenkänning i enhetens inställningar.</string>
+  <string name="onb_bio_open_settings">Öppna inställningar</string>
+  <string name="onb_bio_link_title">Det gick inte att koppla biometri</string>
+  <string name="onb_bio_link_body">Du kan använda appen med ditt lösenord tills vidare och aktivera biometri igen senare.</string>
+  <string name="onb_bio_link_action">Fortsätt utan biometri</string>
+
+</resources>
