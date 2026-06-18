@@ -63,6 +63,16 @@ class SeedVaultTest {
     }
 
     @Test
+    fun unlockedSeedSourceIsCloseableAndZeroizes() = runTest {
+        val vault = SeedVault(CiphertextStore.inMemory())
+        vault.store(seed.copyOf(), password.toCharArray())
+        val source = vault.unlock(password.toCharArray())
+        assertContentEquals(seed, source.withSeed { it.copyOf() })
+        source.close() // zeroizes the held seed
+        assertFailsWith<IllegalStateException> { source.withSeed { it } }
+    }
+
+    @Test
     fun noopKeyStoreReportsBiometricsUnavailable() = runTest {
         val vault = SeedVault(CiphertextStore.inMemory())
         vault.store(seed.copyOf(), password.toCharArray())

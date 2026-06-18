@@ -24,7 +24,10 @@ All notable changes to Cyppie are documented here. The format is based on
     take an app-supplied biometric-authenticated `Cipher` (`CryptoObject`), so the `BiometricPrompt`
     UI stays in ONB-9 (Dev-1) — documented cross-agent seam.
   - Audit-gate tests on **JVM and iOS**: round-trip, wrong-password & tampered-ciphertext →
-    `InvalidPassword`, bad version → `CorruptData`, not-initialized, fresh salt/IV per store. `ConfirmPasswordScreen(value, password, onValueChange,
+    `InvalidPassword`, bad version → `CorruptData`, not-initialized, fresh salt/IV per store. Unlock
+    returns a closeable `SecureSeedSource` (zeroizes the seed on `close`); password bytes are UTF-8
+    encoded without an intermediate `String` and zeroized; the caller owns the input `CharArray`.
+- **KAN-13 — ONB-4 Confirm-password screen.** `ConfirmPasswordScreen(value, password, onValueChange,
   onNext, onBack)`: masked re-entry field (eye toggle) compared live against the ONB-3 password via
   `validateConfirmPassword` (empty / mismatch); "continue" stays visible but disabled until they
   match, errors surface on focus-loss and clear when fixed. After match it branches by the chosen

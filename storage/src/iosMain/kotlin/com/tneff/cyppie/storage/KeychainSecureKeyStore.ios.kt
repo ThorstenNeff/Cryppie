@@ -90,7 +90,9 @@ class KeychainSecureKeyStore(
         val query = newQuery(alias) {
             CFDictionaryAddValue(it, kSecReturnData, kCFBooleanTrueRef())
             CFDictionaryAddValue(it, kSecMatchLimit, kSecMatchLimitOne)
-            CFDictionaryAddValue(it, kSecUseOperationPrompt, CFBridgingRetain(prompt))
+            val promptRef = CFBridgingRetain(prompt)
+            CFDictionaryAddValue(it, kSecUseOperationPrompt, promptRef)
+            CFRelease(promptRef) // dict retains; drop our +1 (M4)
         }
         try {
             val status: OSStatus = SecItemCopyMatching(query, result.ptr)
@@ -113,14 +115,26 @@ class KeychainSecureKeyStore(
         }
     }
 
-    /** Builds a base generic-password query for [alias], then applies [extra] (caller releases nothing). */
-    private inline fun newQuery(alias: String, extra: (platform.CoreFoundation.CFMutableDictionaryRef?) -> Unit) =
-        CFDictionaryCreateMutable(null, 0, kCFTypeDictionaryKeyCallBacks.ptr, kCFTypeDictionaryValueCallBacks.ptr).also {
-            CFDictionaryAddValue(it, kSecClass, kSecClassGenericPassword)
-            CFDictionaryAddValue(it, kSecAttrService, CFBridgingRetain(service))
-            CFDictionaryAddValue(it, kSecAttrAccount, CFBridgingRetain(alias))
-            extra(it)
-        }
+    /**
+     * Builds a base generic-password query for [alias], then applies [extra]. Each `CFBridgingRetain`
+     * temporary is released after `CFDictionaryAddValue` — the dict keeps its own retain via the
+     * type value-callbacks, so dropping our +1 avoids a per-call leak (M4).
+     */
+    private inline fun newQuery(
+        alias: String,
+        extra: (platform.CoreFoundation.CFMutableDictionaryRef?) -> Unit,
+    ): platform.CoreFoundation.CFMutableDictionaryRef? {
+        val dict = CFDictionaryCreateMutable(null, 0, kCFTypeDictionaryKeyCallBacks.ptr, kCFTypeDictionaryValueCallBacks.ptr)
+        CFDictionaryAddValue(dict, kSecClass, kSecClassGenericPassword)
+        val serviceRef = CFBridgingRetain(service)
+        val accountRef = CFBridgingRetain(alias)
+        CFDictionaryAddValue(dict, kSecAttrService, serviceRef)
+        CFDictionaryAddValue(dict, kSecAttrAccount, accountRef)
+        CFRelease(serviceRef)
+        CFRelease(accountRef)
+        extra(dict)
+        return dict
+    }
 }
 
 @OptIn(ExperimentalForeignApi::class)
