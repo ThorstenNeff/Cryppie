@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KAN-17 (M3): keep the encrypted wallet seed out of cloud backup & device-transfer (defense-in-depth;
+     the ciphertext is PBKDF2+AES-GCM but the password is the only gate, so don't ship it off-device). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="wallet/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="wallet/" />
+    </device-transfer>
+</data-extraction-rules>

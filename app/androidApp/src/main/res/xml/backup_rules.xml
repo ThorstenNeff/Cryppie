@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KAN-17 (M3): pre-Android-12 auto-backup exclusion for the encrypted wallet seed dir. -->
+<full-backup-content>
+    <exclude domain="file" path="wallet/" />
+</full-backup-content>
