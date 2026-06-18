@@ -20,6 +20,16 @@ All notable changes to Cyppie are documented here. The format is based on
   (unlock), and `disableBiometricUnlock()`. The alias-parameter wrap/unwrap helpers are now private;
   the `BiometricPrompt` UI stays in ONB-9 (Dev-1) via the `CryptoObject` cipher. iOS Keychain
   unchanged. Robolectric androidHostTest round-trips enroll→unlock and disable with a fake-HW Cipher.
+- **KAN-78 — Wallet D2: Receive screen (`:feature:wallet`).** New Compose-MP feature module
+  (android/ios/jvm; depends `:designsystem`+`:walletcore`), modeled on `:feature:onboarding`, with
+  `ReceiveScreen(address, onBack)` (KAN-47): segmented chain selector (Ethereum/Base — **same EVM
+  address**, switching only re-labels + frames the warning), QR via **qrose 1.1.2**
+  (`rememberQrCodePainter`, bare address, fixed black-on-white **always-light** carrier for
+  scannability), full **LTR** untruncated selectable address + content-copy, a primary copy button
+  with copied-state, and a `CryptasaBanner(Warning)` network warning. testTags = i18n keys
+  (`receive_*`); tokens-only, adaptive (max-width 480). Added `CryptasaIcons.ContentCopy`. Desktop
+  `runComposeUiTest` verifies the surface + copy→copied. i18n: en/de imported; the other 12 locales
+  fall back to en until the design i18n adds the wallet/receive keys (designer follow-up).
 - **KAN-77 — Wallet-Core read-side domain.** New non-web `:walletcore` module (android · ios · jvm;
   depends on `:wallet`+`:rpc`) orchestrating the read paths: `AccountManager` (derive/list EVM accounts
   via L1, addresses only) and `WalletRepository` — native + ERC-20 balances and nonce per `EvmChain`

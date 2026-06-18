@@ -195,6 +195,37 @@ object CryptasaIcons {
         }
     }
 
+    /** Copy-to-clipboard affordance (KAN-78 Receive — copy address). */
+    val ContentCopy: ImageVector by lazy {
+        materialVector("Cryptasa.ContentCopy") {
+            moveTo(16.0f, 1.0f)
+            horizontalLineTo(4.0f)
+            curveTo(2.9f, 1.0f, 2.0f, 1.9f, 2.0f, 3.0f)
+            verticalLineToRelative(14.0f)
+            horizontalLineToRelative(2.0f)
+            verticalLineTo(3.0f)
+            horizontalLineToRelative(12.0f)
+            verticalLineTo(1.0f)
+            close()
+            moveTo(19.0f, 5.0f)
+            horizontalLineTo(8.0f)
+            curveTo(6.9f, 5.0f, 6.0f, 5.9f, 6.0f, 7.0f)
+            verticalLineToRelative(14.0f)
+            curveToRelative(0.0f, 1.1f, 0.9f, 2.0f, 2.0f, 2.0f)
+            horizontalLineToRelative(11.0f)
+            curveToRelative(1.1f, 0.0f, 2.0f, -0.9f, 2.0f, -2.0f)
+            verticalLineTo(7.0f)
+            curveToRelative(0.0f, -1.1f, -0.9f, -2.0f, -2.0f, -2.0f)
+            close()
+            moveToRelative(0.0f, 16.0f)
+            horizontalLineTo(8.0f)
+            verticalLineTo(7.0f)
+            horizontalLineToRelative(11.0f)
+            verticalLineToRelative(14.0f)
+            close()
+        }
+    }
+
     /** Trailing affordance on navigation cards; auto-mirrored for RTL (points left in `ar`). */
     val ChevronRight: ImageVector by lazy {
         materialVector("Cryptasa.ChevronRight", autoMirror = true) {
