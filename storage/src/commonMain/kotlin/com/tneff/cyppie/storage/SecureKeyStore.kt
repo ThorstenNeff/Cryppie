@@ -34,3 +34,11 @@ object NoopSecureKeyStore : SecureKeyStore {
     override suspend fun retrieve(alias: String): ByteArray? = null
     override suspend fun clear(alias: String) = Unit
 }
+
+/**
+ * The single canonical alias for the wallet's biometric-unlock secret. Shared between [SeedVault]
+ * (which clears it on `store`/`clear`) and the platform key stores (Android enroll, iOS Keychain) so
+ * a wallet reset/overwrite **always** wipes the biometric credential — never leaving a now-stale
+ * password recoverable behind a wiped seed (KAN-82). Do not introduce a second alias.
+ */
+internal const val SEED_UNLOCK_ALIAS: String = "cyppie.seed.unlock"

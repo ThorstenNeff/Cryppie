@@ -1,6 +1,7 @@
 package com.tneff.cyppie.storage
 
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -61,6 +62,22 @@ class AndroidSecureKeyStoreTest {
         store.disableBiometricUnlock()
         assertFailsWith<StorageException.KeyStoreUnavailable> {
             store.retrieveUnlockPassword(unlockCipher(enroll.iv))
+        }
+    }
+
+    @Test
+    fun seedVaultClearWipesBiometricEnroll() {
+        runBlocking {
+            val store = newStore()
+            val enroll = enrollCipher()
+            store.enableBiometricUnlock("pw".encodeToByteArray(), enroll)
+
+            // A wallet reset must wipe the biometric enroll too — same shared alias (KAN-82).
+            SeedVault(store = CiphertextStore.inMemory(), keyStore = store).clear()
+
+            assertFailsWith<StorageException.KeyStoreUnavailable> {
+                store.retrieveUnlockPassword(unlockCipher(enroll.iv))
+            }
         }
     }
 }

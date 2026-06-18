@@ -7,6 +7,12 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-82 — Reset wipes the biometric enroll (security, M1).** Unified the biometric-unlock Keystore
+  alias into one shared `SEED_UNLOCK_ALIAS`: `SeedVault.store()`/`clear()` and the Android enroll
+  (`AndroidSecureKeyStore.enableBiometricUnlock`) now use the **same** alias, so a wallet reset/
+  overwrite wipes the biometric credential — no stale password left recoverable behind a wiped seed.
+  Added zeroize-ownership KDoc on the Android enroll/retrieve (caller owns/zeroizes the password
+  bytes). Robolectric test asserts `SeedVault.clear()` wipes the enroll. Lands before Dev-1's KAN-33.
 - **KAN-80 — `:storage` Android biometric-unlock enroll API.** `AndroidSecureKeyStore` now exposes a
   wallet-level API over a **private, fixed Keystore alias** (`cyppie_seed_unlock`) so the app never
   names it: `biometricEnrollCipher()` + `enableBiometricUnlock(password, authenticatedCipher)` (enroll

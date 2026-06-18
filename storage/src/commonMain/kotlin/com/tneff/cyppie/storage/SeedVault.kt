@@ -47,7 +47,7 @@ class SeedVault(
         try {
             val ciphertext = aesKey(kek).cipher().encrypt(plaintext = seed)
             store.write(encodeRecord(salt, ciphertext))
-            keyStore.clear(BIOMETRIC_ALIAS)
+            keyStore.clear(SEED_UNLOCK_ALIAS)
         } finally {
             kek.fill(0)
             pwBytes.fill(0)
@@ -69,10 +69,14 @@ class SeedVault(
         }
     }
 
-    /** Deletes the stored seed and any biometric entry. */
+    /**
+     * Deletes the stored seed **and** the biometric-unlock entry. Both the seed and the keystore
+     * credential live behind the shared [SEED_UNLOCK_ALIAS], so a reset can't leave a now-stale
+     * password recoverable by biometrics behind a wiped seed (KAN-82).
+     */
     suspend fun clear() {
         store.clear()
-        keyStore.clear(BIOMETRIC_ALIAS)
+        keyStore.clear(SEED_UNLOCK_ALIAS)
     }
 
     // ---- biometric convenience (ONB-9 seam) ----
@@ -81,7 +85,7 @@ class SeedVault(
     suspend fun enableBiometricUnlock(password: CharArray) {
         val pwBytes = Utf8.encode(password)
         try {
-            keyStore.protect(BIOMETRIC_ALIAS, pwBytes)
+            keyStore.protect(SEED_UNLOCK_ALIAS, pwBytes)
         } finally {
             pwBytes.fill(0)
         }
@@ -89,7 +93,7 @@ class SeedVault(
 
     /** Unlocks via biometrics (releases the stored password bytes, then decrypts). */
     suspend fun unlockWithBiometrics(): SecureSeedSource {
-        val pwBytes = keyStore.retrieve(BIOMETRIC_ALIAS)
+        val pwBytes = keyStore.retrieve(SEED_UNLOCK_ALIAS)
             ?: throw StorageException.KeyStoreUnavailable("No biometric entry available")
         try {
             return unlockWithPasswordBytes(pwBytes)
@@ -156,6 +160,5 @@ class SeedVault(
         const val PBKDF2_ITERATIONS = 210_000 // OWASP-aligned for SHA-512 (ADR-0009)
         const val KEK_SIZE_BITS = 256
         const val MIN_GCM_SIZE = 12 + 16 // 12-byte IV + 16-byte tag
-        const val BIOMETRIC_ALIAS = "cyppie.seed.kek"
     }
 }

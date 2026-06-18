@@ -42,19 +42,25 @@ class AndroidSecureKeyStore(private val context: Context) : SecureKeyStore {
 
     override val isHardwareBacked: Boolean = true
 
-    // ---- Wallet-level biometric-unlock API (private alias, KAN-80) ----
+    // ---- Wallet-level biometric-unlock API (shared [SEED_UNLOCK_ALIAS], KAN-80/82) ----
 
     /** ENCRYPT-mode [Cipher] for enrolling biometric unlock — wrap in a `BiometricPrompt.CryptoObject`. */
     fun biometricEnrollCipher(): Cipher = encryptCipher(SEED_UNLOCK_ALIAS)
 
-    /** Persists the app [password] under biometric protection, wrapped by the [authenticatedCipher]. */
+    /**
+     * Persists the app [password] under biometric protection, wrapped by the [authenticatedCipher].
+     * The caller **owns** [password] and must zeroize it after this call (this class does not).
+     */
     fun enableBiometricUnlock(password: ByteArray, authenticatedCipher: Cipher) =
         protect(SEED_UNLOCK_ALIAS, password, authenticatedCipher)
 
     /** DECRYPT-mode [Cipher] (with the stored IV) for unlocking — wrap in a `CryptoObject`. */
     fun biometricUnlockCipher(): Cipher = decryptCipher(SEED_UNLOCK_ALIAS)
 
-    /** Recovers the app password persisted by [enableBiometricUnlock], via the [authenticatedCipher]. */
+    /**
+     * Recovers the app password persisted by [enableBiometricUnlock], via the [authenticatedCipher].
+     * The returned bytes are the caller's to use and **zeroize** (e.g. after `SeedVault.unlock`).
+     */
     fun retrieveUnlockPassword(authenticatedCipher: Cipher): ByteArray =
         retrieve(SEED_UNLOCK_ALIAS, authenticatedCipher)
 
@@ -148,8 +154,7 @@ class AndroidSecureKeyStore(private val context: Context) : SecureKeyStore {
         const val TRANSFORMATION = "AES/GCM/NoPadding"
         const val TAG_BITS = 128
         const val PREFS = "cyppie_secure_keystore"
-
-        /** Private, fixed alias for the wallet's biometric-unlock secret — never exposed to callers. */
-        const val SEED_UNLOCK_ALIAS = "cyppie_seed_unlock"
+        // Biometric-unlock alias is the shared top-level SEED_UNLOCK_ALIAS (KAN-82) — one alias so
+        // SeedVault.clear()/store() wipe this enroll too.
     }
 }
