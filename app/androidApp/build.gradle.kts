@@ -24,6 +24,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     // FragmentActivity host required by the ONB-9 BiometricPrompt (KAN-33).
     implementation(libs.androidx.fragment)
+    // AndroidStoragePaths.init(filesDir) at startup so :storage resolves the default seed file (KAN-89/95).
+    implementation(projects.storage)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)

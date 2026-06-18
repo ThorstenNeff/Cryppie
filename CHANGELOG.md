@@ -58,12 +58,16 @@ All notable changes to Cyppie are documented here. The format is based on
   adapter (decode → `SendInput`, respond) folds in when `:walletconnect` merges.
 - **KAN-89 — App-shell launch routing (skeleton).** `AppRoot()` in `:app:shared` now drives the app
   start: `walletExists()` → **onboarding** (no wallet) vs **unlock** (returning user) → hand off to
+- **KAN-89 — App-shell launch routing.** `AppRoot()` in `:app:shared` drives the app start:
+  **`walletExists()`** → **onboarding** (no wallet) vs **unlock** (returning user) → hand off to
   **Home**; `App()` renders `AppRoot()` instead of `OnboardingRoot()`. `OnboardingRoot` gained an
-  `onComplete` callback (Biometrics finish zeroizes secrets, then hands off). Decision-independent
-  skeleton: `walletExists` is a placeholder `false`, the unlock screen is a stub (real UX = KAN-92),
-  and Home is a placeholder until the live `WalletRepository` (unlocked `SeedSource` + RPC config) is
-  wired — which lands with the shared file-backed `CiphertextStore` (KAN-95, then `WalletStore` dedupe)
-  behind a non-web `expect/actual` seam (web = onboarding/read-only). Compiles on every target incl. web.
+  `onComplete` callback (Biometrics finish zeroizes secrets, then hands off). `walletExists()` is a
+  non-web `expect`/`actual` seam — android/ios/jvm read the shared `SeedVault(CiphertextStore.defaultFile())`
+  (**KAN-95**); js/wasm = false (onboarding/read-only). Onboarding's `WalletStore` is **deduped** onto
+  the same `CiphertextStore.defaultFile()` (drops the per-module file IO, incl. the iOS NSData store) so
+  launch-check and persistence share one seed file; Android startup calls `AndroidStoragePaths.init(filesDir)`
+  (`MainActivity`). The Unlock screen is still a stub (real UX = KAN-92) and Home a placeholder until the
+  live `WalletRepository` (unlocked `SeedSource` + RPC config) is wired. Compiles on every target incl. web.
 - **KAN-82 — Reset wipes the biometric enroll (security, M1).** Unified the biometric-unlock Keystore
   alias into one shared `SEED_UNLOCK_ALIAS`: `SeedVault.store()`/`clear()` and the Android enroll
   (`AndroidSecureKeyStore.enableBiometricUnlock`) now use the **same** alias, so a wallet reset/

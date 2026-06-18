@@ -25,13 +25,11 @@ import com.tneff.cyppie.feature.onboarding.OnboardingRoot
 private enum class AppDestination { Resolving, Onboarding, Unlock, Home }
 
 /**
- * App-shell launch routing (KAN-89): on start, decide between **onboarding** (no wallet yet) and
- * **unlock** (returning user), then hand off to **Home**. This is the decision-independent skeleton —
- * [walletExists] is a placeholder until the shared file-backed `CiphertextStore` lands (KAN-95), the
- * Unlock screen is a stub until its UX (KAN-92), and Home shows a placeholder until the live
- * `WalletRepository` (unlocked `SeedSource` + RPC config) is wired (KAN-89 final). Web is read-only /
- * onboarding-only, so the wallet shell sits behind a non-web `expect/actual` seam added with the real
- * wiring.
+ * App-shell launch routing (KAN-89): on start, [walletExists] (the shared `:storage` seed file via
+ * the non-web seam, KAN-95) decides **onboarding** (no wallet) vs **unlock** (returning user), then
+ * hands off to **Home**. The Unlock screen is still a stub until its UX (KAN-92), and Home shows a
+ * placeholder until the live `WalletRepository` (unlocked `SeedSource` + RPC config) is wired. Web is
+ * read-only / onboarding-only (`walletExists` = false there).
  */
 @Composable
 fun AppRoot() {
@@ -50,13 +48,6 @@ fun AppRoot() {
         }
     }
 }
-
-/**
- * Whether an encrypted wallet seed is already stored (returning user). Placeholder `false` until the
- * shared file-backed `CiphertextStore` is available (KAN-95) — then this becomes a non-web seam call
- * `SeedVault(CiphertextStore.file(...)).isInitialized()`.
- */
-private suspend fun walletExists(): Boolean = false
 
 /** Stub for the returning-user unlock screen (real password/biometric → `SeedSource` UX = KAN-92). */
 @Composable
