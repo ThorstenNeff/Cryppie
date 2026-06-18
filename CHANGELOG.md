@@ -9,7 +9,9 @@ All notable changes to Cyppie are documented here. The format is based on
 ### Added
 - **KAN-98 — Portfolio balances + valuation + allocation (`:portfolio` / `:rpc`, PRD-03 P1+P2).**
   **Stage A:** `:rpc` Alchemy **Data API** (`tokens/by-address` — multi-chain ERC-20 balances + metadata
-  per holder) + **Prices API** (`tokens/by-address`) REST clients — web-capable, MockEngine-tested.
+  per holder, **follows `pageKey` to the end** so token-rich wallets aren't under-counted) + **Prices
+  API** (`tokens/by-address`, **exact-currency only** — never a wrong-currency value) REST clients —
+  web-capable, MockEngine-tested.
   **Stage B:** the valuation core — big-int-safe `Quantity.divPow10` + `Valuation` (`rawBalance(wei) ×
   price / 10^…` → fiat cents; no float → deterministic FR-6; >64-bit intermediate, Long result, capped
   on absurd inputs); `Money.plus` guards currency + scale (+ `atScale`); `AlchemyPriceSource`

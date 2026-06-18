@@ -66,8 +66,8 @@ class AlchemyPriceClient(
         val chainId = networkChainId(network) ?: return null
         val contract = com.tneff.cyppie.evm.Hex.decodeOrNull(address.orEmpty())
             ?.takeIf { it.size == 20 }?.let { EvmAddress.fromBytes(it) } ?: return null
-        // Prefer the price matching the requested fiat; else the first available.
-        val price = prices.firstOrNull { it.currency.equals(vs, ignoreCase = true) } ?: prices.firstOrNull() ?: return null
+        // Only the requested fiat — never a wrong-currency price (L1): a missing currency → no price.
+        val price = prices.firstOrNull { it.currency.equals(vs, ignoreCase = true) } ?: return null
         val value = price.value ?: return null
         return RawTokenPrice(chainId, contract, value, price.currency, price.lastUpdatedAt)
     }

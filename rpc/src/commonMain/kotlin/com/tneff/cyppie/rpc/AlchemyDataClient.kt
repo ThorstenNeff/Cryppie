@@ -41,10 +41,23 @@ class AlchemyDataClient(
     }
 
     private suspend fun tokensForHolder(holder: EvmAddress, networks: List<String>): List<RawTokenHolding> {
+        // Follow `pageKey` to the end — token-rich wallets span multiple pages (M1; like AlchemyNftClient).
+        val all = mutableListOf<RawTokenHolding>()
+        var pageKey: String? = null
+        var pages = 0
+        do {
+            val dto = fetchPage(holder, networks, pageKey)
+            dto.data?.tokens.orEmpty().forEach { it.toHolding(holder)?.let(all::add) }
+            pageKey = dto.data?.pageKey
+        } while (pageKey != null && ++pages < MAX_PAGES)
+        return all
+    }
+
+    private suspend fun fetchPage(holder: EvmAddress, networks: List<String>, pageKey: String?): TokensByAddressResponse {
         val response = try {
             httpClient.post("$baseUrl/assets/tokens/by-address") {
                 contentType(ContentType.Application.Json)
-                setBody(TokensByAddressRequest(listOf(AddressNetworks(holder.value, networks))))
+                setBody(TokensByAddressRequest(listOf(AddressNetworks(holder.value, networks)), pageKey))
             }
         } catch (e: RpcException) {
             throw e
@@ -54,15 +67,16 @@ class AlchemyDataClient(
         if (!response.status.isSuccess()) {
             throw RpcException.AllProvidersFailed("Alchemy Data HTTP ${response.status.value}")
         }
-        val dto = try {
-            response.body<TokensByAddressResponse>()
+        return try {
+            response.body()
         } catch (e: Throwable) {
             throw RpcException.Decoding("Alchemy Data response could not be parsed")
         }
-        return dto.data?.tokens.orEmpty().mapNotNull { it.toHolding(holder) }
     }
 
     private companion object {
+        const val MAX_PAGES = 25 // safety cap on pagination
+
         fun alchemyNetwork(chainId: Long): String? = when (chainId) {
             1L -> "eth-mainnet"
             8453L -> "base-mainnet"
@@ -86,7 +100,7 @@ class AlchemyDataClient(
 }
 
 @Serializable
-private data class TokensByAddressRequest(val addresses: List<AddressNetworks>)
+private data class TokensByAddressRequest(val addresses: List<AddressNetworks>, val pageKey: String? = null)
 
 @Serializable
 private data class AddressNetworks(val address: String, val networks: List<String>)

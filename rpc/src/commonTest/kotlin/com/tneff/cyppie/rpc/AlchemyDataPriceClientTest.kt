@@ -9,6 +9,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
@@ -67,6 +68,32 @@ class AlchemyDataPriceClientTest {
     fun priceErrorEntriesAreSkipped() = runTest {
         val engine = MockEngine {
             ok("""{"data":[{"network":"eth-mainnet","address":"0xa0b8...","prices":[],"error":"not found"}]}""")
+        }
+        val prices = AlchemyPriceClient("https://prices", client(engine)).pricesByAddress(listOf(1L to usdc), "usd")
+        assertEquals(emptyList(), prices)
+    }
+
+    @Test
+    fun followsDataPageKeyToTheEnd() = runTest {
+        // M1: a token-rich wallet spans pages — both pages must be collected.
+        val engine = MockEngine { request ->
+            val body = (request.body as? TextContent)?.text.orEmpty()
+            if (!body.contains("PAGE2")) {
+                ok("""{"data":{"tokens":[{"network":"eth-mainnet","tokenAddress":"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48","tokenBalance":"0x1","tokenMetadata":{"symbol":"A","decimals":18}}],"pageKey":"PAGE2"}}""")
+            } else {
+                ok("""{"data":{"tokens":[{"network":"eth-mainnet","tokenAddress":"0x4200000000000000000000000000000000000006","tokenBalance":"0x2","tokenMetadata":{"symbol":"B","decimals":18}}]}}""")
+            }
+        }
+        val holdings = AlchemyDataClient("https://data", client(engine)).tokenHoldings(listOf(holder), listOf(1L))
+        assertEquals(2, holdings.size)
+        assertEquals(setOf("A", "B"), holdings.mapNotNull { it.symbol }.toSet())
+    }
+
+    @Test
+    fun omitsPriceInWrongCurrency() = runTest {
+        // L1: only a EUR price is available but USD was requested → no price (never a wrong-currency value).
+        val engine = MockEngine {
+            ok("""{"data":[{"network":"eth-mainnet","address":"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48","prices":[{"currency":"eur","value":"0.92","lastUpdatedAt":"2026-06-18T00:00:00Z"}]}]}""")
         }
         val prices = AlchemyPriceClient("https://prices", client(engine)).pricesByAddress(listOf(1L to usdc), "usd")
         assertEquals(emptyList(), prices)
