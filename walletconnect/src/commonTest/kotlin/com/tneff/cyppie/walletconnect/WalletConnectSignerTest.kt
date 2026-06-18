@@ -10,6 +10,7 @@ import com.tneff.cyppie.wallet.SeedSource
 import com.tneff.cyppie.wallet.tx.Eip1559Transaction
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class WalletConnectSignerTest {
@@ -22,13 +23,13 @@ class WalletConnectSignerTest {
     @Test
     fun personalSignIsEip191AndRecoversToSigner() {
         val message = "Hello Cyppie".encodeToByteArray()
-        val sig = signer.personalSign(message, accountIndex = 0)
+        val sig = signer.personalSign(WcSigningRequest.PersonalSign(message, account0), accountIndex = 0)
         assertEquals(65, sig.size)
         val v = sig[64].toInt() and 0xFF
         assertTrue(v == 27 || v == 28)
 
-        // Recompute the EIP-191 digest and recover the signer.
-        val prefix = "Ethereum Signed Message:\n${message.size}".encodeToByteArray()
+        // Recompute the EIP-191 digest WITH the mandatory 0x19 prefix and recover the signer.
+        val prefix = byteArrayOf(0x19) + "Ethereum Signed Message:\n${message.size}".encodeToByteArray()
         val digest = Keccak.keccak256(prefix + message)
         val recovered = RecoverableSignature(
             r = sig.copyOfRange(0, 32),
@@ -36,12 +37,20 @@ class WalletConnectSignerTest {
             recId = v - 27,
         ).recoverAddress(digest)
         assertEquals(account0, recovered)
+        // Authoritative byte-exact KAT (viem/ethers, Anvil key) = KAN-63.
     }
 
     @Test
     fun personalSignIsDeterministic() {
-        val m = "nonce-42".encodeToByteArray()
-        assertTrue(signer.personalSign(m, 0).contentEquals(signer.personalSign(m, 0)))
+        val req = WcSigningRequest.PersonalSign("nonce-42".encodeToByteArray(), account0)
+        assertTrue(signer.personalSign(req, 0).contentEquals(signer.personalSign(req, 0)))
+    }
+
+    @Test
+    fun rejectsAccountIndexNotMatchingRequestSigner() {
+        // Request signer is account0 but we ask to sign with index 1 → refused (FR-3).
+        val req = WcSigningRequest.PersonalSign("x".encodeToByteArray(), account0)
+        assertFailsWith<WalletConnectException.UnsupportedRequest> { signer.personalSign(req, accountIndex = 1) }
     }
 
     @Test
@@ -55,7 +64,7 @@ class WalletConnectSignerTest {
             to = EvmAddress.parse("0x70997970C51812dc3A010C7d01b50e0d17dc79C8"),
             value = Quantity.of(1_000_000_000_000_000_000L),
         )
-        val signed = signer.signTransaction(tx, accountIndex = 0)
+        val signed = signer.signTransaction(WcSigningRequest.SendTransaction(account0, tx), accountIndex = 0)
         assertTrue(signed.rawTransactionHex.startsWith("0x02"))
         assertEquals(32, signed.transactionHash.size)
     }

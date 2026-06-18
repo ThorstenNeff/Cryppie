@@ -76,8 +76,10 @@ fun WcSigningRequest.disclose(): WcRequestDisclosure = when (this) {
             "to" to (transaction.to?.value ?: "(contract creation)"),
             "value (wei)" to transaction.value.toHex(),
             "data" to "0x" + Hex.encode(transaction.data),
+            "nonce" to transaction.nonce.toHex(),
             "gasLimit" to transaction.gasLimit.toHex(),
             "maxFeePerGas" to transaction.maxFeePerGas.toHex(),
+            "maxPriorityFeePerGas" to transaction.maxPriorityFeePerGas.toHex(),
             "chainId" to transaction.chainId.toString(),
         ),
     )
