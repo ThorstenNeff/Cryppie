@@ -34,6 +34,18 @@ class UnlockViewModel : ViewModel() {
 
     val lockedOut: Boolean get() = lockoutRemaining > 0L
 
+    init {
+        // KAN-92 M1: restore the persisted counter and recompute the *remaining* lockout from the
+        // stored timestamp — so a force-stop + relaunch can't reset the backoff (the in-memory timer
+        // is only the live display; the source of truth is persisted).
+        viewModelScope.launch {
+            val snapshot = UnlockThrottleStore.load()
+            failures = snapshot.failures
+            val remaining = unlockRemainingLockoutSeconds(snapshot.failures, snapshot.secondsSinceLastFailure)
+            if (remaining > 0L) startLockout(remaining)
+        }
+    }
+
     fun updatePassword(value: String) {
         password = value
         if (error == UnlockError.Wrong || error == UnlockError.Empty) error = null
@@ -52,12 +64,14 @@ class UnlockViewModel : ViewModel() {
                     password = ""
                     failures = 0
                     error = null
+                    UnlockThrottleStore.clear()
                     onUnlocked()
                 }
                 UnlockOutcome.WrongPassword -> {
-                    failures += 1
+                    failures = UnlockThrottleStore.recordFailure()
                     error = UnlockError.Wrong
-                    maybeStartLockout()
+                    val seconds = unlockLockoutSeconds(failures)
+                    if (seconds > 0L) startLockout(seconds)
                 }
                 UnlockOutcome.NoWallet, UnlockOutcome.Error -> error = UnlockError.Failed
             }
@@ -65,9 +79,7 @@ class UnlockViewModel : ViewModel() {
         }
     }
 
-    private fun maybeStartLockout() {
-        val seconds = unlockLockoutSeconds(failures)
-        if (seconds <= 0L) return
+    private fun startLockout(seconds: Long) {
         countdown?.cancel()
         lockoutRemaining = seconds
         countdown = viewModelScope.launch {
