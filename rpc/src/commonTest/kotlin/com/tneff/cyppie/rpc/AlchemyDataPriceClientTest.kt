@@ -100,6 +100,23 @@ class AlchemyDataPriceClientTest {
     }
 
     @Test
+    fun parsesHistoricalPricePoints() = runTest {
+        val engine = MockEngine {
+            ok(
+                """{"data":[
+                  {"value":"2543.12","timestamp":"2026-01-01T00:00:00Z"},
+                  {"value":"2600.00","timestamp":"2026-01-02T00:00:00Z"}
+                ]}""",
+            )
+        }
+        val points = AlchemyPriceClient("https://prices", client(engine))
+            .historicalByAddress(1L, usdc, "2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", "1d")
+        assertEquals(2, points.size)
+        assertEquals("2543.12", points[0].priceDecimal)
+        assertEquals("2026-01-02T00:00:00Z", points[1].timestampIso)
+    }
+
+    @Test
     fun httpErrorIsAllProvidersFailed() = runTest {
         val engine = MockEngine { respond("upstream", HttpStatusCode.InternalServerError) }
         assertFailsWith<RpcException.AllProvidersFailed> {

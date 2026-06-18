@@ -19,6 +19,9 @@ data class RawTokenPrice(
     val lastUpdatedIso: String?,
 )
 
+/** A raw historical price sample (decimal value + ISO-8601 timestamp). */
+data class RawPricePoint(val priceDecimal: String, val timestampIso: String?)
+
 /**
  * Alchemy **Prices API** client (`tokens/by-address`) — current fiat prices by contract address per
  * network (ADR-0010 REST, web-capable). [baseUrl] = `https://api.g.alchemy.com/prices/v1/{apiKey}`
@@ -72,6 +75,39 @@ class AlchemyPriceClient(
         return RawTokenPrice(chainId, contract, value, price.currency, price.lastUpdatedAt)
     }
 
+    /**
+     * Historical prices for one token by address (Alchemy Historical Prices API). [startTimeIso] /
+     * [endTimeIso] are ISO-8601; [interval] is e.g. "1d" / "1h". Empty if the chain is unsupported.
+     */
+    suspend fun historicalByAddress(
+        chainId: Long,
+        contract: EvmAddress,
+        startTimeIso: String,
+        endTimeIso: String,
+        interval: String,
+    ): List<RawPricePoint> {
+        val network = alchemyNetwork(chainId) ?: return emptyList()
+        val response = try {
+            httpClient.post("$baseUrl/tokens/historical") {
+                contentType(ContentType.Application.Json)
+                setBody(HistoricalRequest(network, contract.value, startTimeIso, endTimeIso, interval))
+            }
+        } catch (e: RpcException) {
+            throw e
+        } catch (e: Throwable) {
+            throw RpcException.AllProvidersFailed("Alchemy Historical request failed", e)
+        }
+        if (!response.status.isSuccess()) {
+            throw RpcException.AllProvidersFailed("Alchemy Historical HTTP ${response.status.value}")
+        }
+        val dto = try {
+            response.body<HistoricalResponse>()
+        } catch (e: Throwable) {
+            throw RpcException.Decoding("Alchemy Historical response could not be parsed")
+        }
+        return dto.data.mapNotNull { p -> p.value?.let { RawPricePoint(it, p.timestamp) } }
+    }
+
     private companion object {
         fun alchemyNetwork(chainId: Long): String? = when (chainId) {
             1L -> "eth-mainnet"
@@ -110,3 +146,18 @@ private data class AlchemyPrice(
     val value: String? = null,
     val lastUpdatedAt: String? = null,
 )
+
+@Serializable
+private data class HistoricalRequest(
+    val network: String,
+    val address: String,
+    val startTime: String,
+    val endTime: String,
+    val interval: String,
+)
+
+@Serializable
+private data class HistoricalResponse(val data: List<HistoricalPoint> = emptyList())
+
+@Serializable
+private data class HistoricalPoint(val value: String? = null, val timestamp: String? = null)
