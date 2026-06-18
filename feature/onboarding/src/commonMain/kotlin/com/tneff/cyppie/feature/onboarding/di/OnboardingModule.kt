@@ -1,6 +1,7 @@
 package com.tneff.cyppie.feature.onboarding.di
 
 import com.tneff.cyppie.feature.onboarding.OnboardingViewModel
+import com.tneff.cyppie.feature.onboarding.UnlockViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -12,4 +13,5 @@ import org.koin.dsl.module
  */
 val onboardingModule: Module = module {
     viewModelOf(::OnboardingViewModel)
+    viewModelOf(::UnlockViewModel)
 }

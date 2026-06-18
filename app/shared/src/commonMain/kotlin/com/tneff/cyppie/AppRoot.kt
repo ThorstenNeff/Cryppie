@@ -1,9 +1,7 @@
 package com.tneff.cyppie
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -16,10 +14,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tneff.cyppie.designsystem.components.CryptasaButton
 import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.onboarding.OnboardingRoot
+import com.tneff.cyppie.feature.onboarding.ui.UnlockScreen
 
 /** Top-level app destinations (KAN-89 app-shell skeleton). */
 private enum class AppDestination { Resolving, Onboarding, Unlock, Home }
@@ -43,19 +41,13 @@ fun AppRoot() {
         when (destination) {
             AppDestination.Resolving -> Centered { ProgressRing(diameter = 48.dp) }
             AppDestination.Onboarding -> OnboardingRoot(onComplete = { destination = AppDestination.Home })
-            AppDestination.Unlock -> UnlockStubScreen(onUnlocked = { destination = AppDestination.Home })
+            AppDestination.Unlock -> UnlockScreen(
+                onUnlocked = { destination = AppDestination.Home },
+                // "Forgot password?" → non-custodial recovery via the import flow (SPEC_UNLOCK):
+                // route back through onboarding (import path), which replaces the on-device wallet.
+                onRecover = { destination = AppDestination.Onboarding },
+            )
             AppDestination.Home -> HomePlaceholder()
-        }
-    }
-}
-
-/** Stub for the returning-user unlock screen (real password/biometric → `SeedSource` UX = KAN-92). */
-@Composable
-private fun UnlockStubScreen(onUnlocked: () -> Unit) {
-    Centered {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Unlock (stub — KAN-92)", color = CryptasaTheme.colors.onSurface)
-            CryptasaButton(text = "Unlock", onClick = onUnlocked)
         }
     }
 }
