@@ -7,6 +7,13 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-95 — File-backed `CiphertextStore` (single seed-file source).** `:storage` now owns the
+  canonical encrypted-seed file: `CiphertextStore.file(path)` + `CiphertextStore.defaultFile()` over a
+  platform `defaultSeedFilePath()` — Android `filesDir` (`AndroidStoragePaths.init(filesDir)` at
+  startup), iOS Application Support (**excluded from backup**), Desktop `~/.cyppie`. Atomic writes
+  (temp + rename / `writeToFile atomically`) via expect/actual file IO. One source of truth for where
+  the seed lives, so launch / unlock / onboarding read the same file; ONB-8's per-platform `WalletStore`
+  file store dedupes onto this. Round-trip test (write/read/overwrite/clear) on JVM; compiles iOS/Android.
 - **KAN-82 — Reset wipes the biometric enroll (security, M1).** Unified the biometric-unlock Keystore
   alias into one shared `SEED_UNLOCK_ALIAS`: `SeedVault.store()`/`clear()` and the Android enroll
   (`AndroidSecureKeyStore.enableBiometricUnlock`) now use the **same** alias, so a wallet reset/
