@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -84,7 +85,13 @@ fun ConfirmPasswordScreen(
         modifier = modifier.fillMaxSize().background(colors.surface),
         contentAlignment = Alignment.TopCenter,
     ) {
-        Column(modifier = Modifier.widthIn(max = 480.dp).fillMaxSize().padding(horizontal = spacing.xl)) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = 480.dp)
+                .fillMaxSize()
+                .imePadding()
+                .padding(horizontal = spacing.xl),
+        ) {
             CryptasaTopAppBar(onBack = onBack, backContentDescription = stringResource(Res.string.cd_back))
 
             Column(
@@ -117,6 +124,7 @@ fun ConfirmPasswordScreen(
                         if (revealed) Res.string.cd_password_hide else Res.string.cd_password_show,
                     ),
                     onTrailingIconClick = { revealed = !revealed },
+                    trailingIconTestTag = OnboardingTestTags.CONFIRM_REVEAL,
                     errorTestTag = OnboardingTestTags.CONFIRM_ERROR,
                     modifier = Modifier
                         .testTag(OnboardingTestTags.CONFIRM_INPUT)
