@@ -29,6 +29,8 @@ dependencies {
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
+    // WC E2E harness (KAN-126 L3 / KAN-127): debug-only — physically absent from the release binary.
+    debugImplementation(projects.walletconnectE2e)
 }
 
 android {

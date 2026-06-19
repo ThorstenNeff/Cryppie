@@ -6,6 +6,7 @@ import com.tneff.cyppie.walletconnect.WcEvent
 import com.tneff.cyppie.walletconnect.WcSessionProposal
 import com.tneff.cyppie.walletconnect.WcSessionRequest
 import com.tneff.cyppie.walletconnect.WcTransport
+import com.tneff.cyppie.walletconnect.WcVerify
 import com.tneff.cyppie.walletconnect.approvedAddressesFrom
 import com.tneff.cyppie.walletconnect.approvedChainIdsFrom
 import com.tneff.cyppie.walletconnect.caip2ChainIdOrNull
@@ -86,7 +87,7 @@ class FakeWalletConnectController(private val script: WcE2eScript) : WcTransport
                         chainId = script.chain,
                         method = req.method,
                         params = req.params,
-                        dapp = WcDappMetadata(script.dappName, "", script.dappUrl, verifyContext = script.verifyContext),
+                        dapp = WcDappMetadata(script.dappName, "", script.dappUrl, verify = WcVerify.from(script.verifyContext)),
                     ),
                 ),
             )
@@ -144,7 +145,7 @@ data class WcE2eScript(
 
     internal fun toProposal() = WcSessionProposal(
         proposalId = topic,
-        dapp = WcDappMetadata(dappName, "", dappUrl, verifyContext = verifyContext),
+        dapp = WcDappMetadata(dappName, "", dappUrl, verify = WcVerify.from(verifyContext)),
         chains = listOf(chain),
         methods = requests.map { it.method }.distinct().ifEmpty { DEFAULT_METHODS },
     )

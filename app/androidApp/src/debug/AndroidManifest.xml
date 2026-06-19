@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DEBUG-ONLY (KAN-126 L3 / KAN-127 WC E2E harness). This manifest is merged ONLY into debug builds, so
+     the cyppie://wc-e2e deep-link + WcE2eActivity are physically absent from the release binary. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".WcE2eActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="cyppie" android:host="wc-e2e" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

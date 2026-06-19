@@ -37,6 +37,7 @@ import com.tneff.cyppie.storage.CiphertextStore
 import com.tneff.cyppie.storage.SeedSession
 import com.tneff.cyppie.storage.SeedVault
 import com.tneff.cyppie.walletconnect.WalletConnectController
+import com.tneff.cyppie.walletconnect.WcTransportOverride
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.tneff.cyppie.wallet.EvmKeyManager
@@ -264,7 +265,8 @@ fun WalletShell(onLock: () -> Unit) {
             // WC-UI (KAN-126): pairing → proposal/request, over the app-embedded :walletconnect controller.
             val wcViewModel: WalletConnectViewModel = viewModel(key = "walletconnect") {
                 WalletConnectViewModel(
-                    controller = WalletConnectController(),
+                    // Debug-only E2E harness override (KAN-126 L3); null in release → the real controller.
+                    controller = WcTransportOverride.transport ?: WalletConnectController(),
                     accounts = viewModel.accounts,
                     // Re-auth (ADR-0009): a correct password decrypts a FRESH per-signature source off-Main;
                     // signAndRespond signs with it and closes/zeroizes it immediately (same as Send/M1).
