@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.tneff.cyppie.designsystem.components.DisclosureRow
+import com.tneff.cyppie.designsystem.components.LtrIsland
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
@@ -454,19 +456,6 @@ private fun TxHashAndExplorer(txHash: String, chain: com.tneff.cyppie.walletcore
 }
 
 @Composable
-internal fun DisclosureRow(label: String, value: String, ltr: Boolean = false, valueTestTag: String? = null) {
-    val colors = CryptasaTheme.colors
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(label, style = CryptasaTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-        val valueModifier = if (valueTestTag != null) Modifier.testTag(valueTestTag) else Modifier
-        val text: @Composable () -> Unit = {
-            Text(value, style = CryptasaTheme.typography.body, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = valueModifier)
-        }
-        if (ltr) LtrIsland { text() } else text()
-    }
-}
-
-@Composable
 private fun Centered(text: String, style: androidx.compose.ui.text.TextStyle, color: androidx.compose.ui.graphics.Color, testTag: String? = null) {
     Text(
         text = text,
@@ -475,12 +464,6 @@ private fun Centered(text: String, style: androidx.compose.ui.text.TextStyle, co
         textAlign = TextAlign.Center,
         modifier = (if (testTag != null) Modifier.testTag(testTag) else Modifier).fillMaxWidth(),
     )
-}
-
-/** Wraps content in a forced-LTR scope (addresses/amounts/hashes stay LTR even in RTL locales). */
-@Composable
-internal fun LtrIsland(content: @Composable () -> Unit) {
-    androidx.compose.runtime.CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { content() }
 }
 
 @Composable
