@@ -24,6 +24,7 @@ import platform.Security.SecAccessControlCreateWithFlags
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
+import platform.Security.errSecInteractionNotAllowed
 import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccessControl
@@ -35,6 +36,8 @@ import platform.Security.kSecClassGenericPassword
 import platform.Security.kSecMatchLimit
 import platform.Security.kSecMatchLimitOne
 import platform.Security.kSecReturnData
+import platform.Security.kSecUseAuthenticationUI
+import platform.Security.kSecUseAuthenticationUIFail
 import platform.Security.kSecUseOperationPrompt
 import platform.Security.kSecValueData
 import platform.Security.kSecAccessControlBiometryCurrentSet
@@ -110,6 +113,27 @@ class KeychainSecureKeyStore(
         val query = newQuery(alias) {}
         try {
             SecItemDelete(query) // ignore errSecItemNotFound
+        } finally {
+            CFRelease(query)
+        }
+    }
+
+    /**
+     * Non-interactive existence probe (KAN-101-L1): `kSecUseAuthenticationUIFail` tells the keychain to
+     * never present Face/Touch ID, so a biometry-gated item that EXISTS returns
+     * `errSecInteractionNotAllowed` (rather than prompting) and an absent one returns
+     * `errSecItemNotFound`. No data is requested. Any error → treat as "no credential" (fail safe).
+     */
+    override fun hasCredential(alias: String): Boolean {
+        val query = newQuery(alias) {
+            CFDictionaryAddValue(it, kSecMatchLimit, kSecMatchLimitOne)
+            CFDictionaryAddValue(it, kSecUseAuthenticationUI, kSecUseAuthenticationUIFail)
+        }
+        return try {
+            when (SecItemCopyMatching(query, null)) {
+                errSecInteractionNotAllowed, errSecSuccess -> true
+                else -> false
+            }
         } finally {
             CFRelease(query)
         }

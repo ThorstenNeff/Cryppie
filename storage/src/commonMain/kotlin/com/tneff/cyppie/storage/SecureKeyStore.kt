@@ -22,6 +22,13 @@ interface SecureKeyStore {
 
     /** Removes the entry for [alias]. */
     suspend fun clear(alias: String)
+
+    /**
+     * Whether an entry for [alias] exists — **without** triggering a biometric prompt (KAN-101-L1).
+     * Lets a caller decide up front whether to even offer the biometric affordance. Default false
+     * (password-primary / no hardware); real key stores probe their backing store non-interactively.
+     */
+    fun hasCredential(alias: String): Boolean = false
 }
 
 /**

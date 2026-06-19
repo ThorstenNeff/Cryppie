@@ -25,12 +25,14 @@ import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthenticationWithBiometr
 actual class BiometricUnlock {
 
     /**
-     * Whether biometrics can be evaluated on this device (hardware present + enrolled). A precise check
-     * that the wallet's keychain credential exists (without prompting) is a follow-up; if it's absent,
-     * [unlock] degrades to [BiometricUnlockResult.Unavailable] and the password gate still works.
+     * Whether to offer biometric unlock: biometrics evaluable on this device (hardware present +
+     * enrolled) AND the wallet's keychain credential actually exists — the latter probed without
+     * prompting (KAN-101-L1), so the affordance is hidden when biometric unlock was never set up
+     * rather than shown and then failing. The password gate is always the fallback.
      */
     actual fun available(): Boolean =
-        LAContext().canEvaluatePolicy(LAPolicyDeviceOwnerAuthenticationWithBiometrics, null)
+        LAContext().canEvaluatePolicy(LAPolicyDeviceOwnerAuthenticationWithBiometrics, null) &&
+            SeedVault(CiphertextStore.defaultFile(), KeychainSecureKeyStore()).hasBiometricCredential()
 
     actual suspend fun unlock(): BiometricUnlockResult =
         try {
