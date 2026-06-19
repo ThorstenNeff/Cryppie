@@ -155,8 +155,8 @@ private val marketWatchlist: List<WatchedAsset> by lazy {
 /**
  * PRD-05 Ph1 (KAN-138/KAN-141) — DCA / AA endpoints.
  * - [KEYCLOAK_BASE_URL]: the SIWE realm (KAN-141, real).
- * - [USER_SERVICE_BASE_URL]: the JWT User-Service (Ph0 §4) — per the runbook it lives at
- *   `auth.cyppie.com/v1/*` (api.cyppie.com is the Alchemy key-proxy, a different host). The exact base
+ * - [USER_SERVICE_BASE_URL]: the JWT User-Service (Ph0 §4) — per the runbook its paths live under
+ *   `auth.cyppie.com/v1/...` (api.cyppie.com is the Alchemy key-proxy, a different host). The exact base
  *   URL is fixed at deploy; until then a 404/unreachable surface maps to Error (FR-4 graceful), exactly
  *   like Market degrades on a 503. The nav + SIWE flow are live; only the live data awaits the backend.
  */
