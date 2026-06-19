@@ -50,12 +50,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.aa.PendingDca
+import com.tneff.cyppie.feature.dca.generated.resources.dca_expires
 import com.tneff.cyppie.aa.SessionConfig
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
 import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
 import com.tneff.cyppie.designsystem.components.CryptasaTextField
+import com.tneff.cyppie.designsystem.BidiSanitizer
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
 import com.tneff.cyppie.designsystem.components.DisclosureRow
 import com.tneff.cyppie.designsystem.components.ProgressRing
@@ -147,10 +149,10 @@ private fun PendingCard(
         verticalArrangement = Arrangement.spacedBy(spacing.xs),
     ) {
         // No-blind disclosure of the op the user is about to authorize.
-        DisclosureRow(stringResource(Res.string.dca_spend), dca.action.amountIn, ltr = true, valueTestTag = "dca_amount_in")
-        DisclosureRow(stringResource(Res.string.dca_pay_token), dca.action.tokenIn, ltr = true)
-        DisclosureRow(stringResource(Res.string.dca_receive_token), dca.action.tokenOut, ltr = true)
-        DisclosureRow(stringResource(Res.string.dca_router), dca.action.router, ltr = true)
+        DisclosureRow(stringResource(Res.string.dca_spend), BidiSanitizer.sanitize(dca.action.amountIn), ltr = true, valueTestTag = "dca_amount_in")
+        DisclosureRow(stringResource(Res.string.dca_pay_token), BidiSanitizer.sanitize(dca.action.tokenIn), ltr = true)
+        DisclosureRow(stringResource(Res.string.dca_receive_token), BidiSanitizer.sanitize(dca.action.tokenOut), ltr = true)
+        DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(dca.action.router), ltr = true)
         if (isSigning) {
             // Re-auth gate (ADR-0009) — a correct password yields a fresh seed source that AaSigner zeroizes.
             CryptasaTextField(
@@ -178,12 +180,18 @@ private fun SessionCard(session: SessionConfig, onRevoke: () -> Unit) {
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag("dca_session"),
         verticalArrangement = Arrangement.spacedBy(spacing.xs),
     ) {
-        DisclosureRow(stringResource(Res.string.dca_account), session.account, ltr = true)
+        // P1-10: disclose every signed policy field of the active session (external strings sanitized).
+        DisclosureRow(stringResource(Res.string.dca_account), BidiSanitizer.sanitize(session.account), ltr = true)
         DisclosureRow(stringResource(Res.string.dca_chain), session.chainId.toString(), ltr = true)
         session.actions.firstOrNull()?.let { a ->
-            a.spendingLimits.firstOrNull()?.let { DisclosureRow(stringResource(Res.string.dca_cap), it.cap, ltr = true) }
+            DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(a.target), ltr = true)
+            DisclosureRow("Function", BidiSanitizer.sanitize(a.selector), ltr = true)
+            a.spendingLimits.firstOrNull()?.let { DisclosureRow(stringResource(Res.string.dca_cap), BidiSanitizer.sanitize(it.cap), ltr = true) }
+            DisclosureRow("Rolling window (s)", a.rollingWindowSeconds.toString(), ltr = true)
             DisclosureRow(stringResource(Res.string.dca_max_ops), a.usageLimit.toString(), ltr = true)
+            DisclosureRow(stringResource(Res.string.dca_expires), a.validUntil.toString(), ltr = true)
         }
+        session.totalExposureCap?.let { DisclosureRow("Total exposure cap", BidiSanitizer.sanitize(it.cap), ltr = true) }
         CryptasaButton(text = stringResource(Res.string.dca_revoke), onClick = onRevoke, style = CryptasaButtonStyle.Secondary, modifier = Modifier.fillMaxWidth().padding(top = spacing.sm).testTag("dca_revoke"))
     }
 }

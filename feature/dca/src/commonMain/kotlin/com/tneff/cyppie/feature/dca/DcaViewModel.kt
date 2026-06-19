@@ -40,6 +40,7 @@ class DcaViewModel(
     var uiState: DcaUiState by mutableStateOf(DcaUiState.Loading); private set
     /** Last sign error to surface (wrong password / submit failure); null when clear. */
     var signError: DcaError? by mutableStateOf(null); private set
+    private var signingInFlight = false // P2: busy-guard against concurrent signs
 
     init { load() }
 
@@ -70,6 +71,8 @@ class DcaViewModel(
      * leaves the op unsigned and surfaces [signError]. The fresh seed source is zeroized by [AaSigner].
      */
     fun signPending(dca: PendingDca, password: String) {
+        if (signingInFlight) return // P2 busy-guard
+        signingInFlight = true
         signError = null
         viewModelScope.launch {
             // LOW-3: re-check the kill-switch VM-side, fail-closed, right before signing — it may have armed
@@ -88,6 +91,7 @@ class DcaViewModel(
                 null // success
             }.getOrElse { DcaError.SUBMIT_FAILED }
             if (outcome != null) signError = outcome
+            signingInFlight = false
             load()
         }
     }
