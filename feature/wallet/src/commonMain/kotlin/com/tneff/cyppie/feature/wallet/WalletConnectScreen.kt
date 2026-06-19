@@ -234,10 +234,21 @@ private fun WcRequestScreen(
             VerifyBadge(request.dapp.verifyContext)
             WcScopeRow(stringResource(Res.string.wc_chains_label), BidiSanitizer.sanitize(request.chainId), ltr = true)
 
+            // M1 (review, sign-what-you-saw): EIP-712 is parsed ONCE here; the same parse drives the
+            // disclosure AND the sign-gate. If it fails to parse, the disclosure can't be shown → signing
+            // is blocked (not merely warned), so we never sign a payload the user couldn't see.
+            val signReq = (decoded as? WcDecodedRequest.SignNow)?.request
+            val typedRoot = (signReq as? WcSigningRequest.SignTypedDataV4)?.let { parseTypedData(it.typedDataJson) }
+            val disclosable = when (signReq) {
+                is WcSigningRequest.PersonalSign -> true
+                is WcSigningRequest.SignTypedDataV4 -> typedRoot != null
+                else -> false // SendTransaction = Et.3b; null = not a sign-now request
+            }
+
             when (decoded) {
                 is WcDecodedRequest.SignNow -> when (val req = decoded.request) {
                     is WcSigningRequest.PersonalSign -> PersonalSignBody(req)
-                    is WcSigningRequest.SignTypedDataV4 -> TypedDataBody(req)
+                    is WcSigningRequest.SignTypedDataV4 -> TypedDataBody(req, typedRoot)
                     is WcSigningRequest.SendTransaction -> Text(stringResource(Res.string.wc_req_method, request.method))
                 }
                 is WcDecodedRequest.SendTransaction -> Text(
@@ -253,11 +264,10 @@ private fun WcRequestScreen(
             if (viewModel.authorizing) {
                 WcAuthorizePanel(viewModel)
             } else {
-                val signable = decoded is WcDecodedRequest.SignNow && decoded.request !is WcSigningRequest.SendTransaction
                 CryptasaButton(
                     text = stringResource(Res.string.wc_req_approve_sign),
                     onClick = { viewModel.startAuthorize() },
-                    enabled = signable && !viewModel.busy,
+                    enabled = disclosable && !viewModel.busy,
                     modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.WC_REQ_APPROVE),
                 )
             }
@@ -288,11 +298,19 @@ private fun PersonalSignBody(req: WcSigningRequest.PersonalSign) {
     WcWarning(stringResource(Res.string.wc_sign_warning))
 }
 
+/** Parse the typed-data JSON for display; null → can't disclose → the caller blocks signing (M1). */
+private fun parseTypedData(json: String): JsonObject? =
+    runCatching { typedDataJson.parseToJsonElement(json).jsonObject }.getOrNull()
+
 @Composable
-private fun TypedDataBody(req: WcSigningRequest.SignTypedDataV4) {
-    val root = remember(req.typedDataJson) { runCatching { typedDataJson.parseToJsonElement(req.typedDataJson).jsonObject }.getOrNull() }
-    val domain = root?.get("domain") as? JsonObject
-    val message = root?.get("message")
+private fun TypedDataBody(req: WcSigningRequest.SignTypedDataV4, root: JsonObject?) {
+    if (root == null) {
+        // Parse failed → the disclosure can't be rendered; the Sign button is disabled (M1). Show why.
+        WcWarning(stringResource(Res.string.wc_typed_warning))
+        return
+    }
+    val domain = root["domain"] as? JsonObject
+    val message = root["message"]
     WcSectionLabel(stringResource(Res.string.wc_typed_domain))
     if (domain != null) JsonTree(domain, depth = 0) else Text("—", color = CryptasaTheme.colors.onSurfaceVariant)
     WcSectionLabel(stringResource(Res.string.wc_typed_message))
