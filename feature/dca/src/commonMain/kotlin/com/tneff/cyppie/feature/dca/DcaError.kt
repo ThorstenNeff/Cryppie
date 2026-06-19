@@ -17,6 +17,6 @@ fun DcaError.text(): String = when (this) {
     DcaError.SUBMIT_FAILED -> stringResource(Res.string.dca_err_submit)
     DcaError.AUTHORIZE_FAILED -> stringResource(Res.string.dca_err_authorize)
     DcaError.ENTER_AMOUNT -> stringResource(Res.string.dca_err_amount)
-    // KAN-144: on-device grant verification failed → we refuse to sign. dca_err_verify = UX follow.
-    DcaError.VERIFY_FAILED -> "Couldn't verify the grant on-device — not signed"
+    // KAN-144: on-device grant verification failed → we refuse to sign.
+    DcaError.VERIFY_FAILED -> "Couldn't verify the session on-device — not signed" // dca_err_verify = UX (parity pending)
 }

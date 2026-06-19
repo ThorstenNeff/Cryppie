@@ -102,7 +102,7 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                     // Phase 1 (KAN-144): the disclosure is the ON-DEVICE-VERIFIED grant, so we must first run
                     // verifyGrant against the backend enable digest. No blind config preview here.
                     CryptasaButton(
-                        text = if (viewModel.reviewing) stringResource(Res.string.dca_authorizing) else "Review grant",
+                        text = if (viewModel.reviewing) stringResource(Res.string.dca_authorizing) else "Review grant", // dca_review = UX (parity pending)
                         onClick = { viewModel.review() },
                         enabled = !viewModel.reviewing && viewModel.capAmount.isNotBlank(),
                         modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag("dca_grant_review"),
@@ -121,7 +121,7 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                         DisclosureRow(stringResource(Res.string.dca_selector), BidiSanitizer.sanitize(verified.actionSelector), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_spend_token), BidiSanitizer.sanitize(verified.spendToken), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_total_cap), viewModel.capHuman(verified), ltr = true, valueTestTag = "dca_grant_cap")
-                        DisclosureRow("Active from", verified.windowStartEpochSeconds.toString(), ltr = true) // dca_window_start = UX follow
+                        DisclosureRow("Active from", verified.windowStartEpochSeconds.toString(), ltr = true) // dca_window_start = UX (parity pending)
                         DisclosureRow(stringResource(Res.string.dca_expires), verified.windowEndEpochSeconds.toString(), ltr = true)
                     }
 

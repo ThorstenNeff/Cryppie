@@ -46,12 +46,6 @@ class KtorDcaApi(
     private suspend fun bearer(): String =
         bearerToken().ifBlank { throw IllegalStateException("no auth token — sign in required") }
 
-    override suspend fun buildSessionEnable(config: SessionConfig): SessionEnable =
-        httpClient.post("$base/v1/me/sessions/enable") {
-            expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)
-            setBody(config)
-        }.body()
-
     override suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult =
         httpClient.post("$base/v1/me/sessions") {
             expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)

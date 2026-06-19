@@ -6,12 +6,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tneff.cyppie.aa.AaSigner
+import com.tneff.cyppie.aa.BuiltEnable
 import com.tneff.cyppie.aa.DcaApi
+import com.tneff.cyppie.aa.DcaEnableBuilder
 import com.tneff.cyppie.aa.ScopedAction
 import com.tneff.cyppie.aa.SessionConfig
-import com.tneff.cyppie.aa.SessionEnable
 import com.tneff.cyppie.aa.SpendingLimit
-import com.tneff.cyppie.aa.toSigned
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.GrantVerificationException
 import com.tneff.cyppie.evm.SmartSessionGrantVerifier
@@ -47,6 +47,10 @@ class GrantViewModel(
     private val owner: EvmAddress,
     private val params: DcaGrantParams,
     private val nowEpochSeconds: () -> Long,
+    // KAN-144: the enable is built ON-DEVICE (no backend endpoint). [readNonce] reads the SmartSession
+    // module nonce via RPC (keyed by permissionId+account); [genSalt] is the app-chosen 32-byte session salt.
+    private val readNonce: suspend (permissionId: String, account: String, chainId: Long) -> Long,
+    private val genSalt: () -> String,
     private val reauth: suspend (password: String) -> SeedSource?,
 ) : ViewModel() {
 
@@ -68,8 +72,8 @@ class GrantViewModel(
     // P1-6 (TOCTOU): one immutable config is memoized + invalidated on input change, so the config sent to
     // the backend is byte-stable; KAN-144 then proves the returned digest encodes exactly that.
     private var configCache: SessionConfig? = null
-    // The verified enable (its digestToSign is signed) + the config it was built from (sent to grantSession).
-    private var pendingEnable: SessionEnable? = null
+    // The verified on-device enable (its digestToSign is signed) + the config it was built from (registered).
+    private var pendingEnable: BuiltEnable? = null
     private var pendingConfig: SessionConfig? = null
 
     fun setCap(value: String) { capAmount = value.filter { it.isDigit() }; invalidate() }
@@ -121,10 +125,11 @@ class GrantViewModel(
     }
 
     /**
-     * Phase 1 (KAN-144) — **review**: build the §2 config → backend enable op → **on-device `verifyGrant`**
-     * (recompute the enable digest + decode the pinned spending-limit/time-frame policies). Success exposes
-     * [verified] (what the disclosure renders); a [GrantVerificationException] is fail-closed — [verified]
-     * stays null so [grant] can't sign. No seed is in scope here (verification needs only the JWT).
+     * Phase 1 (KAN-144) — **review**: build the enable **entirely on-device** (no backend endpoint —
+     * [DcaEnableBuilder] over client-pinned constants; the only runtime input is the RPC-read [readNonce]),
+     * then **`verifyGrant`** as a defensive self-check (re-derive the display from the signed bytes; catches
+     * any construction/serialization bug). Success exposes [verified]; a [GrantVerificationException] is
+     * fail-closed — [verified] stays null so [grant] can't sign. No seed is in scope here.
      */
     fun review() {
         if (capAmount.isBlank()) { error = DcaError.ENTER_AMOUNT; return }
@@ -133,7 +138,13 @@ class GrantViewModel(
         viewModelScope.launch {
             val outcome = runCatching {
                 val config = buildConfig()
-                val enable = api.buildSessionEnable(config)
+                val action = config.actions.first()
+                val windowStart = action.validUntil - durationDays.toLong() * 86_400L // = the config's grant-time start
+                val salt = genSalt()
+                val initData = DcaEnableBuilder.ownableInitData(owner.value)
+                val permissionId = DcaEnableBuilder.permissionId(DcaEnableBuilder.OWNABLE_VALIDATOR, initData, salt)
+                val nonce = readNonce(permissionId, owner.value, config.chainId) // SmartSession module, via RPC
+                val enable = DcaEnableBuilder.build(config, owner = owner.value, salt = salt, nonce = nonce, windowStart = windowStart)
                 val v = SmartSessionGrantVerifier.verifyGrant(
                     account = owner.value, // = keyManager.deriveAddress(0); never a backend address
                     chainId = enable.chainId,
@@ -141,7 +152,7 @@ class GrantViewModel(
                     sessionValidatorInitData = enable.sessionValidatorInitData,
                     salt = enable.salt,
                     nonce = enable.nonce,
-                    permissions = enable.permissions.toSigned(),
+                    permissions = enable.permissions, // already the :evm SignedPermissions
                     digestToSign = enable.digestToSign,
                 ) // throws GrantVerificationException on ANY mismatch → we must NOT sign
                 pendingEnable = enable

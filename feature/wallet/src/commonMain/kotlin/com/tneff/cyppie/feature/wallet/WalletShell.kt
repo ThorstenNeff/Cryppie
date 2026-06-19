@@ -16,7 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.aa.AaSigner
+import com.tneff.cyppie.aa.DcaEnableBuilder
 import com.tneff.cyppie.aa.KtorDcaApi
+import com.tneff.cyppie.evm.Hex
+import com.tneff.cyppie.evm.Quantity
+import kotlin.random.Random
 import com.tneff.cyppie.auth.AuthSession
 import com.tneff.cyppie.auth.Eip191SiweSigner
 import com.tneff.cyppie.auth.InMemoryTokenVault
@@ -449,6 +453,15 @@ fun WalletShell(onLock: () -> Unit) {
                     owner = dcaOwner,
                     params = dcaGrantParams,
                     nowEpochSeconds = ::nowEpochSeconds,
+                    // The session-enable nonce is on-chain state: read it from the SmartSession module via the
+                    // RPC key-proxy (read-only, public) — keeps the enable fully app-built (no backend endpoint).
+                    readNonce = { permissionId, account, chainId ->
+                        val rpc = defaultRpcByChain.getValue(chainId)
+                        val out = rpc.call(EvmAddress.parse(DcaEnableBuilder.SMART_SESSION_ADDRESS), DcaEnableBuilder.nonceCalldata(permissionId, account))
+                        Quantity.ofBytes(out).toLong()
+                    },
+                    // App-chosen unique 32-byte session salt (→ a unique permissionId per session).
+                    genSalt = { "0x" + Hex.encode(Random.nextBytes(32)) },
                     reauth = dcaReauth,
                 )
             }

@@ -1,6 +1,5 @@
 package com.tneff.cyppie.aa
 
-import com.tneff.cyppie.evm.SmartSessionEnableDigest
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,9 +9,9 @@ import kotlinx.serialization.Serializable
  * publishes the User-Service surface. All amounts are base-unit decimal Strings (FR-6).
  */
 interface DcaApi {
-    /** Build the session-enable owner-userOp for [config]; returns the 32-byte digest the app signs
-     *  on-device (Ph0 §4 — session-enable is an owner-userOp, so the app just signs its hash). */
-    suspend fun buildSessionEnable(config: SessionConfig): SessionEnable
+    // NB: there is no buildSessionEnable — the enable digest is built ENTIRELY on-device ([DcaEnableBuilder],
+    // pure offline EIP-712 over client-pinned constants; the only runtime input is the RPC-read nonce). The
+    // app verifies ([SmartSessionGrantVerifier]) + signs it, then registers the enabled session below.
 
     /** Register an on-device-enabled Smart Session (grant UX → §2 config + the enable signature). */
     suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult
@@ -35,88 +34,6 @@ interface DcaApi {
     /** Global kill-switch state (backend pause flag); when paused, no op can be signed/submitted. */
     suspend fun aaStatus(): AaStatus
 }
-
-/**
- * The session-enable response the app signs on-device to authorize a new Smart Session. Carries the
- * **full grant material** (not just [digestToSign]) so the app can independently verify on-device
- * (KAN-144 `SmartSessionGrantVerifier`): recompute the enable digest over this material + pinned modules
- * and decode the policies → render the verified values, never the raw fields. Extra fields default so the
- * shape stays backward-compatible while the backend's published surface is reconciled.
- */
-@Serializable
-data class SessionEnable(
-    val digestToSign: String,
-    val account: String = "",
-    val chainId: Long = 0,
-    val sessionValidator: String = "",
-    val sessionValidatorInitData: String = "",
-    val salt: String = "",
-    val nonce: String = "",
-    val permissions: GrantPermissions = GrantPermissions(),
-    val validUntil: Long = 0,
-)
-
-/**
- * The signed-permissions grant material, wire DTO (mirrors the `:evm`
- * `SmartSessionEnableDigest.SignedPermissions` so the User-Service JSON deserializes here without making
- * the `:evm` domain types serializable). [toSigned] maps it to the verifier's input.
- */
-@Serializable
-data class GrantPermissions(
-    val permitGenericPolicy: Boolean = false,
-    val permitAdminAccess: Boolean = false,
-    val ignoreSecurityAttestations: Boolean = false,
-    // MED-fix (KAN-144 review): every field is part of the signed-permissions hash encoding, so the recompute
-    // must carry them ALL or it diverges and verifyGrant rejects every honest grant. DCA uses Pimlico
-    // sponsoring → permitERC4337Paymaster is true; it is mapped from the backend material, never defaulted.
-    val permitERC4337Paymaster: Boolean = false,
-    val userOpPolicies: List<GrantPolicyData> = emptyList(),
-    val erc7739Policies: GrantErc7739Data = GrantErc7739Data(),
-    val actions: List<GrantActionData> = emptyList(),
-)
-
-@Serializable
-data class GrantPolicyData(val policy: String, val initData: String)
-
-@Serializable
-data class GrantActionData(
-    val actionTargetSelector: String,
-    val actionTarget: String,
-    val actionPolicies: List<GrantPolicyData> = emptyList(),
-)
-
-/** ERC-7739 policies sub-object — empty for DCA, but still part of the hash encoding (tuple arrays). */
-@Serializable
-data class GrantErc7739Data(
-    val allowedERC7739Content: List<GrantErc7739Context> = emptyList(),
-    val erc1271Policies: List<GrantPolicyData> = emptyList(),
-)
-
-@Serializable
-data class GrantErc7739Context(val appDomainSeparator: String, val contentName: List<String>)
-
-/** Map the wire DTO → the `:evm` verifier input (ALL signed-permissions fields the digest is encoded over). */
-fun GrantPermissions.toSigned(): SmartSessionEnableDigest.SignedPermissions =
-    SmartSessionEnableDigest.SignedPermissions(
-        permitGenericPolicy = permitGenericPolicy,
-        permitAdminAccess = permitAdminAccess,
-        ignoreSecurityAttestations = ignoreSecurityAttestations,
-        permitERC4337Paymaster = permitERC4337Paymaster,
-        userOpPolicies = userOpPolicies.map { SmartSessionEnableDigest.PolicyData(it.policy, it.initData) },
-        erc7739Policies = SmartSessionEnableDigest.Erc7739Data(
-            allowedERC7739Content = erc7739Policies.allowedERC7739Content.map {
-                SmartSessionEnableDigest.Erc7739Context(it.appDomainSeparator, it.contentName)
-            },
-            erc1271Policies = erc7739Policies.erc1271Policies.map { SmartSessionEnableDigest.PolicyData(it.policy, it.initData) },
-        ),
-        actions = actions.map { a ->
-            SmartSessionEnableDigest.ActionData(
-                actionTargetSelector = a.actionTargetSelector,
-                actionTarget = a.actionTarget,
-                actionPolicies = a.actionPolicies.map { SmartSessionEnableDigest.PolicyData(it.policy, it.initData) },
-            )
-        },
-    )
 
 @Serializable
 data class GrantResult(val sessionId: String)
