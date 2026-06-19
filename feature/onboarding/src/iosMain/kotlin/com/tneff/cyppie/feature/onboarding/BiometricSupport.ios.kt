@@ -6,6 +6,12 @@ import com.tneff.cyppie.storage.CiphertextStore
 import com.tneff.cyppie.storage.KeychainSecureKeyStore
 import com.tneff.cyppie.storage.SeedVault
 import com.tneff.cyppie.storage.StorageException
+import kotlinx.cinterop.ExperimentalForeignApi
+import platform.LocalAuthentication.LABiometryTypeFaceID
+import platform.LocalAuthentication.LABiometryTypeOpticID
+import platform.LocalAuthentication.LABiometryTypeTouchID
+import platform.LocalAuthentication.LAContext
+import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthenticationWithBiometrics
 
 /**
  * iOS biometric enrollment via the Keychain (`SecAccessControl(.biometryCurrentSet)`): storing the
@@ -29,6 +35,19 @@ actual class BiometricSupport {
             BiometricEnableResult.LinkFailed
         } finally {
             pw.fill(' ')
+        }
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    actual fun biometryTypeName(): String {
+        // biometryType is only populated after canEvaluatePolicy is queried on the context.
+        val ctx = LAContext()
+        ctx.canEvaluatePolicy(LAPolicyDeviceOwnerAuthenticationWithBiometrics, null)
+        return when (ctx.biometryType) {
+            LABiometryTypeFaceID -> "Face ID"
+            LABiometryTypeTouchID -> "Touch ID"
+            LABiometryTypeOpticID -> "Optic ID"
+            else -> "Biometrics"
         }
     }
 }

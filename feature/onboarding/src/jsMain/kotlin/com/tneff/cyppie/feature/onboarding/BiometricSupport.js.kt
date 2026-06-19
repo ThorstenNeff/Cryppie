@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 actual class BiometricSupport {
     actual fun availability(): BiometricAvailability = BiometricAvailability.NoHardware
     actual suspend fun enable(password: String): BiometricEnableResult = BiometricEnableResult.Unavailable
+    actual fun biometryTypeName(): String = "Biometrics" // no hardware — never shown, but the seam needs it
 }
 
 @Composable

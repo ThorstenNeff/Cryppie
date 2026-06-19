@@ -22,6 +22,14 @@ enum class BiometricEnableResult { Success, AuthFailed, PermissionDenied, LinkFa
 expect class BiometricSupport {
     fun availability(): BiometricAvailability
     suspend fun enable(password: String): BiometricEnableResult
+
+    /**
+     * The user-facing name of this device's biometric method, for the enable-screen copy
+     * (`onb_bio_body` "Unlock your wallet with %1$s") — KAN-101 i18n-Low. iOS returns the Apple brand
+     * ("Face ID"/"Touch ID"/"Optic ID", intentionally untranslated); other platforms a generic
+     * "Biometrics".
+     */
+    fun biometryTypeName(): String
 }
 
 /** Provides a platform [BiometricSupport] (Android needs the host Activity, hence a composable factory). */
