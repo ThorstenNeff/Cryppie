@@ -44,6 +44,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_degraded
 import com.tneff.cyppie.feature.wallet.generated.resources.home_empty
 import com.tneff.cyppie.feature.wallet.generated.resources.home_error
 import com.tneff.cyppie.feature.wallet.generated.resources.home_nfts
+import com.tneff.cyppie.feature.wallet.generated.resources.home_portfolio
 import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
 import com.tneff.cyppie.feature.wallet.generated.resources.home_retry
@@ -67,6 +68,7 @@ fun WalletHomeScreen(
     onSend: () -> Unit = {},
     onAddToken: () -> Unit = {},
     onNfts: () -> Unit = {},
+    onPortfolio: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -140,6 +142,14 @@ fun WalletHomeScreen(
                 text = stringResource(Res.string.wallet_action_send),
                 onClick = onSend,
                 modifier = Modifier.fillMaxWidth().padding(top = spacing.sm).testTag(WalletTestTags.HOME_SEND),
+            )
+
+            // Portfolio overview (KAN-114 / PF-1) — full-width secondary entry.
+            CryptasaButton(
+                text = stringResource(Res.string.home_portfolio),
+                onClick = onPortfolio,
+                style = CryptasaButtonStyle.Secondary,
+                modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.HOME_PORTFOLIO),
             )
 
             // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).

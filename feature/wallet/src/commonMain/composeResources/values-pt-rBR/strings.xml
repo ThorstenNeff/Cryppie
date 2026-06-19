@@ -105,4 +105,5 @@
   <string name="send_auth_subtitle">Digite sua senha novamente para assinar.</string>
   <string name="send_auth_password">Senha</string>
   <string name="send_auth_error">Senha incorreta.</string>
+  <string name="home_portfolio">Portfólio</string>
 </resources>

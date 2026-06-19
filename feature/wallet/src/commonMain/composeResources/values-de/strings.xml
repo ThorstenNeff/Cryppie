@@ -105,4 +105,5 @@
   <string name="send_auth_subtitle">Passwort erneut eingeben, um zu signieren.</string>
   <string name="send_auth_password">Passwort</string>
   <string name="send_auth_error">Falsches Passwort.</string>
+  <string name="home_portfolio">Portfolio</string>
 </resources>

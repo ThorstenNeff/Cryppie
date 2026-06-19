@@ -28,6 +28,7 @@ object WalletTestTags {
     const val HOME_ADD_TOKEN = "home_add_token"
     const val HOME_NFTS = "home_nfts"
     const val HOME_SEND = "home_send"
+    const val HOME_PORTFOLIO = "home_portfolio"
 
     /** Account row `i` in the switcher. */
     fun homeAccountItem(i: Int): String = "home_account_item_$i"

@@ -105,4 +105,5 @@
   <string name="send_auth_subtitle">Введите пароль ещё раз, чтобы подписать.</string>
   <string name="send_auth_password">Пароль</string>
   <string name="send_auth_error">Неверный пароль.</string>
+  <string name="home_portfolio">Портфель</string>
 </resources>

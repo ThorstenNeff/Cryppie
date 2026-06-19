@@ -105,4 +105,5 @@
   <string name="send_auth_subtitle">Nhập lại mật khẩu của bạn để ký.</string>
   <string name="send_auth_password">Mật khẩu</string>
   <string name="send_auth_error">Mật khẩu không đúng.</string>
+  <string name="home_portfolio">Danh mục</string>
 </resources>

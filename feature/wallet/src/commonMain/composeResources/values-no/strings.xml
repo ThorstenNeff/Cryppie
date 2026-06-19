@@ -105,4 +105,5 @@
   <string name="send_auth_subtitle">Skriv inn passordet på nytt for å signere.</string>
   <string name="send_auth_password">Passord</string>
   <string name="send_auth_error">Feil passord.</string>
+  <string name="home_portfolio">Portefølje</string>
 </resources>

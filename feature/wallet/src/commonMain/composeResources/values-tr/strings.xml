@@ -105,4 +105,5 @@
   <string name="send_auth_subtitle">İmzalamak için parolanı tekrar gir.</string>
   <string name="send_auth_password">Parola</string>
   <string name="send_auth_error">Yanlış parola.</string>
+  <string name="home_portfolio">Portföy</string>
 </resources>

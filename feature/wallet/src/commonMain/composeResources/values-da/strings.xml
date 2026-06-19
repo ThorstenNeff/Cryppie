@@ -105,4 +105,5 @@
   <string name="send_auth_subtitle">Indtast din adgangskode igen for at signere.</string>
   <string name="send_auth_password">Adgangskode</string>
   <string name="send_auth_error">Forkert adgangskode.</string>
+  <string name="home_portfolio">Portefølje</string>
 </resources>

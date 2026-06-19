@@ -126,6 +126,7 @@ fun WalletShell(onLock: () -> Unit) {
             onSend = { if (viewModel.accounts.isNotEmpty()) dest = WalletDest.Send },
             onAddToken = { dest = WalletDest.AddToken },
             onNfts = { dest = WalletDest.Nfts },
+            onPortfolio = { dest = WalletDest.Portfolio },
             viewModel = viewModel,
         )
         WalletDest.Receive -> {
