@@ -1,7 +1,7 @@
 package com.tneff.cyppie.walletconnect
 
+import com.tneff.cyppie.evm.Eip191
 import com.tneff.cyppie.evm.EvmAddress
-import com.tneff.cyppie.evm.Keccak
 import com.tneff.cyppie.wallet.EvmKeyManager
 import com.tneff.cyppie.wallet.tx.EvmTransactionSigner
 import com.tneff.cyppie.wallet.tx.SignedTransaction
@@ -19,15 +19,12 @@ class WalletConnectSigner(private val keyManager: EvmKeyManager) {
     private val transactionSigner = EvmTransactionSigner(keyManager)
 
     /**
-     * `personal_sign` (EIP-191): signs `keccak256(0x19 ‖ "Ethereum Signed Message:\n" ‖ len ‖ message)`.
+     * `personal_sign` (EIP-191): signs the shared [Eip191.personalSignDigest] of the message.
      * Returns the 65-byte `r ‖ s ‖ v` signature with `v = 27 + recId`.
      */
     fun personalSign(request: WcSigningRequest.PersonalSign, accountIndex: Int): ByteArray {
         requireSignerMatches(accountIndex, request.address)
-        val message = request.message
-        // EIP-191 0x45 ("personal_sign") prefix — the leading 0x19 byte is mandatory.
-        val prefix = byteArrayOf(0x19) + "Ethereum Signed Message:\n${message.size}".encodeToByteArray()
-        val digest = Keccak.keccak256(prefix + message)
+        val digest = Eip191.personalSignDigest(request.message)
         val signature = keyManager.sign(accountIndex, digest)
         return signature.r + signature.s + byteArrayOf((27 + signature.recId).toByte())
     }
