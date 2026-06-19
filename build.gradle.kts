@@ -34,10 +34,15 @@ run {
             file("feature/wallet/src/commonMain/composeResources"),
             listOf("wallet_", "receive_", "home_", "token_", "nft_", "common_"),
         ),
+        Triple(
+            "feature:portfolio",
+            file("feature/portfolio/src/commonMain/composeResources"),
+            listOf("pf_"),
+        ),
     )
     // Prefixes owned by modules not yet on develop — keys here are intentionally not synced (no module),
     // but must still be "covered" so the unmapped-key check below doesn't flag them as lost.
-    val pendingPrefixes = listOf("pf_", "send_", "wc_")
+    val pendingPrefixes = listOf("send_", "wc_")
 
     tasks.register("syncI18n") {
         group = "i18n"
