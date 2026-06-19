@@ -18,7 +18,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken }
+private enum class WalletDest { Home, Receive, AddToken, Nfts }
 
 /**
  * Public dev/test RPC endpoints (no API key). Release builds inject Alchemy/Infura keys via build-config
@@ -62,6 +62,7 @@ fun WalletShell(onLock: () -> Unit) {
         WalletDest.Home -> WalletHomeScreen(
             onReceive = { dest = WalletDest.Receive },
             onAddToken = { dest = WalletDest.AddToken },
+            onNfts = { dest = WalletDest.Nfts },
             viewModel = viewModel,
         )
         WalletDest.Receive -> {
@@ -78,5 +79,12 @@ fun WalletShell(onLock: () -> Unit) {
             onAdd = { dest = WalletDest.Home },
             onBack = { dest = WalletDest.Home },
         )
+        WalletDest.Nfts -> {
+            // NFTs for the currently selected account on Ethereum (PRD-03 read-only; KAN-105).
+            val account = viewModel.selectedAccount
+            val nftViewModel: NftViewModel =
+                viewModel(key = "nft_${account}") { NftViewModel(repository, account, EvmChain.ETHEREUM) }
+            NftGridScreen(onBack = { dest = WalletDest.Home }, viewModel = nftViewModel)
+        }
     }
 }

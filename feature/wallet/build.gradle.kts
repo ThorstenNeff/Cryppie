@@ -35,6 +35,16 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
+            // Coil3 Ktor engine — Android (KAN-105). Not transitive from :rpc (implementation there).
+            implementation(libs.ktor.client.okhttp)
+        }
+        jvmMain.dependencies {
+            // Coil3 Ktor engine — Desktop/JVM (KAN-105).
+            implementation(libs.ktor.client.cio)
+        }
+        iosMain.dependencies {
+            // Coil3 Ktor engine — iOS (KAN-105).
+            implementation(libs.ktor.client.darwin)
         }
         commonMain.dependencies {
             api(projects.designsystem)
@@ -64,6 +74,10 @@ kotlin {
 
             // QR rendering (KAN-78) — qrose, Compose-MP vector QR
             implementation(libs.qrose)
+
+            // NFT media (KAN-105) — Coil3 AsyncImage + Ktor3 network fetcher (Alchemy-cached URLs only).
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -71,6 +85,8 @@ kotlin {
         getByName("jvmTest").dependencies {
             implementation(libs.compose.uiTest)
             implementation(compose.desktop.currentOs)
+            // Deterministic viewModelScope: drive Dispatchers.Main from a test dispatcher (KAN-105 NFT VM).
+            implementation(libs.kotlinx.coroutines.test)
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.compose.uiTest)

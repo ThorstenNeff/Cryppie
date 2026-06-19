@@ -43,6 +43,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_add_token
 import com.tneff.cyppie.feature.wallet.generated.resources.home_degraded
 import com.tneff.cyppie.feature.wallet.generated.resources.home_empty
 import com.tneff.cyppie.feature.wallet.generated.resources.home_error
+import com.tneff.cyppie.feature.wallet.generated.resources.home_nfts
 import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
 import com.tneff.cyppie.feature.wallet.generated.resources.home_retry
@@ -63,6 +64,7 @@ private const val NATIVE_DECIMALS = 18
 fun WalletHomeScreen(
     onReceive: () -> Unit = {},
     onAddToken: () -> Unit = {},
+    onNfts: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -146,6 +148,12 @@ fun WalletHomeScreen(
                     onClick = onAddToken,
                     style = CryptasaButtonStyle.Secondary,
                     modifier = Modifier.weight(1f).testTag(WalletTestTags.HOME_ADD_TOKEN),
+                )
+                CryptasaButton(
+                    text = stringResource(Res.string.home_nfts),
+                    onClick = onNfts,
+                    style = CryptasaButtonStyle.Secondary,
+                    modifier = Modifier.weight(1f).testTag(WalletTestTags.HOME_NFTS),
                 )
             }
 

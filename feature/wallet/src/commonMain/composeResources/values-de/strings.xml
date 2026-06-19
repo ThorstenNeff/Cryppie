@@ -33,4 +33,13 @@
   <string name="home_refresh_cd">Guthaben aktualisieren</string>
   <string name="home_receive">Empfangen</string>
   <string name="home_add_token">Token hinzufügen</string>
+  <string name="home_nfts">Sammlerstücke</string>
+  <!-- KAN-105 NFT-Grid -->
+  <string name="nft_title">Sammlerstücke</string>
+  <string name="nft_empty">Noch keine Sammlerstücke.</string>
+  <string name="nft_error">Sammlerstücke konnten nicht geladen werden.</string>
+  <string name="nft_retry">Erneut versuchen</string>
+  <string name="nft_degraded">Einige Sammlerstücke fehlen möglicherweise.</string>
+  <string name="nft_collection_unknown">Unbekannte Sammlung</string>
+  <string name="nft_back">Zurück</string>
 </resources>

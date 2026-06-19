@@ -32,6 +32,8 @@ cryptographyKotlin = "0.6.0"
 kotlinxSerialization = "1.11.0"
 # QR rendering for the Receive screen (KAN-78). Compose-MP, pinned vs Maven Central (2026-06-18).
 qrose = "1.1.2"
+# NFT media loading (KAN-105, PO-approved). Coil3 Compose-MP + Ktor3 network fetcher. Dep-verification = KAN-106.
+coil = "3.4.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -114,6 +116,11 @@ compose-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptiv
 
 # QR code rendering (KAN-78 Receive) — Compose-MP, commonMain, rememberQrCodePainter (vector, web-capable)
 qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
+
+# NFT media (KAN-105) — Coil3 AsyncImage (commonMain) + Ktor3 network fetcher. Non-web (:feature:wallet).
+# Engines per target via Ktor (okhttp/cio/darwin) — not transitive from :rpc (implementation-scoped there).
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

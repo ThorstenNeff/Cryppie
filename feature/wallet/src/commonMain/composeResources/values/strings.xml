@@ -33,4 +33,13 @@
   <string name="home_refresh_cd">Refresh balances</string>
   <string name="home_receive">Receive</string>
   <string name="home_add_token">Add token</string>
+  <string name="home_nfts">Collectibles</string>
+  <!-- KAN-105 NFT grid. en base; other locales fall back until KAN-76. -->
+  <string name="nft_title">Collectibles</string>
+  <string name="nft_empty">No collectibles yet.</string>
+  <string name="nft_error">Couldn't load collectibles.</string>
+  <string name="nft_retry">Retry</string>
+  <string name="nft_degraded">Some collectibles may be missing.</string>
+  <string name="nft_collection_unknown">Unknown collection</string>
+  <string name="nft_back">Back</string>
 </resources>
