@@ -23,7 +23,14 @@ actual class WalletStore {
             // KAN-111: persist AND open the in-memory session now (the seed was just created/imported),
             // so the app-shell lands on Home unlocked instead of bouncing the just-set password to
             // Unlock. The session owns its own copy (zeroized on lock); the local `seed` is zeroized below.
-            SeedSession.set(SeedVault(CiphertextStore.defaultFile()).storeAndOpen(seed, pw))
+            val opened = SeedVault(CiphertextStore.defaultFile()).storeAndOpen(seed, pw)
+            // N1: if installing the session fails, close the opened source so its seed copy can't leak.
+            try {
+                SeedSession.set(opened)
+            } catch (t: Throwable) {
+                opened.close()
+                throw t
+            }
             WalletSetupOutcome.Success
         } catch (e: StorageException.KeyStoreUnavailable) {
             WalletSetupOutcome.KeystoreError
