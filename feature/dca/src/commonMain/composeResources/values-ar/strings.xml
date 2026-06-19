@@ -45,4 +45,7 @@
   <string name="dca_selector">الدالة المسموح بها</string>
   <string name="dca_rolling">نافذة الحد المتجدّدة</string>
   <string name="dca_total_cap">الحد الأقصى الإجمالي</string>
+  <string name="dca_review">مراجعة</string>
+  <string name="dca_window_start">بداية النافذة</string>
+  <string name="dca_err_verify">تعذّر التحقق من الجلسة — لم يُوقَّع</string>
 </resources>

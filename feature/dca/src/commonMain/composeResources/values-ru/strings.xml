@@ -45,4 +45,7 @@
   <string name="dca_selector">Разрешённая функция</string>
   <string name="dca_rolling">Скользящее окно лимита</string>
   <string name="dca_total_cap">Общий лимит</string>
+  <string name="dca_review">Проверить</string>
+  <string name="dca_window_start">Начало окна</string>
+  <string name="dca_err_verify">Не удалось проверить сессию — не подписано</string>
 </resources>

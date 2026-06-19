@@ -11,6 +11,8 @@ import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_daily
 import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_weekly
 import com.tneff.cyppie.feature.dca.generated.resources.dca_new
 import com.tneff.cyppie.feature.dca.generated.resources.dca_password
+import com.tneff.cyppie.feature.dca.generated.resources.dca_review
+import com.tneff.cyppie.feature.dca.generated.resources.dca_window_start
 import com.tneff.cyppie.feature.dca.generated.resources.dca_router
 import com.tneff.cyppie.feature.dca.generated.resources.dca_selector
 import com.tneff.cyppie.feature.dca.generated.resources.dca_spend_token
@@ -102,7 +104,7 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                     // Phase 1 (KAN-144): the disclosure is the ON-DEVICE-VERIFIED grant, so we must first run
                     // verifyGrant against the backend enable digest. No blind config preview here.
                     CryptasaButton(
-                        text = if (viewModel.reviewing) stringResource(Res.string.dca_authorizing) else "Review grant", // dca_review = UX (parity pending)
+                        text = if (viewModel.reviewing) stringResource(Res.string.dca_authorizing) else stringResource(Res.string.dca_review),
                         onClick = { viewModel.review() },
                         enabled = !viewModel.reviewing && viewModel.capAmount.isNotBlank(),
                         modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag("dca_grant_review"),
@@ -121,7 +123,7 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                         DisclosureRow(stringResource(Res.string.dca_selector), BidiSanitizer.sanitize(verified.actionSelector), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_spend_token), BidiSanitizer.sanitize(verified.spendToken), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_total_cap), viewModel.capHuman(verified), ltr = true, valueTestTag = "dca_grant_cap")
-                        DisclosureRow("Active from", verified.windowStartEpochSeconds.toString(), ltr = true) // dca_window_start = UX (parity pending)
+                        DisclosureRow(stringResource(Res.string.dca_window_start), verified.windowStartEpochSeconds.toString(), ltr = true)
                         DisclosureRow(stringResource(Res.string.dca_expires), verified.windowEndEpochSeconds.toString(), ltr = true)
                     }
 

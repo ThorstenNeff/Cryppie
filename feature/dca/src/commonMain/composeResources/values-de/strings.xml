@@ -45,4 +45,7 @@
   <string name="dca_selector">Erlaubte Funktion</string>
   <string name="dca_rolling">Rollendes Limit-Fenster</string>
   <string name="dca_total_cap">Gesamtlimit</string>
+  <string name="dca_review">Prüfen</string>
+  <string name="dca_window_start">Fensterbeginn</string>
+  <string name="dca_err_verify">Konnte die Session nicht verifizieren — nicht signiert</string>
 </resources>

@@ -45,4 +45,7 @@
   <string name="dca_selector">Tillatt funksjon</string>
   <string name="dca_rolling">Rullerende grensevindu</string>
   <string name="dca_total_cap">Total grense</string>
+  <string name="dca_review">Gjennomgå</string>
+  <string name="dca_window_start">Vindusstart</string>
+  <string name="dca_err_verify">Kunne ikke verifisere økten — ikke signert</string>
 </resources>

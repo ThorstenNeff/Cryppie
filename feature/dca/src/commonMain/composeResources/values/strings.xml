@@ -45,4 +45,7 @@
   <string name="dca_selector">Allowed function</string>
   <string name="dca_rolling">Rolling limit window</string>
   <string name="dca_total_cap">Total cap</string>
+  <string name="dca_review">Review</string>
+  <string name="dca_window_start">Window start</string>
+  <string name="dca_err_verify">Couldn't verify the session — not signed</string>
 </resources>

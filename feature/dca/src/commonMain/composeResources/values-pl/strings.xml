@@ -45,4 +45,7 @@
   <string name="dca_selector">Dozwolona funkcja</string>
   <string name="dca_rolling">Ruchome okno limitu</string>
   <string name="dca_total_cap">Limit całkowity</string>
+  <string name="dca_review">Sprawdź</string>
+  <string name="dca_window_start">Początek okna</string>
+  <string name="dca_err_verify">Nie można zweryfikować sesji — niepodpisana</string>
 </resources>

@@ -45,4 +45,7 @@
   <string name="dca_selector">允许的函数</string>
   <string name="dca_rolling">滚动限额时间窗口</string>
   <string name="dca_total_cap">总上限</string>
+  <string name="dca_review">检查</string>
+  <string name="dca_window_start">窗口起始时间</string>
+  <string name="dca_err_verify">无法验证该会话 — 未签名</string>
 </resources>

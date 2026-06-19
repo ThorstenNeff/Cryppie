@@ -45,4 +45,7 @@
   <string name="dca_selector">Fonction autorisée</string>
   <string name="dca_rolling">Fenêtre de limite glissante</string>
   <string name="dca_total_cap">Plafond total</string>
+  <string name="dca_review">Vérifier</string>
+  <string name="dca_window_start">Début de la fenêtre</string>
+  <string name="dca_err_verify">Impossible de vérifier la session — non signée</string>
 </resources>

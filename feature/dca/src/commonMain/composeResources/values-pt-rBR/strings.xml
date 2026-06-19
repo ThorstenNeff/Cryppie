@@ -45,4 +45,7 @@
   <string name="dca_selector">Função permitida</string>
   <string name="dca_rolling">Janela de limite contínua</string>
   <string name="dca_total_cap">Limite total</string>
+  <string name="dca_review">Revisar</string>
+  <string name="dca_window_start">Início da janela</string>
+  <string name="dca_err_verify">Não foi possível verificar a sessão — não assinada</string>
 </resources>

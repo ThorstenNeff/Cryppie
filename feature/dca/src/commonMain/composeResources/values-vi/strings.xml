@@ -45,4 +45,7 @@
   <string name="dca_selector">Hàm được phép</string>
   <string name="dca_rolling">Cửa sổ giới hạn luân phiên</string>
   <string name="dca_total_cap">Tổng giới hạn</string>
+  <string name="dca_review">Xem lại</string>
+  <string name="dca_window_start">Bắt đầu cửa sổ</string>
+  <string name="dca_err_verify">Không thể xác minh phiên — chưa ký</string>
 </resources>

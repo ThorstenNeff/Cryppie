@@ -45,4 +45,7 @@
   <string name="dca_selector">İzin verilen işlev</string>
   <string name="dca_rolling">Kayan limit penceresi</string>
   <string name="dca_total_cap">Toplam üst sınır</string>
+  <string name="dca_review">Gözden geçir</string>
+  <string name="dca_window_start">Pencere başlangıcı</string>
+  <string name="dca_err_verify">Oturum doğrulanamadı — imzalanmadı</string>
 </resources>

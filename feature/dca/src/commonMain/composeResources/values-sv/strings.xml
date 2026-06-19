@@ -45,4 +45,7 @@
   <string name="dca_selector">Tillåten funktion</string>
   <string name="dca_rolling">Rullande gränsfönster</string>
   <string name="dca_total_cap">Totalt tak</string>
+  <string name="dca_review">Granska</string>
+  <string name="dca_window_start">Fönstrets början</string>
+  <string name="dca_err_verify">Det gick inte att verifiera sessionen — inte signerad</string>
 </resources>

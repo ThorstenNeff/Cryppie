@@ -45,4 +45,7 @@
   <string name="dca_selector">Función permitida</string>
   <string name="dca_rolling">Ventana de límite móvil</string>
   <string name="dca_total_cap">Límite total</string>
+  <string name="dca_review">Revisar</string>
+  <string name="dca_window_start">Inicio de la ventana</string>
+  <string name="dca_err_verify">No se pudo verificar la sesión — no se firmó</string>
 </resources>
