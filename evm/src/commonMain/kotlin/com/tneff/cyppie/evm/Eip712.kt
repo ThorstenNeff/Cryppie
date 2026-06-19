@@ -1,8 +1,5 @@
-package com.tneff.cyppie.walletconnect
+package com.tneff.cyppie.evm
 
-import com.tneff.cyppie.evm.Hex
-import com.tneff.cyppie.evm.Keccak
-import com.tneff.cyppie.evm.Quantity
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -12,16 +9,25 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+/** Fail-closed signal for malformed / out-of-range EIP-712 typed data (KAN-143). Neutral to `:evm` so the
+ *  digest builder is shared by WalletConnect's `eth_signTypedData_v4` AND the AA enable-recompute. */
+class Eip712Exception(message: String) : RuntimeException(message)
+
 /**
  * EIP-712 (`eth_signTypedData_v4`) digest builder. Produces the 32-byte hash to sign:
  * `keccak256(0x1901 ‖ domainSeparator ‖ hashStruct(primaryType, message))`, where
  * `hashStruct(s) = keccak256(typeHash(s) ‖ encodeData(s))` and `typeHash = keccak256(encodeType)`.
  *
- * Security-sensitive + encoding-heavy (ADR-0014 ethos) — validated against the canonical EIP-712
- * "Mail" example; authoritative WC vectors are KAN-63. Addresses are decoded as raw 20 bytes (no
- * EIP-55 enforcement — dapp typed-data is often un-checksummed).
+ * Lifted to `:evm` (KAN-143, like Eip191/KAN-142) so it is the **single auditable EIP-712 source** shared by
+ * WalletConnect's typed-data signing and the AA **enable-recompute** (on-device verification of the
+ * Smart-Sessions enable digest before signing — approach C). Web-safe: pure keccak + runtime JSON, no
+ * secp256k1.
+ *
+ * Security-sensitive + encoding-heavy (ADR-0014 ethos) — validated against the canonical EIP-712 "Mail"
+ * example; authoritative recover-to-signer vectors live in `:walletconnect` (WC merge gate, KAN-63).
+ * Addresses are decoded as raw 20 bytes (no EIP-55 enforcement — dapp typed-data is often un-checksummed).
  */
-internal object Eip712 {
+object Eip712 {
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -35,13 +41,13 @@ internal object Eip712 {
         val domainSeparator = hashStruct("EIP712Domain", domain, types)
         val messageHash = hashStruct(primaryType, message, types)
         Keccak.keccak256(byteArrayOf(0x19, 0x01) + domainSeparator + messageHash)
-    } catch (e: WalletConnectException) {
+    } catch (e: Eip712Exception) {
         throw e
     } catch (e: NoSuchElementException) {
-        throw WalletConnectException.UnsupportedRequest("Malformed EIP-712 typed data (missing field)")
+        throw Eip712Exception("Malformed EIP-712 typed data (missing field)")
     } catch (e: IllegalArgumentException) {
         // JsonObject/JsonArray/primitive cast failures, bad decimals, oversize values, etc. → fail-closed.
-        throw WalletConnectException.UnsupportedRequest("Malformed EIP-712 typed data: ${e.message}")
+        throw Eip712Exception("Malformed EIP-712 typed data: ${e.message}")
     }
 
     private fun hashStruct(type: String, data: JsonObject, types: JsonObject): ByteArray =
@@ -96,9 +102,7 @@ internal object Eip712 {
             val fixedSize = type.substring(open + 1, type.length - 1) // "" for dynamic [], "n" for [n]
             val elements = value.jsonArray
             if (fixedSize.isNotEmpty() && elements.size != fixedSize.toInt()) {
-                throw WalletConnectException.UnsupportedRequest(
-                    "Array $type expects $fixedSize elements, got ${elements.size}",
-                )
+                throw Eip712Exception("Array $type expects $fixedSize elements, got ${elements.size}")
             }
             var enc = ByteArray(0)
             for (e in elements) enc += encodeValue(elementType, e, types)
@@ -113,16 +117,16 @@ internal object Eip712 {
             type.startsWith("uint") -> uintTo32(type, value.jsonPrimitive.content)
             type.startsWith("int") -> intTo32(type, value.jsonPrimitive.content)
             type.startsWith("bytes") -> rightPad32(decodeHexOrThrow(value.jsonPrimitive.content))
-            else -> throw WalletConnectException.UnsupportedRequest("Unsupported EIP-712 type: $type")
+            else -> throw Eip712Exception("Unsupported EIP-712 type: $type")
         }
     }
 
     private fun decodeHexOrThrow(hex: String): ByteArray =
-        Hex.decodeOrNull(hex) ?: throw WalletConnectException.UnsupportedRequest("Invalid hex value: $hex")
+        Hex.decodeOrNull(hex) ?: throw Eip712Exception("Invalid hex value: $hex")
 
     private fun decodeAddress(hex: String): ByteArray {
-        val bytes = Hex.decodeOrNull(hex) ?: throw WalletConnectException.UnsupportedRequest("Bad address: $hex")
-        if (bytes.size != 20) throw WalletConnectException.UnsupportedRequest("Address must be 20 bytes")
+        val bytes = Hex.decodeOrNull(hex) ?: throw Eip712Exception("Bad address: $hex")
+        if (bytes.size != 20) throw Eip712Exception("Address must be 20 bytes")
         return bytes
     }
 
@@ -130,7 +134,7 @@ internal object Eip712 {
     private fun uintTo32(type: String, value: String): ByteArray {
         val bits = bitWidth(type, "uint")
         val bytes = if (value.startsWith("0x") || value.startsWith("0X")) Quantity.ofHex(value).toBytes32() else decimalTo32(value)
-        if (highBytesNonZero(bytes, bits)) throw WalletConnectException.UnsupportedRequest("$type value exceeds $bits bits")
+        if (highBytesNonZero(bytes, bits)) throw Eip712Exception("$type value exceeds $bits bits")
         return bytes
     }
 
@@ -138,19 +142,19 @@ internal object Eip712 {
     private fun intTo32(type: String, value: String): ByteArray {
         val bits = bitWidth(type, "int")
         if (value.startsWith("-0x") || value.startsWith("-0X")) {
-            throw WalletConnectException.UnsupportedRequest("negative hex not allowed for $type")
+            throw Eip712Exception("negative hex not allowed for $type")
         }
         if (!value.startsWith("-")) {
             val bytes = if (value.startsWith("0x") || value.startsWith("0X")) Quantity.ofHex(value).toBytes32() else decimalTo32(value)
             // positive: must fit N-1 bits (sign bit stays 0)
             if (highBytesNonZero(bytes, bits) || (bits < 256 && signBitSet(bytes, bits))) {
-                throw WalletConnectException.UnsupportedRequest("$type value out of range")
+                throw Eip712Exception("$type value out of range")
             }
             return bytes
         }
         val magnitude = decimalTo32(value.substring(1)) // |value|; must be ≤ 2^(N-1)
         if (highBytesNonZero(magnitude, bits) || (bits < 256 && signBitSet(magnitude, bits) && !isExactlyMinInt(magnitude, bits))) {
-            throw WalletConnectException.UnsupportedRequest("$type value out of range")
+            throw Eip712Exception("$type value out of range")
         }
         for (i in magnitude.indices) magnitude[i] = magnitude[i].toInt().inv().toByte()
         var carry = 1
@@ -166,8 +170,8 @@ internal object Eip712 {
     private fun bitWidth(type: String, prefix: String): Int {
         val suffix = type.removePrefix(prefix)
         val bits = if (suffix.isEmpty()) 256 else suffix.toIntOrNull()
-            ?: throw WalletConnectException.UnsupportedRequest("Unsupported type: $type")
-        if (bits !in 8..256 || bits % 8 != 0) throw WalletConnectException.UnsupportedRequest("Invalid bit width: $type")
+            ?: throw Eip712Exception("Unsupported type: $type")
+        if (bits !in 8..256 || bits % 8 != 0) throw Eip712Exception("Invalid bit width: $type")
         return bits
     }
 
@@ -203,7 +207,7 @@ internal object Eip712 {
                 out[i] = (v and 0xFF).toByte()
                 carry = v shr 8
             }
-            if (carry != 0) throw WalletConnectException.UnsupportedRequest("uint256 overflow")
+            if (carry != 0) throw Eip712Exception("uint256 overflow")
         }
         return out
     }

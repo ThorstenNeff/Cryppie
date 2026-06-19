@@ -1,16 +1,15 @@
-package com.tneff.cyppie.walletconnect
+package com.tneff.cyppie.evm
 
-import com.tneff.cyppie.evm.EvmAddress
-import com.tneff.cyppie.evm.Hex
-import com.tneff.cyppie.wallet.EvmKeyManager
-import com.tneff.cyppie.wallet.Mnemonic
-import com.tneff.cyppie.wallet.RecoverableSignature
-import com.tneff.cyppie.wallet.SeedSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
+/**
+ * KAN-143 — EIP-712 digest vectors for the lifted `:evm` [Eip712]. The known-answer is the canonical
+ * EIP-712 "Mail" digest from the standard; the authoritative recover-to-signer vector (full 65-byte sig
+ * vs eth-account) lives in `:walletconnect` (`WcSignerExternalVectorsTest`), which exercises this builder
+ * through the signer and must stay green = byte-identity proof of the lift.
+ */
 class Eip712Test {
 
     // The canonical EIP-712 "Mail" example from the standard.
@@ -59,8 +58,8 @@ class Eip712Test {
 
     @Test
     fun malformedTypedDataFailsClosed() {
-        // Missing "primaryType" → fail-closed with a wrapped exception (L1), not a raw NoSuchElementException.
-        assertFailsWith<WalletConnectException.UnsupportedRequest> {
+        // Missing "primaryType" → fail-closed with a wrapped Eip712Exception, not a raw NoSuchElementException.
+        assertFailsWith<Eip712Exception> {
             Eip712.encode("""{"types":{"EIP712Domain":[]},"domain":{},"message":{}}""")
         }
     }
@@ -76,33 +75,14 @@ class Eip712Test {
 
     @Test
     fun rejectsUintExceedingDeclaredWidth() {
-        assertFailsWith<WalletConnectException.UnsupportedRequest> { Eip712.encode(singleField("uint8", "300")) }
+        assertFailsWith<Eip712Exception> { Eip712.encode(singleField("uint8", "300")) }
         Eip712.encode(singleField("uint8", "200")) // valid uint8 encodes fine
     }
 
     @Test
     fun rejectsHexNegativeAndOutOfRangeInt() {
-        assertFailsWith<WalletConnectException.UnsupportedRequest> { Eip712.encode(singleField("int8", "\"-0x5\"")) }
-        assertFailsWith<WalletConnectException.UnsupportedRequest> { Eip712.encode(singleField("int8", "200")) } // > 127
+        assertFailsWith<Eip712Exception> { Eip712.encode(singleField("int8", "\"-0x5\"")) }
+        assertFailsWith<Eip712Exception> { Eip712.encode(singleField("int8", "200")) } // > 127
         Eip712.encode(singleField("int8", "\"-128\"")) // legitimate most-negative int8
-    }
-
-    @Test
-    fun signTypedDataV4RecoversToSigner() {
-        val keyManager = EvmKeyManager(
-            SeedSource.ofSeed(Mnemonic.of("test test test test test test test test test test test junk").toSeed()),
-        )
-        val signer = WalletConnectSigner(keyManager)
-        val account0 = EvmAddress.parse("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
-
-        val sig = signer.signTypedDataV4(WcSigningRequest.SignTypedDataV4(account0, mailTypedData), accountIndex = 0)
-        assertEquals(65, sig.size)
-        val v = sig[64].toInt() and 0xFF
-        val recovered = RecoverableSignature(
-            r = sig.copyOfRange(0, 32),
-            s = sig.copyOfRange(32, 64),
-            recId = v - 27,
-        ).recoverAddress(Eip712.encode(mailTypedData))
-        assertEquals(account0, recovered)
     }
 }

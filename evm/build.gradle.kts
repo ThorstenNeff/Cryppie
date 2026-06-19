@@ -38,6 +38,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlincrypto.hash.sha3)
+            // Runtime JSON only (parseToJsonElement) for the EIP-712 typed-data digest (KAN-143) — no
+            // @Serializable / compiler plugin needed. Web-safe (same lib :rpc/:market use cross-target).
+            implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

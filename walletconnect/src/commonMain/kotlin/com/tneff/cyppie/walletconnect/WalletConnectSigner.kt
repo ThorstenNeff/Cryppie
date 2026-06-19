@@ -1,6 +1,8 @@
 package com.tneff.cyppie.walletconnect
 
 import com.tneff.cyppie.evm.Eip191
+import com.tneff.cyppie.evm.Eip712
+import com.tneff.cyppie.evm.Eip712Exception
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.wallet.EvmKeyManager
 import com.tneff.cyppie.wallet.tx.EvmTransactionSigner
@@ -44,7 +46,11 @@ class WalletConnectSigner(private val keyManager: EvmKeyManager) {
      */
     fun signTypedDataV4(request: WcSigningRequest.SignTypedDataV4, accountIndex: Int): ByteArray {
         requireSignerMatches(accountIndex, request.address)
-        val digest = Eip712.encode(request.typedDataJson)
+        val digest = try {
+            Eip712.encode(request.typedDataJson) // shared :evm EIP-712 digest (KAN-143)
+        } catch (e: Eip712Exception) {
+            throw WalletConnectException.UnsupportedRequest("Malformed EIP-712 typed data: ${e.message}")
+        }
         val signature = keyManager.sign(accountIndex, digest)
         return signature.r + signature.s + byteArrayOf((27 + signature.recId).toByte())
     }
