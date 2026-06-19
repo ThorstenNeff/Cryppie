@@ -7,6 +7,15 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-116 — Locale-aware number/currency formatting (`:feature:portfolio`, KAN-107-L2).** Money/percent
+  rendering was US-hardcoded (`,` group, `.` decimal) — wrong for the 14 shipped locales. Added a
+  **float-free** (FR-6) `NumberFormatProfile` (grouping sep · decimal sep · symbol placement) resolved
+  from the active `Locale.current`, collapsing the 14 locales into 3 classes: **US** (`$1,234.56` —
+  en/ar/zh), **EU_DOT** (`€1.000.000,00` — da/de/es/pt/tr/vi), **EU_SPACE** (`1 000 000,00 €` —
+  fr/no/pl/ru/sv). `Money.formatted()/formattedSigned()` + `formatBps` now take a profile (default US,
+  so existing callers/tests are unchanged); `PortfolioOverviewScreen` resolves it from `Locale.current`.
+  Still pure string-slicing — no `Double`. 11 `MoneyFormat` tests (per-class grouping/decimal/symbol +
+  `forLanguageTag` mapping). *(ar = Latin digits for now; Arabic-Indic digit-shaping is out of scope.)*
 - **KAN-106 — Gradle dependency-verification gate (ADR-0018(A), supply-chain security).** Committed a
   strict `gradle/verification-metadata.xml` (`verify-metadata=true`) — **1539 artifacts sha256-pinned**,
   generated via `./gradlew --refresh-dependencies --write-verification-metadata sha256`. With the file

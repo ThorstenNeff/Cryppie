@@ -15,10 +15,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.window.core.layout.WindowSizeClass
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
@@ -116,6 +118,9 @@ private fun PortfolioContent(overview: PortfolioOverview) {
     val portfolio = overview.portfolio
     val twoColumn = currentWindowAdaptiveInfo().windowSizeClass
         .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    // KAN-116: number/currency separators follow the active locale (float-free).
+    val languageTag = Locale.current.toLanguageTag()
+    val profile = remember(languageTag) { NumberFormatProfile.forLanguageTag(languageTag) }
 
     val showCaveat = portfolio.totalValue?.isApproximate == true ||
         portfolio.change24h?.isApproximate == true ||
@@ -136,6 +141,7 @@ private fun PortfolioContent(overview: PortfolioOverview) {
                 metric = portfolio.totalValue,
                 signed = false,
                 tag = PortfolioTestTags.TOTAL_VALUE,
+                profile = profile,
                 large = true,
             )
             MetricHeadline(
@@ -143,12 +149,14 @@ private fun PortfolioContent(overview: PortfolioOverview) {
                 metric = portfolio.change24h,
                 signed = true,
                 tag = PortfolioTestTags.CHANGE_24H,
+                profile = profile,
             )
             MetricHeadline(
                 label = stringResource(Res.string.pf_pnl),
                 metric = overview.pnl,
                 signed = true,
                 tag = PortfolioTestTags.PNL,
+                profile = profile,
             )
         }
     }
@@ -164,7 +172,7 @@ private fun PortfolioContent(overview: PortfolioOverview) {
                 modifier = Modifier.fillMaxWidth().testTag(PortfolioTestTags.ALLOCATION_LIST),
                 verticalArrangement = Arrangement.spacedBy(spacing.xs),
             ) {
-                portfolio.allocation.forEachIndexed { i, slice -> AllocationRow(slice, i) }
+                portfolio.allocation.forEachIndexed { i, slice -> AllocationRow(slice, i, profile) }
             }
         }
     }
@@ -194,6 +202,7 @@ private fun MetricHeadline(
     metric: Metric<Money>?,
     signed: Boolean,
     tag: String,
+    profile: NumberFormatProfile,
     large: Boolean = false,
 ) {
     val colors = CryptasaTheme.colors
@@ -201,8 +210,8 @@ private fun MetricHeadline(
     val approximate = metric?.isApproximate == true
     val text = when {
         value == null -> "—"
-        signed -> value.formattedSigned()
-        else -> value.formatted()
+        signed -> value.formattedSigned(profile)
+        else -> value.formatted(profile)
     }
     val prefix = if (approximate && value != null) "≈ " else ""
     val color: Color = when {
@@ -224,7 +233,7 @@ private fun MetricHeadline(
 }
 
 @Composable
-private fun AllocationRow(slice: AllocationSlice, index: Int) {
+private fun AllocationRow(slice: AllocationSlice, index: Int, profile: NumberFormatProfile) {
     val colors = CryptasaTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth().testTag(PortfolioTestTags.allocationItem(index)),
@@ -238,12 +247,12 @@ private fun AllocationRow(slice: AllocationSlice, index: Int) {
             modifier = Modifier.weight(1f),
         )
         Text(
-            text = formatBps(slice.fractionBps),
+            text = formatBps(slice.fractionBps, profile),
             style = CryptasaTheme.typography.bodySmall,
             color = colors.onSurfaceVariant,
         )
         Text(
-            text = slice.value.formatted(),
+            text = slice.value.formatted(profile),
             style = CryptasaTheme.typography.body,
             color = colors.onSurface,
         )
@@ -266,13 +275,4 @@ private fun CenteredState(
             content = { content() },
         )
     }
-}
-
-/** Basis points → a "12.34%" string, float-free (bps/100 = percent, two decimals). */
-internal fun formatBps(bps: Int): String {
-    // L1 (KAN-107 review): derive the sign from bps, not from `whole` — for bps in (-99..-1) the
-    // integer `whole` is 0 and would drop the minus, mis-rendering a small negative as positive.
-    val negative = bps < 0
-    val abs = if (negative) -bps else bps
-    return "${if (negative) "-" else ""}${abs / 100}.${(abs % 100).toString().padStart(2, '0')}%"
 }

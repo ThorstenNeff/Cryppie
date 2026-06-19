@@ -52,4 +52,50 @@ class MoneyFormatTest {
         assertEquals("-0.50%", formatBps(-50))
         assertEquals("-12.34%", formatBps(-1_234))
     }
+
+    // ---- KAN-116: locale-aware format classes (float-free) ----
+
+    private val nbsp = " "
+
+    @Test
+    fun euDotClassGroupsWithDotCommaDecimalSymbolBefore() {
+        // de/da/es/pt/tr/vi — e.g. de "€1.000.000,00"
+        val p = NumberFormatProfile.EU_DOT
+        assertEquals("€1.234.567,89", Money(123_456_789, 2, "EUR").formatted(p))
+        assertEquals("€0,05", Money(5, 2, "EUR").formatted(p))
+        assertEquals("-€1.234,56", Money(-123_456, 2, "EUR").formatted(p))
+        assertEquals("+€123,45", Money(12_345, 2, "EUR").formattedSigned(p))
+        assertEquals("25,00%", formatBps(2_500, p))
+        assertEquals("-0,05%", formatBps(-5, p))
+    }
+
+    @Test
+    fun euSpaceClassGroupsWithSpaceCommaDecimalSymbolAfter() {
+        // fr/no/pl/ru/sv — e.g. fr "1 000 000,00 €"
+        val p = NumberFormatProfile.EU_SPACE
+        assertEquals("1${nbsp}234${nbsp}567,89${nbsp}€", Money(123_456_789, 2, "EUR").formatted(p))
+        assertEquals("-1${nbsp}234,56${nbsp}€", Money(-123_456, 2, "EUR").formatted(p))
+        assertEquals("+123,45${nbsp}€", Money(12_345, 2, "EUR").formattedSigned(p))
+        assertEquals("12,34%", formatBps(1_234, p))
+    }
+
+    @Test
+    fun usClassIsTheDefault() {
+        // en/ar/zh — group ",", decimal "."
+        assertEquals("$1,234.56", Money(123_456, 2, "USD").formatted(NumberFormatProfile.US))
+        assertEquals(Money(123_456, 2, "USD").formatted(), Money(123_456, 2, "USD").formatted(NumberFormatProfile.US))
+    }
+
+    @Test
+    fun languageTagResolvesToFormatClass() {
+        assertEquals(NumberFormatProfile.EU_DOT, NumberFormatProfile.forLanguageTag("de"))
+        assertEquals(NumberFormatProfile.EU_DOT, NumberFormatProfile.forLanguageTag("pt-BR"))
+        assertEquals(NumberFormatProfile.EU_DOT, NumberFormatProfile.forLanguageTag("vi"))
+        assertEquals(NumberFormatProfile.EU_SPACE, NumberFormatProfile.forLanguageTag("fr-FR"))
+        assertEquals(NumberFormatProfile.EU_SPACE, NumberFormatProfile.forLanguageTag("ru"))
+        assertEquals(NumberFormatProfile.US, NumberFormatProfile.forLanguageTag("en-US"))
+        assertEquals(NumberFormatProfile.US, NumberFormatProfile.forLanguageTag("zh-Hans-CN"))
+        assertEquals(NumberFormatProfile.US, NumberFormatProfile.forLanguageTag("ar"))
+        assertEquals(NumberFormatProfile.US, NumberFormatProfile.forLanguageTag("xx")) // unknown → US
+    }
 }
