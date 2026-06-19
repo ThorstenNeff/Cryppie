@@ -52,7 +52,7 @@ class DcaViewModel(
                 DcaUiState.Content(
                     sessions = api.listSessions(),
                     pending = api.pendingDca(),
-                    paused = runCatching { api.aaStatus().paused }.getOrDefault(false),
+                    paused = runCatching { api.aaStatus().paused }.getOrDefault(true), // P1-4 fail-closed: unknown = paused
                 )
             }.getOrElse { DcaUiState.Error }
         }

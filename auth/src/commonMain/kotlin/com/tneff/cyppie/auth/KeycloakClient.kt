@@ -2,6 +2,7 @@ package com.tneff.cyppie.auth
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.http.parameters
@@ -33,11 +34,12 @@ class KeycloakClient(
     private val base = baseUrl.trimEnd('/')
 
     suspend fun nonce(): NonceResponse =
-        httpClient.get("$base/realms/cyppie/siwe/nonce").body()
+        httpClient.get("$base/realms/cyppie/siwe/nonce") { expectSuccess = true }.body()
 
     suspend fun token(siweMessage: String, siweSignature: String): TokenResponse =
         httpClient.submitForm(
             url = "$base/realms/cyppie/protocol/openid-connect/token",
+            block = { expectSuccess = true },
             formParameters = parameters {
                 append("grant_type", "password")
                 append("client_id", CLIENT_ID)

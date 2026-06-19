@@ -26,6 +26,7 @@ data class DcaGrantParams(
     val router: String,
     val swapSelector: String,
     val spendToken: String,
+    val spendTokenDecimals: Int, // P1-5: scale the human cap to base units (e.g. USDC = 6)
 )
 
 /**
@@ -51,12 +52,21 @@ class GrantViewModel(
     var error: DcaError? by mutableStateOf(null); private set
     var granted: Boolean by mutableStateOf(false); private set
 
-    fun setCap(value: String) { capAmount = value.filter { it.isDigit() } }
-    fun selectFrequency(value: DcaFrequency) { frequency = value }
-    fun setDuration(days: Int) { durationDays = days }
+    // P1-6 (TOCTOU): one immutable config is memoized + invalidated on input change, so the config the
+    // disclosure renders is byte-identical to the one signed (no re-build between display and sign).
+    private var configCache: SessionConfig? = null
 
-    /** The §2 session the user is authorizing — built from the inputs; what the disclosure shows + signs. */
+    fun setCap(value: String) { capAmount = value.filter { it.isDigit() }; configCache = null }
+    fun selectFrequency(value: DcaFrequency) { frequency = value; configCache = null }
+    fun setDuration(days: Int) { durationDays = days; configCache = null }
+
+    /** P1-5: scale the whole-unit [capAmount] to base units, float-free (append 10^decimals zeros). */
+    private fun scaledCap(): String =
+        if (capAmount.isBlank()) "0" else capAmount + "0".repeat(params.spendTokenDecimals)
+
+    /** The §2 session the user is authorizing — memoized; what the disclosure shows AND what gets signed. */
     fun buildConfig(): SessionConfig {
+        configCache?.let { return it }
         val validUntil = nowEpochSeconds() + durationDays.toLong() * 86_400L
         val maxOps = (durationDays.toLong() * 86_400L / frequency.seconds).toInt().coerceAtLeast(1)
         return SessionConfig(
@@ -66,13 +76,13 @@ class GrantViewModel(
                 ScopedAction(
                     target = params.router,
                     selector = params.swapSelector,
-                    spendingLimits = listOf(SpendingLimit(token = params.spendToken, cap = capAmount.ifBlank { "0" })),
+                    spendingLimits = listOf(SpendingLimit(token = params.spendToken, cap = scaledCap())),
                     rollingWindowSeconds = frequency.seconds,
                     usageLimit = maxOps,
                     validUntil = validUntil,
                 ),
             ),
-        )
+        ).also { configCache = it }
     }
 
     fun grant(password: String) {
