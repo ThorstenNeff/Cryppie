@@ -481,7 +481,7 @@ private fun LtrIsland(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun Scaffolded(title: String, onBack: () -> Unit, modifier: Modifier, content: @Composable () -> Unit) {
+internal fun Scaffolded(title: String, onBack: () -> Unit, modifier: Modifier, content: @Composable () -> Unit) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {

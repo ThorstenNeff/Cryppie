@@ -29,6 +29,7 @@ object WalletTestTags {
     const val HOME_NFTS = "home_nfts"
     const val HOME_SEND = "home_send"
     const val HOME_PORTFOLIO = "home_portfolio"
+    const val HOME_CONNECT = "home_connect"
 
     /** Account row `i` in the switcher. */
     fun homeAccountItem(i: Int): String = "home_account_item_$i"
@@ -91,4 +92,12 @@ object WalletTestTags {
 
     /** Fee tier option, `send_fee_<tier>` (slow/normal/fast). */
     fun sendFeeTier(tier: String): String = "send_fee_${tier.lowercase()}"
+
+    // WalletConnect (KAN-126) — testTags mirror the wc_ i18n keys (SPEC_WC §5).
+    const val WC_PAIRING = "wc_pairing"
+    const val WC_PAIRING_SCAN = "wc_pairing_scan"
+    const val WC_PAIRING_PASTE = "wc_pairing_paste"
+    const val WC_PAIRING_INPUT = "wc_pairing_input"
+    const val WC_PAIRING_CONNECT = "wc_pairing_connect"
+    const val WC_ERROR = "wc_error"
 }

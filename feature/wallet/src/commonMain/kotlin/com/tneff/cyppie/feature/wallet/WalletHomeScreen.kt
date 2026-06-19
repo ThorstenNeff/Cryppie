@@ -57,6 +57,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
 import com.tneff.cyppie.feature.wallet.generated.resources.home_retry
 import com.tneff.cyppie.feature.wallet.generated.resources.home_title
+import com.tneff.cyppie.feature.wallet.generated.resources.wallet_action_connect
 import com.tneff.cyppie.feature.wallet.generated.resources.wallet_action_send
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -77,6 +78,7 @@ fun WalletHomeScreen(
     onAddToken: () -> Unit = {},
     onNfts: () -> Unit = {},
     onPortfolio: () -> Unit = {},
+    onConnect: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -169,6 +171,14 @@ fun WalletHomeScreen(
                 onClick = onPortfolio,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.HOME_PORTFOLIO),
+            )
+
+            // WalletConnect entry (KAN-126) — full-width secondary; opens pairing.
+            CryptasaButton(
+                text = stringResource(Res.string.wallet_action_connect),
+                onClick = onConnect,
+                style = CryptasaButtonStyle.Secondary,
+                modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.HOME_CONNECT),
             )
 
             // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).

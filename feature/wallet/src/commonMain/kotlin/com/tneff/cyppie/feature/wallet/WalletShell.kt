@@ -36,6 +36,7 @@ import com.tneff.cyppie.send.SendOrchestrator
 import com.tneff.cyppie.storage.CiphertextStore
 import com.tneff.cyppie.storage.SeedSession
 import com.tneff.cyppie.storage.SeedVault
+import com.tneff.cyppie.walletconnect.WalletConnectController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.tneff.cyppie.wallet.EvmKeyManager
@@ -45,7 +46,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -199,6 +200,7 @@ fun WalletShell(onLock: () -> Unit) {
             onAddToken = { dest = WalletDest.AddToken },
             onNfts = { dest = WalletDest.Nfts },
             onPortfolio = { dest = WalletDest.Portfolio },
+            onConnect = { dest = WalletDest.WalletConnect },
             viewModel = viewModel,
         )
         WalletDest.Receive -> {
@@ -257,6 +259,13 @@ fun WalletShell(onLock: () -> Unit) {
                 onRetry = pfViewModel::refresh,
                 onBack = { dest = WalletDest.Home },
             )
+        }
+        WalletDest.WalletConnect -> {
+            // WC-UI (KAN-126): pairing → proposal/request, over the app-embedded :walletconnect controller.
+            val wcViewModel: WalletConnectViewModel = viewModel(key = "walletconnect") {
+                WalletConnectViewModel(WalletConnectController())
+            }
+            WalletConnectRoot(viewModel = wcViewModel, onExit = { dest = WalletDest.Home })
         }
     }
 }

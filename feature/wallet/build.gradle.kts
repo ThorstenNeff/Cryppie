@@ -56,6 +56,8 @@ kotlin {
             implementation(projects.storage)
             // Send orchestrator (KAN-91/ADR-0019) — the Send UI (KAN-110) renders prepare→disclose→sign.
             implementation(projects.send)
+            // WalletConnect layer (KAN-62) — the WC-UI (KAN-126) consumes the controller + WcSendAdapter.
+            implementation(projects.walletconnect)
             // Portfolio (KAN-114): the PF-1 screen/VM + the assembler (PortfolioService/AlchemyPriceSource)
             // the wallet shell wires to the live proxy clients.
             implementation(projects.feature.portfolio)
