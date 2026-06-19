@@ -18,9 +18,11 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
 firebase-service-account.json
-*.md
-# Versioned project docs (ADRs, agent guides) must not be swept up by the broad *.md ignore (KAN-91).
-!docs/**/*.md
+# Per-worktree agent role instructions (Dev-1/Dev-2/QA/…) — they differ per worktree, so they are
+# intentionally LOCAL and never tracked; committing one path would clobber the others across git
+# worktrees. This is the ONLY Markdown we ignore — KAN-97 dropped the former blanket `*.md` that also
+# swept docs/adr (KAN-89/91), READMEs, CHANGELOG and server/** docs. All other *.md is now versioned.
+CLAUDE.md
 fastlane/report.xml
 keystore.properties
 app/androidApp/build/

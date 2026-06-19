@@ -7,6 +7,16 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-97 — `.gitignore` audit: drop the blanket `*.md` (build/repo bug).** The repo-wide `*.md`
+  ignore had silently swept *needed* docs out of git (the whole `docs/adr` set — KAN-89/91 — only the
+  ADRs had been rescued via a `!docs/**/*.md` negation; READMEs / `CHANGELOG` / `server/HARDENING.md`
+  each needed a manual `-f`). Replaced the blanket + its negation with a single targeted rule:
+  **only `CLAUDE.md` stays ignored** — those are *per-worktree* agent role instructions that differ per
+  developer/worktree, so committing one path would clobber the others (verified Dev-1≠Dev-2). Every
+  other Markdown (docs, ADRs, module READMEs, `CHANGELOG`, `server/**` docs) is now versioned by default
+  — no more `-f`, and a fresh clone carries them. Audited the remaining rules (`*.iml`, `*.p8`, `build/`,
+  secrets, `*.xcodeproj/*` with its negations) — all legitimately scoped; KAN-86's Android backup-rules
+  XML is already tracked. `git status --ignored` shows no other needed file swept.
 - **KAN-115 — Key-proxy hardening: tail allow-list (`:server`, security, KAN-112 follow-up).** The
   Data/Prices/NFT proxy routes previously forwarded `{tail...}` unvalidated, so a client could drive the
   server-side key against **any** Alchemy path the key is entitled to (least-privilege gap; host/scheme
