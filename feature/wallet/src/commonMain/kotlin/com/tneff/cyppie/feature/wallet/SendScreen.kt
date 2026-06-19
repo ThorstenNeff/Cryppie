@@ -129,7 +129,7 @@ private fun SendAssetSelect(viewModel: SendViewModel, onBack: () -> Unit, modifi
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(asset.symbol, style = CryptasaTheme.typography.body, color = colors.onSurface)
+                    Text(BidiSanitizer.sanitize(asset.symbol), style = CryptasaTheme.typography.body, color = colors.onSurface)
                     Text(asset.chain.displayName, style = CryptasaTheme.typography.labelSmall, color = colors.onSurfaceVariant)
                 }
             }
@@ -163,7 +163,7 @@ private fun SendForm(viewModel: SendViewModel, onBack: () -> Unit, modifier: Mod
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
-                    Text("${asset.symbol} · ${asset.chain.displayName}", style = CryptasaTheme.typography.body, color = colors.onSurface)
+                    Text("${BidiSanitizer.sanitize(asset.symbol)} · ${asset.chain.displayName}", style = CryptasaTheme.typography.body, color = colors.onSurface)
                     val avail = viewModel.available
                     if (avail != null) {
                         Text(
@@ -287,7 +287,7 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
             // Amount (big, LTR) — from the prepared tx, not the form state (single source of truth, L1).
             LtrIsland {
                 Text(
-                    "${formatTokenAmount(viewModel.disclosedAmount(prepared), asset.decimals, profile)} ${asset.symbol}",
+                    "${formatTokenAmount(viewModel.disclosedAmount(prepared), asset.decimals, profile)} ${BidiSanitizer.sanitize(asset.symbol)}",
                     style = CryptasaTheme.typography.titleLarge,
                     color = colors.onSurface,
                 )
