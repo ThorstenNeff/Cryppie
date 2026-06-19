@@ -81,5 +81,9 @@ kotlin {
     }
 }
 
-// i18n (ADR-0004): the compose.resources block + the mkt_* keys (SoT/syncI18n) are added when the
-// screen copy is finalized — none during scaffold (the screen uses no stringResource yet).
+// i18n (ADR-0004 / KAN-131): public Res class for the market strings (mkt_* — synced from ../Cryptasa/i18n).
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.tneff.cyppie.feature.market.generated.resources"
+    generateResClass = always
+}

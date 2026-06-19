@@ -41,6 +41,11 @@ run {
             file("feature/portfolio/src/commonMain/composeResources"),
             listOf("pf_"),
         ),
+        Triple(
+            "feature:market",
+            file("feature/market/src/commonMain/composeResources"),
+            listOf("mkt_"),
+        ),
     )
     // Prefixes owned by modules not yet on develop — keys here are intentionally not synced (no module),
     // but must still be "covered" so the unmapped-key check below doesn't flag them as lost.

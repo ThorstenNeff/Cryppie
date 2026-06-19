@@ -23,6 +23,10 @@ import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.components.SegmentedControl
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.market.SpotPrice
+import com.tneff.cyppie.feature.market.generated.resources.Res
+import com.tneff.cyppie.feature.market.generated.resources.mkt_load_error
+import com.tneff.cyppie.feature.market.generated.resources.mkt_retry
+import org.jetbrains.compose.resources.stringResource
 
 /** Range chip labels (scaffold — pre-i18n; mkt_* keys land when the copy is finalized). */
 private fun MarketRange.label(): String = when (this) {
@@ -66,8 +70,8 @@ fun MarketScreen(
                     }
                     is MarketUiState.Error ->
                         Column(Modifier.fillMaxWidth().padding(top = spacing.xl), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Couldn't load market data", style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant)
-                            CryptasaButton(text = "Retry", onClick = viewModel::retry, modifier = Modifier.padding(top = spacing.md).testTag("mkt_retry"))
+                            Text(stringResource(Res.string.mkt_load_error), style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant)
+                            CryptasaButton(text = stringResource(Res.string.mkt_retry), onClick = viewModel::retry, modifier = Modifier.padding(top = spacing.md).testTag("mkt_retry"))
                         }
                 }
             }
