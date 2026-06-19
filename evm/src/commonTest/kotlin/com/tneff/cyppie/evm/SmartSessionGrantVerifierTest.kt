@@ -46,6 +46,7 @@ class SmartSessionGrantVerifierTest {
             sessionValidatorInitData = sessionValidatorInitData, salt = salt, nonce = nonce,
             permissions = permissions, digestToSign = digest,
             spendingLimitPolicy = spendingLimitPolicy, timeFramePolicy = timeFramePolicy,
+            sessionValidatorPin = sessionValidator, // Vector-B uses the placeholder validator
         )
 
     // ── decoders pinned vs Vector-B ──
@@ -111,25 +112,52 @@ class SmartSessionGrantVerifierTest {
         assertFailsWith<GrantVerificationException> { verify(permissions = perms, digest = digest) }
     }
 
+    // Vector-D production path: real OwnableValidator + real policies + paymaster=true, ALL default pins.
+    private val validatorD = "0x000000000013fdB5234E4E3162a810F54d9f7E98"
+    private val validatorInitDataD = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "0000000000000000000000000000000000000000000000000000000000000040" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+    private val permsD = SignedPermissions(
+        permitERC4337Paymaster = true,
+        userOpPolicies = listOf(PolicyData(SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY, spendInitData)),
+        actions = listOf(ActionData(selector, router, listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, timeInitData)))),
+    )
+
     @Test
-    fun verifiesWithProductionDefaultPins() {
-        // A grant using the REAL (default-pinned) policy addresses verifies with NO override (production path).
-        val perms = SignedPermissions(
-            userOpPolicies = listOf(PolicyData(SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY, spendInitData)),
-            actions = listOf(
-                ActionData(selector, router, listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, timeInitData))),
-            ),
-        )
+    fun verifiesVectorD_allDefaultPins() {
+        // The REAL DCA grant (validator 0x…7E98 + GLOBAL_CONSTANTS policies + paymaster) verifies with NO
+        // overrides → exercises every production default pin (validator + both policies).
         val digest = "0x" + Hex.encode(
-            SmartSessionEnableDigest.enableDigest(account, 1L, sessionValidator, sessionValidatorInitData, salt, nonce, perms),
+            SmartSessionEnableDigest.enableDigest(account, 1L, validatorD, validatorInitDataD, salt, nonce, permsD),
         )
         val grant = SmartSessionGrantVerifier.verifyGrant(
-            account = account, chainId = 1L, sessionValidator = sessionValidator,
-            sessionValidatorInitData = sessionValidatorInitData, salt = salt, nonce = nonce,
-            permissions = perms, digestToSign = digest, // no policy overrides → production default pins
+            account = account, chainId = 1L, sessionValidator = validatorD,
+            sessionValidatorInitData = validatorInitDataD, salt = salt, nonce = nonce,
+            permissions = permsD, digestToSign = digest, // no overrides → all production default pins
         )
         assertEquals("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", grant.spendToken)
         assertEquals("1000000", grant.capBaseUnits)
+    }
+
+    @Test
+    fun failsClosedOnNonPinnedValidator() {
+        // A session built with a validator other than the pinned OwnableValidator (e.g. the legacy export) is
+        // rejected by the default sessionValidatorPin — even though its self-computed digest matches.
+        val perms = dcaPermissions()
+        val digest = "0x" + Hex.encode(
+            SmartSessionEnableDigest.enableDigest(account, 1L, sessionValidator, sessionValidatorInitData, salt, nonce, perms),
+        )
+        assertFailsWith<GrantVerificationException> {
+            SmartSessionGrantVerifier.verifyGrant(
+                account = account, chainId = 1L, sessionValidator = sessionValidator, // placeholder 0x…0777
+                sessionValidatorInitData = sessionValidatorInitData, salt = salt, nonce = nonce,
+                permissions = perms, digestToSign = digest,
+                spendingLimitPolicy = spendingLimitPolicy, timeFramePolicy = timeFramePolicy,
+                // no sessionValidatorPin override → default 0x…7E98 ≠ 0x…0777 → reject
+            )
+        }
     }
 
     @Test
@@ -137,5 +165,6 @@ class SmartSessionGrantVerifierTest {
         // Guard the emitted GLOBAL_CONSTANTS addresses against accidental drift / a legacy-constants.js swap.
         assertEquals("0x000000000033212e272655d8a22402db819477a6", SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY)
         assertEquals("0x0000000000D30f611fA3bf652ac6879428586930", SmartSessionGrantVerifier.TIMEFRAME_POLICY)
+        assertEquals("0x000000000013fdB5234E4E3162a810F54d9f7E98", SmartSessionGrantVerifier.SESSION_VALIDATOR)
     }
 }

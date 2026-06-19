@@ -44,6 +44,11 @@ object SmartSessionGrantVerifier {
     const val SPENDING_LIMIT_POLICY: String = "0x000000000033212e272655d8a22402db819477a6"
     const val TIMEFRAME_POLICY: String = "0x0000000000D30f611fA3bf652ac6879428586930"
 
+    // Deployed Rhinestone OwnableValidator (GLOBAL_CONSTANTS) — emitted into `SignedSession.sessionValidator`,
+    // CREATE2-uniform ETH+Base. NOT the legacy top-level `OWNABLE_VALIDATOR_ADDRESS` (0x2483DA…) export.
+    // Pinned so the app-built self-check catches a legacy/wrong validator in the constructed session.
+    const val SESSION_VALIDATOR: String = "0x000000000013fdB5234E4E3162a810F54d9f7E98"
+
     /**
      * Verifies [digestToSign] against the disclosed grant material and returns the [VerifiedGrant] to render.
      * Throws [GrantVerificationException] on ANY mismatch (digest, pinned policy address, shape, broad flags) —
@@ -60,6 +65,7 @@ object SmartSessionGrantVerifier {
         digestToSign: String,
         spendingLimitPolicy: String = SPENDING_LIMIT_POLICY,
         timeFramePolicy: String = TIMEFRAME_POLICY,
+        sessionValidatorPin: String = SESSION_VALIDATOR,
         smartSession: String = SmartSessionEnableDigest.SMART_SESSION_ADDRESS,
     ): VerifiedGrant {
         // 1. The enable digest must match what we're asked to sign (over the disclosed material + pinned module).
@@ -79,7 +85,12 @@ object SmartSessionGrantVerifier {
             throw GrantVerificationException("enable digest mismatch — refusing to sign")
         }
 
-        // 2. Broad-access flags must be off (they would grant scope beyond the displayed action).
+        // 2. The session validator must be the pinned OwnableValidator (catches the legacy-validator gotcha).
+        if (!sessionValidator.equals(sessionValidatorPin, ignoreCase = true)) {
+            throw GrantVerificationException("unexpected session validator $sessionValidator")
+        }
+
+        // 3. Broad-access flags must be off (they would grant scope beyond the displayed action).
         if (permissions.permitAdminAccess || permissions.permitGenericPolicy || permissions.ignoreSecurityAttestations) {
             throw GrantVerificationException("grant requests broad access (admin/generic/ignore-attestations)")
         }
