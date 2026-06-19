@@ -58,6 +58,8 @@ kotlin {
             implementation(projects.send)
             // WalletConnect layer (KAN-62) — the WC-UI (KAN-126) consumes the controller + WcSendAdapter.
             implementation(projects.walletconnect)
+            // EIP-712 typed-data is rendered as a human-readable field tree (KAN-126 Et.3a) — parse only.
+            implementation(libs.kotlinx.serialization.json)
             // Portfolio (KAN-114): the PF-1 screen/VM + the assembler (PortfolioService/AlchemyPriceSource)
             // the wallet shell wires to the live proxy clients.
             implementation(projects.feature.portfolio)

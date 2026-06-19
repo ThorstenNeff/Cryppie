@@ -263,7 +263,17 @@ fun WalletShell(onLock: () -> Unit) {
         WalletDest.WalletConnect -> {
             // WC-UI (KAN-126): pairing → proposal/request, over the app-embedded :walletconnect controller.
             val wcViewModel: WalletConnectViewModel = viewModel(key = "walletconnect") {
-                WalletConnectViewModel(WalletConnectController(), viewModel.accounts)
+                WalletConnectViewModel(
+                    controller = WalletConnectController(),
+                    accounts = viewModel.accounts,
+                    // Re-auth (ADR-0009): a correct password decrypts a FRESH per-signature source off-Main;
+                    // signAndRespond signs with it and closes/zeroizes it immediately (same as Send/M1).
+                    reauth = { pw ->
+                        withContext(Dispatchers.Default) {
+                            runCatching { SeedVault(CiphertextStore.defaultFile()).unlock(pw) }.getOrNull()
+                        }
+                    },
+                )
             }
             WalletConnectRoot(viewModel = wcViewModel, onExit = { dest = WalletDest.Home })
         }

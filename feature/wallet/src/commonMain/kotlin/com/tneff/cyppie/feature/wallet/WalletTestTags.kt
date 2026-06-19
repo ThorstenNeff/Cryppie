@@ -104,4 +104,9 @@ object WalletTestTags {
     const val WC_VERIFY = "wc_verify"
     const val WC_APPROVE = "wc_approve"
     const val WC_REJECT = "wc_reject"
+    const val WC_REQUEST = "wc_request"
+    const val WC_REQ_APPROVE = "wc_req_approve"
+    const val WC_SIGN_MESSAGE = "wc_sign_message"
+    const val WC_AUTH_PASSWORD = "wc_auth_password"
+    const val WC_AUTH_SUBMIT = "wc_auth_submit"
 }
