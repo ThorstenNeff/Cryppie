@@ -66,7 +66,12 @@ data class GrantPermissions(
     val permitGenericPolicy: Boolean = false,
     val permitAdminAccess: Boolean = false,
     val ignoreSecurityAttestations: Boolean = false,
+    // MED-fix (KAN-144 review): every field is part of the signed-permissions hash encoding, so the recompute
+    // must carry them ALL or it diverges and verifyGrant rejects every honest grant. DCA uses Pimlico
+    // sponsoring → permitERC4337Paymaster is true; it is mapped from the backend material, never defaulted.
+    val permitERC4337Paymaster: Boolean = false,
     val userOpPolicies: List<GrantPolicyData> = emptyList(),
+    val erc7739Policies: GrantErc7739Data = GrantErc7739Data(),
     val actions: List<GrantActionData> = emptyList(),
 )
 
@@ -80,13 +85,30 @@ data class GrantActionData(
     val actionPolicies: List<GrantPolicyData> = emptyList(),
 )
 
-/** Map the wire DTO → the `:evm` verifier input (the broad-access flags + policies the digest is over). */
+/** ERC-7739 policies sub-object — empty for DCA, but still part of the hash encoding (tuple arrays). */
+@Serializable
+data class GrantErc7739Data(
+    val allowedERC7739Content: List<GrantErc7739Context> = emptyList(),
+    val erc1271Policies: List<GrantPolicyData> = emptyList(),
+)
+
+@Serializable
+data class GrantErc7739Context(val appDomainSeparator: String, val contentName: List<String>)
+
+/** Map the wire DTO → the `:evm` verifier input (ALL signed-permissions fields the digest is encoded over). */
 fun GrantPermissions.toSigned(): SmartSessionEnableDigest.SignedPermissions =
     SmartSessionEnableDigest.SignedPermissions(
         permitGenericPolicy = permitGenericPolicy,
         permitAdminAccess = permitAdminAccess,
         ignoreSecurityAttestations = ignoreSecurityAttestations,
+        permitERC4337Paymaster = permitERC4337Paymaster,
         userOpPolicies = userOpPolicies.map { SmartSessionEnableDigest.PolicyData(it.policy, it.initData) },
+        erc7739Policies = SmartSessionEnableDigest.Erc7739Data(
+            allowedERC7739Content = erc7739Policies.allowedERC7739Content.map {
+                SmartSessionEnableDigest.Erc7739Context(it.appDomainSeparator, it.contentName)
+            },
+            erc1271Policies = erc7739Policies.erc1271Policies.map { SmartSessionEnableDigest.PolicyData(it.policy, it.initData) },
+        ),
         actions = actions.map { a ->
             SmartSessionEnableDigest.ActionData(
                 actionTargetSelector = a.actionTargetSelector,
