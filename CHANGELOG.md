@@ -7,6 +7,16 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-122 — `WalletConnectController.approvedChains(topic): Set<Long>` (closes the #4 chain-binding gap).**
+  A `WcSessionRequest` carries only its *own* `chainId`, so the WC send VM had to fall back to "any supported
+  chain" — a replay surface. The new accessor reads the **approved EIP-155 chain ids from the SDK session
+  store**, so it's correct across **persisted/restored sessions** (app restart), not just freshly-settled
+  ones: Android = `WalletKit.getActiveSessionByTopic` → namespace `chains` ∪ account CAIP-2 prefixes; iOS =
+  reown-swift shim via `WalletConnectBridge.approvedChains` (new bridge method — Kotlin parses); Desktop = `emptySet()`.
+  Chain-id derivation (`approvedChainIdsFrom` / `caip2ChainIdOrNull`, accounts as a robust fallback when a
+  namespace omits `chains`, non-EVM refs dropped) is **common + unit-tested** (`WcApprovedChainsTest`); the
+  platform `actual`s only fetch raw lists. Dev-1 feeds the result into `prepareWalletConnectSend(approvedChainIds=…)`
+  (KAN-126-Et.3b), which rejects a request whose chain the session never approved.
 - **KAN-123 — AGP 9.1.0 / Gradle 9.3.1 / compileSdk 37 + self-healing `android-37` symlink (build-infra, unblocks WC-on-Android).**
   reown 1.6.14's own AARs (`com.reown:android-core`, `com.walletconnect:pay`) require **compileSdk 37** (Android 17)
   + **AGP 9.1.0** (which needs **Gradle ≥9.3.1**) — so `:walletconnect`'s android `assemble` couldn't build on the

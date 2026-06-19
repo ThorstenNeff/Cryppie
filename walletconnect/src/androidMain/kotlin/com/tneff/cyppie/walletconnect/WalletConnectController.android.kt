@@ -86,6 +86,17 @@ actual class WalletConnectController actual constructor() {
         }
     }
 
+    actual suspend fun approvedChains(topic: String): Set<Long> {
+        // Read from WalletKit's persisted session store (survives app restart) — not a freshly-settled cache.
+        // getActiveSessionByTopic throws IllegalStateException if WalletKit isn't initialized; treat as none.
+        val session = runCatching { WalletKit.getActiveSessionByTopic(topic) }.getOrNull() ?: return emptySet()
+        val namespaces = session.namespaces.values
+        return approvedChainIdsFrom(
+            chains = namespaces.flatMap { it.chains ?: emptyList() },
+            accounts = namespaces.flatMap { it.accounts },
+        )
+    }
+
     actual suspend fun respondRequest(requestId: Long, topic: String, result: String) {
         val response = Wallet.Params.SessionRequestResponse(
             sessionTopic = topic,

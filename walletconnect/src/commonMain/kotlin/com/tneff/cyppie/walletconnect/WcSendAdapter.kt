@@ -72,17 +72,36 @@ object WcSendAdapter {
     /** Resolves a CAIP-2 chain ref (`eip155:1`) — or a bare/`eip155:`-prefixed id — to a supported [EvmChain]. */
     private fun resolveChain(caip2: String): EvmChain {
         EvmChain.entries.firstOrNull { it.caip2.equals(caip2, ignoreCase = true) }?.let { return it }
-        val id = chainIdOrNull(caip2)
+        val id = caip2ChainIdOrNull(caip2)
         return id?.let { EvmChain.fromChainId(it) }
             ?: throw WalletConnectException.UnsupportedRequest("Unsupported WalletConnect chain: $caip2")
     }
-
-    private fun chainIdOrNull(caip2: String): Long? {
-        if (':' !in caip2) return caip2.toLongOrNull()
-        val (namespace, reference) = caip2.split(':', limit = 2)
-        return if (namespace.equals("eip155", ignoreCase = true)) reference.toLongOrNull() else null
-    }
 }
+
+/**
+ * Parses an EIP-155 chain id from a CAIP-2 ref (`eip155:1`), a bare numeric id (`1`), or an `eip155:`-prefixed
+ * id. Returns `null` for any non-`eip155` namespace (e.g. `cosmos:…`) or an unparseable reference — so callers
+ * keep only the EVM chains they actually support. Shared by [WcSendAdapter] (#4 resolution) and the
+ * [WalletConnectController.approvedChains] actuals.
+ */
+internal fun caip2ChainIdOrNull(caip2: String): Long? {
+    if (':' !in caip2) return caip2.toLongOrNull()
+    val (namespace, reference) = caip2.split(':', limit = 2)
+    return if (namespace.equals("eip155", ignoreCase = true)) reference.toLongOrNull() else null
+}
+
+/**
+ * Derives the approved EIP-155 chain ids of a WalletConnect session from its namespace [chains] (CAIP-2,
+ * e.g. `eip155:1`) and [accounts] (CAIP-10, e.g. `eip155:1:0xabc…`). An account always carries its chain ref
+ * (its CAIP-2 prefix), so accounts are a robust fallback when a namespace omits an explicit `chains` list —
+ * which keeps [WalletConnectController.approvedChains] correct across persisted/restored sessions. Non-EVM
+ * refs are dropped. The platform `actual`s fetch the raw lists from the SDK session store and call this; the
+ * result feeds [WcSendAdapter.toSendInput]'s `approvedChainIds` (#4 chain-binding, replay defence).
+ */
+internal fun approvedChainIdsFrom(chains: List<String>, accounts: List<String>): Set<Long> =
+    (chains + accounts.map { it.substringBeforeLast(':') })
+        .mapNotNull { caip2ChainIdOrNull(it) }
+        .toSet()
 
 /**
  * Convenience wiring (steps 1–4): decode-side [params] → [SendInput] → [SendOrchestrator.prepare].

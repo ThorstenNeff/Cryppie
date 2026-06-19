@@ -33,6 +33,18 @@ expect class WalletConnectController() {
     /** Reject a session proposal. */
     suspend fun rejectSession(proposalId: String, reason: String)
 
+    /**
+     * The EIP-155 chain ids the session [topic] approved, read from the SDK session store — so it stays
+     * correct across **persisted/restored sessions** (app restart), not just freshly-settled ones. Returns
+     * an empty set when the session is unknown/expired or has no EVM chains.
+     *
+     * Closes the **#4 chain-binding** gap: a [WcSessionRequest] carries only its own `chainId`, so without
+     * this the send VM would have to fall back to "any supported chain" — a replay surface. The VM passes
+     * the result into [prepareWalletConnectSend]'s `approvedChainIds`, which rejects a request whose chain
+     * the session never approved.
+     */
+    suspend fun approvedChains(topic: String): Set<Long>
+
     /** Respond to a request with its [result] (signature hex / tx hash). */
     suspend fun respondRequest(requestId: Long, topic: String, result: String)
 

@@ -17,6 +17,14 @@ interface WalletConnectBridge {
     fun respondRequest(requestId: Long, topic: String, result: String)
     fun rejectRequest(requestId: Long, topic: String, reason: String)
     fun disconnect(topic: String)
+
+    /**
+     * The approved chain refs for session [topic], read from reown-swift's session store (e.g.
+     * `session.namespaces.values` → `chains`, falling back to each account's CAIP-2 prefix). Return
+     * CAIP-2 (`eip155:1`) and/or CAIP-10 (`eip155:1:0x…`) strings — the Kotlin side parses & filters to
+     * EVM chain ids. Empty for an unknown session. Keeps chain-id parsing single-sourced in Kotlin.
+     */
+    fun approvedChains(topic: String): List<String>
 }
 
 /**
@@ -92,6 +100,11 @@ actual class WalletConnectController actual constructor() {
     actual suspend fun pair(uri: String) = bridge().pair(uri)
     actual suspend fun approveSession(proposalId: String, accounts: List<String>) = bridge().approveSession(proposalId, accounts)
     actual suspend fun rejectSession(proposalId: String, reason: String) = bridge().rejectSession(proposalId, reason)
+    // Parse the shim's refs robustly whether they arrive as CAIP-2 or CAIP-10 (passing the list as both
+    // `chains` and `accounts` lets approvedChainIdsFrom normalize each form; the Set dedups).
+    actual suspend fun approvedChains(topic: String): Set<Long> =
+        bridge().approvedChains(topic).let { refs -> approvedChainIdsFrom(refs, refs) }
+
     actual suspend fun respondRequest(requestId: Long, topic: String, result: String) = bridge().respondRequest(requestId, topic, result)
     actual suspend fun rejectRequest(requestId: Long, topic: String, reason: String) = bridge().rejectRequest(requestId, topic, reason)
     actual suspend fun disconnect(topic: String) = bridge().disconnect(topic)
