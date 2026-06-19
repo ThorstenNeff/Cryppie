@@ -270,7 +270,9 @@ private fun CenteredState(
 
 /** Basis points → a "12.34%" string, float-free (bps/100 = percent, two decimals). */
 internal fun formatBps(bps: Int): String {
-    val whole = bps / 100
-    val frac = (if (bps < 0) -bps else bps) % 100
-    return "$whole.${frac.toString().padStart(2, '0')}%"
+    // L1 (KAN-107 review): derive the sign from bps, not from `whole` — for bps in (-99..-1) the
+    // integer `whole` is 0 and would drop the minus, mis-rendering a small negative as positive.
+    val negative = bps < 0
+    val abs = if (negative) -bps else bps
+    return "${if (negative) "-" else ""}${abs / 100}.${(abs % 100).toString().padStart(2, '0')}%"
 }

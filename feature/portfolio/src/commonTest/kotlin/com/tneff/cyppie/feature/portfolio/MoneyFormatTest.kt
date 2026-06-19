@@ -44,4 +44,12 @@ class MoneyFormatTest {
         assertEquals("8.33%", formatBps(833))
         assertEquals("0.05%", formatBps(5))
     }
+
+    @Test
+    fun negativeBpsKeepSignEvenBelowOnePercent() {
+        // L1 regression: a small negative (whole part 0) must still show the minus.
+        assertEquals("-0.05%", formatBps(-5))
+        assertEquals("-0.50%", formatBps(-50))
+        assertEquals("-12.34%", formatBps(-1_234))
+    }
 }
