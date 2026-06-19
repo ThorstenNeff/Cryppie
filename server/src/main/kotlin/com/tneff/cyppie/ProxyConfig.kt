@@ -86,3 +86,14 @@ object AlchemyUpstream {
         "https://$network.g.alchemy.com/nft/v3/$key/$tail"
     fun rpc(network: String, key: String): String = "https://$network.g.alchemy.com/v2/$key"
 }
+
+/**
+ * Upstream-URL builder for CoinGecko (PRD-04 market data). Unlike Alchemy (key in path), CoinGecko takes
+ * the Pro key as the `x_cg_pro_api_key` query param — injected here **server-side** so it never ships in
+ * the client; the proxy then appends the client's own query (`vs_currency`/`from`/`to`/…) faithfully.
+ * Pure function → unit-testable. NOTE: today this reuses [ProxyConfig.alchemyApiKey] as the generic
+ * upstream key slot; split into a dedicated `coinGeckoApiKey` when the real Pro key is provisioned.
+ */
+object CoinGeckoUpstream {
+    fun url(key: String, tail: String): String = "https://pro-api.coingecko.com/api/v3/$tail?x_cg_pro_api_key=$key"
+}

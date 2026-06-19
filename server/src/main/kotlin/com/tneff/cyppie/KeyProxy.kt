@@ -82,6 +82,39 @@ fun Application.installKeyProxy(
                 }
             }
         }
+        // CoinGecko market data (PRD-04) — Pro key injected server-side. The tail is allow-listed by
+        // endpoint *shape* (variable platform/contract/id segments), so the key only ever reaches the
+        // handful of price/candle endpoints the app uses — never an arbitrary CoinGecko path.
+        route("/coingecko/v3/{tail...}") {
+            handle {
+                proxy(config, client, rateLimiter) { key ->
+                    tailPath().takeIf { isAllowedCoinGeckoTail(it) }?.let { CoinGeckoUpstream.url(key, it) }
+                }
+            }
+        }
+    }
+}
+
+// KAN — CoinGecko least-privilege allow-list. Unlike Alchemy's fixed tails, CoinGecko paths carry
+// variable platform/contract/coin-id segments, so we match by *structure* (and bound the platform to the
+// chains we support) rather than exact strings. Only these endpoint shapes are forwarded.
+private val COINGECKO_PLATFORMS: Set<String> = setOf("ethereum", "base")
+private val COINGECKO_ID = Regex("[a-z0-9-]{1,64}")
+private val COINGECKO_HEX_ADDRESS = Regex("0x[0-9a-fA-F]{40}")
+
+internal fun isAllowedCoinGeckoTail(tail: String): Boolean {
+    val s = tail.split("/")
+    return when {
+        // simple/token_price/{platform} — spot by contract
+        s.size == 3 && s[0] == "simple" && s[1] == "token_price" && s[2] in COINGECKO_PLATFORMS -> true
+        // simple/price — spot by coin id
+        s.size == 2 && s[0] == "simple" && s[1] == "price" -> true
+        // coins/{platform}/contract/{address}/market_chart[/range] — history by contract
+        (s.size == 5 || s.size == 6) && s[0] == "coins" && s[1] in COINGECKO_PLATFORMS && s[2] == "contract" &&
+            COINGECKO_HEX_ADDRESS.matches(s[3]) && s[4] == "market_chart" && (s.size == 5 || s[5] == "range") -> true
+        // coins/{id}/ohlc — candles by coin id
+        s.size == 3 && s[0] == "coins" && COINGECKO_ID.matches(s[1]) && s[2] == "ohlc" -> true
+        else -> false
     }
 }
 

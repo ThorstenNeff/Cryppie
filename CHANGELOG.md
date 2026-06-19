@@ -7,6 +7,17 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **PRD-04 (recon greenlight) — `:market` web-capable data-layer foundation + CoinGecko proxy route.**
+  Additive scaffold (does NOT touch `:portfolio` — the `PriceSource` relocation is a held follow-up). New
+  **web-capable `:market`** module (js/wasmJs/ios/jvm/android, like `:rpc`; depends only on `:evm`, no secp256k1):
+  `MarketDataApi` contract (candles/spot/history — superset of the held `PriceSource`), precision-preserving
+  models (OHLC/spot/points as **decimal strings**, FR-6), and two adapters — `CoinGeckoMarketClient` (spot by
+  contract, contract market-chart history, coin OHLC — via the key-proxy) and `BinanceMarketClient` (keyless
+  klines). Both parse decimals via `JsonPrimitive.content` (no float round-trip) and normalize ms→s. Added the
+  **`/coingecko/v3/{tail...}` key-proxy route** (`:server`) with a **structural least-privilege allow-list**
+  (variable platform/contract/coin-id segments, platforms bound to ethereum/base) + server-side `x_cg_pro_api_key`
+  injection (FR-6) — same pattern as the Alchemy routes. Cache/failover/server-indicators remain the full PRD-08
+  service's job; the unified `MarketDataApi` impl + asset→source routing is the next (Q3-gated) slice.
 - **KAN-127 — `:walletconnect-e2e` debug-only module: `FakeWalletConnectController` + `WcE2eScript` + `WcE2e`.**
   Deterministic WalletConnect test double (no relay, offline, CI-safe) so QA can drive the KAN-50 WC approval/sign
   **E2E** (Maestro): a `WcE2eScript` (env `CYPPIE_WC_E2E` / deep-link `cyppie://wc-e2e`) scripts the `WcEvent`s —
