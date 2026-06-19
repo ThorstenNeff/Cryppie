@@ -62,4 +62,9 @@ kotlin {
     }
 }
 
-// i18n (ADR-0004): dca_* keys + the compose.resources block are added once the UX copy is finalized.
+// i18n (ADR-0004 / KAN-138): public Res class for the DCA strings (dca_* — synced from ../Cryptasa/i18n).
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.tneff.cyppie.feature.dca.generated.resources"
+    generateResClass = always
+}

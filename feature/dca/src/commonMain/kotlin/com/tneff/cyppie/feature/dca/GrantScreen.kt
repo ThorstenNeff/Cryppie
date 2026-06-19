@@ -1,5 +1,22 @@
 package com.tneff.cyppie.feature.dca
 
+import com.tneff.cyppie.feature.dca.generated.resources.Res
+import com.tneff.cyppie.feature.dca.generated.resources.dca_amount_per_buy
+import com.tneff.cyppie.feature.dca.generated.resources.dca_authorize
+import com.tneff.cyppie.feature.dca.generated.resources.dca_authorizing
+import com.tneff.cyppie.feature.dca.generated.resources.dca_cap_per_buy
+import com.tneff.cyppie.feature.dca.generated.resources.dca_expires
+import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_daily
+import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_weekly
+import com.tneff.cyppie.feature.dca.generated.resources.dca_frequency
+import com.tneff.cyppie.feature.dca.generated.resources.dca_max_buys
+import com.tneff.cyppie.feature.dca.generated.resources.dca_new
+import com.tneff.cyppie.feature.dca.generated.resources.dca_password
+import com.tneff.cyppie.feature.dca.generated.resources.dca_router
+import com.tneff.cyppie.feature.dca.generated.resources.dca_spend_token
+import com.tneff.cyppie.feature.dca.generated.resources.dca_you_authorize
+import org.jetbrains.compose.resources.stringResource
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,12 +63,14 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     var password by remember { mutableStateOf("") }
+    val freqDaily = stringResource(Res.string.dca_freq_daily)
+    val freqWeekly = stringResource(Res.string.dca_freq_weekly)
 
     LaunchedEffect(viewModel.granted) { if (viewModel.granted) onDone() }
 
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
         Column(modifier = Modifier.widthIn(max = 640.dp).fillMaxSize()) {
-            CryptasaTopAppBar(title = "New DCA", onBack = onBack)
+            CryptasaTopAppBar(title = stringResource(Res.string.dca_new), onBack = onBack)
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(horizontal = spacing.xl).testTag("dca_grant_screen"),
@@ -60,7 +79,7 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                 CryptasaTextField(
                     value = viewModel.capAmount,
                     onValueChange = viewModel::setCap,
-                    label = "Amount per buy",
+                    label = stringResource(Res.string.dca_amount_per_buy),
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth().testTag("dca_grant_amount"),
                 )
@@ -68,7 +87,7 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                     options = DcaFrequency.entries.toList(),
                     selected = viewModel.frequency,
                     onSelect = viewModel::selectFrequency,
-                    label = { it.label },
+                    label = { if (it == DcaFrequency.DAILY) freqDaily else freqWeekly },
                     optionTestTag = { "dca_freq_${it.name.lowercase()}" },
                 )
 
@@ -79,30 +98,30 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag("dca_grant_disclosure"),
                     verticalArrangement = Arrangement.spacedBy(spacing.xs),
                 ) {
-                    Text("You authorize", style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
-                    DisclosureRow("Router", action.target, ltr = true)
+                    Text(stringResource(Res.string.dca_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+                    DisclosureRow(stringResource(Res.string.dca_router), action.target, ltr = true)
                     action.spendingLimits.firstOrNull()?.let {
-                        DisclosureRow("Spend token", it.token, ltr = true)
-                        DisclosureRow("Cap per buy", it.cap, ltr = true, valueTestTag = "dca_grant_cap")
+                        DisclosureRow(stringResource(Res.string.dca_spend_token), it.token, ltr = true)
+                        DisclosureRow(stringResource(Res.string.dca_cap_per_buy), it.cap, ltr = true, valueTestTag = "dca_grant_cap")
                     }
-                    DisclosureRow("Frequency", viewModel.frequency.label, ltr = true)
-                    DisclosureRow("Max buys", action.usageLimit.toString(), ltr = true)
-                    DisclosureRow("Expires (unix)", action.validUntil.toString(), ltr = true)
+                    DisclosureRow(stringResource(Res.string.dca_frequency), (if (viewModel.frequency == DcaFrequency.DAILY) freqDaily else freqWeekly), ltr = true)
+                    DisclosureRow(stringResource(Res.string.dca_max_buys), action.usageLimit.toString(), ltr = true)
+                    DisclosureRow(stringResource(Res.string.dca_expires), action.validUntil.toString(), ltr = true)
                 }
 
-                viewModel.error?.let { CryptasaBanner(title = it, tone = CryptasaBannerTone.Danger, modifier = Modifier.testTag("dca_grant_error")) }
+                viewModel.error?.let { CryptasaBanner(title = it.text(), tone = CryptasaBannerTone.Danger, modifier = Modifier.testTag("dca_grant_error")) }
 
                 // Re-auth gate (ADR-0009) → on-device enable-sign of the disclosed session.
                 CryptasaTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = "Password",
+                    label = stringResource(Res.string.dca_password),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardType = KeyboardType.Password,
                     modifier = Modifier.fillMaxWidth().testTag("dca_grant_password"),
                 )
                 CryptasaButton(
-                    text = if (viewModel.submitting) "Authorizing…" else "Authorize session",
+                    text = if (viewModel.submitting) stringResource(Res.string.dca_authorizing) else stringResource(Res.string.dca_authorize),
                     onClick = { viewModel.grant(password) },
                     enabled = !viewModel.submitting && password.isNotBlank() && viewModel.capAmount.isNotBlank(),
                     modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag("dca_grant_authorize"),

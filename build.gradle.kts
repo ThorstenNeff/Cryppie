@@ -46,6 +46,11 @@ run {
             file("feature/market/src/commonMain/composeResources"),
             listOf("mkt_"),
         ),
+        Triple(
+            "feature:dca",
+            file("feature/dca/src/commonMain/composeResources"),
+            listOf("dca_", "common_"), // common_retry / common_cancel reused in the DCA screens
+        ),
     )
     // Prefixes owned by modules not yet on develop — keys here are intentionally not synced (no module),
     // but must still be "covered" so the unmapped-key check below doesn't flag them as lost.
