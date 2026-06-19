@@ -39,7 +39,7 @@ class DcaViewModel(
 
     var uiState: DcaUiState by mutableStateOf(DcaUiState.Loading); private set
     /** Last sign error to surface (wrong password / submit failure); null when clear. */
-    var signError: String? by mutableStateOf(null); private set
+    var signError: DcaError? by mutableStateOf(null); private set
 
     init { load() }
 
@@ -74,7 +74,7 @@ class DcaViewModel(
         viewModelScope.launch {
             val source = reauth(password)
             if (source == null) {
-                signError = "Incorrect password"
+                signError = DcaError.WRONG_PASSWORD
                 return@launch
             }
             val result = runCatching {
@@ -82,7 +82,7 @@ class DcaViewModel(
                 api.submitSignature(dca.id, signature)
             }
             if (result.isFailure) {
-                signError = "Couldn't submit the DCA signature"
+                signError = DcaError.SUBMIT_FAILED
             }
             load()
         }

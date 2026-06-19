@@ -48,7 +48,7 @@ class GrantViewModel(
     var frequency: DcaFrequency by mutableStateOf(DcaFrequency.WEEKLY); private set
     var durationDays: Int by mutableStateOf(90); private set
     var submitting: Boolean by mutableStateOf(false); private set
-    var error: String? by mutableStateOf(null); private set
+    var error: DcaError? by mutableStateOf(null); private set
     var granted: Boolean by mutableStateOf(false); private set
 
     fun setCap(value: String) { capAmount = value.filter { it.isDigit() } }
@@ -76,13 +76,13 @@ class GrantViewModel(
     }
 
     fun grant(password: String) {
-        if (capAmount.isBlank()) { error = "Enter an amount"; return }
+        if (capAmount.isBlank()) { error = DcaError.ENTER_AMOUNT; return }
         error = null
         submitting = true
         viewModelScope.launch {
             val source = reauth(password)
             if (source == null) {
-                error = "Incorrect password"; submitting = false; return@launch
+                error = DcaError.WRONG_PASSWORD; submitting = false; return@launch
             }
             val result = runCatching {
                 val config = buildConfig()
@@ -91,7 +91,7 @@ class GrantViewModel(
                 api.grantSession(config, signature)
             }
             submitting = false
-            if (result.isSuccess) granted = true else error = "Couldn't authorize the session"
+            if (result.isSuccess) granted = true else error = DcaError.AUTHORIZE_FAILED
         }
     }
 }
