@@ -52,6 +52,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_degraded
 import com.tneff.cyppie.feature.wallet.generated.resources.home_empty
 import com.tneff.cyppie.feature.wallet.generated.resources.home_error
 import com.tneff.cyppie.feature.wallet.generated.resources.home_nfts
+import com.tneff.cyppie.feature.wallet.generated.resources.home_market
 import com.tneff.cyppie.feature.wallet.generated.resources.home_portfolio
 import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
@@ -182,10 +183,9 @@ fun WalletHomeScreen(
                 modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.HOME_CONNECT),
             )
 
-            // Market overview entry (KAN-131, MD-3) — full-width secondary. Label is pre-i18n ("Markets");
-            // a home_market key is a tiny UX follow-up (no composeResources change → checkI18n stays green).
+            // Market overview entry (KAN-131, MD-3) — full-width secondary.
             CryptasaButton(
-                text = "Markets",
+                text = stringResource(Res.string.home_market),
                 onClick = onMarket,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag("home_market"),

@@ -138,4 +138,5 @@
   <string name="home_portfolio">Portefølje</string>
   <string name="wc_signer_label">Signeringskonto</string>
   <string name="wc_send_amount_label">Beløb</string>
+  <string name="home_market">Markeder</string>
 </resources>

@@ -138,4 +138,5 @@
   <string name="home_portfolio">Portfolio</string>
   <string name="wc_signer_label">Konto podpisujące</string>
   <string name="wc_send_amount_label">Kwota</string>
+  <string name="home_market">Rynki</string>
 </resources>

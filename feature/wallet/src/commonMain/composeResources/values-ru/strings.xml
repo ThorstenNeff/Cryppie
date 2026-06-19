@@ -138,4 +138,5 @@
   <string name="home_portfolio">Портфель</string>
   <string name="wc_signer_label">Подписывающий аккаунт</string>
   <string name="wc_send_amount_label">Сумма</string>
+  <string name="home_market">Рынки</string>
 </resources>

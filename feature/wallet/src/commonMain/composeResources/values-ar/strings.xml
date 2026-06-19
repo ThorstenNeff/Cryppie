@@ -138,4 +138,5 @@
   <string name="home_portfolio">المحفظة</string>
   <string name="wc_signer_label">حساب التوقيع</string>
   <string name="wc_send_amount_label">المبلغ</string>
+  <string name="home_market">الأسواق</string>
 </resources>
