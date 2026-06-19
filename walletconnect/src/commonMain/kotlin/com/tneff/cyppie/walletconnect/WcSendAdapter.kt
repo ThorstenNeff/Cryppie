@@ -1,5 +1,6 @@
 package com.tneff.cyppie.walletconnect
 
+import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.send.PreparedSend
 import com.tneff.cyppie.send.SendInput
 import com.tneff.cyppie.send.SendOrchestrator
@@ -15,9 +16,12 @@ import com.tneff.cyppie.walletcore.EvmChain
  * Guardrails (ADR-0015 / FR-3), fail-closed:
  * - **#2 fill-not-override** — every dApp-supplied field is carried into [SendInput] as-is; the
  *   orchestrator completes only the `null` fields (nonce/fees/gas). The signed tx equals the disclosed.
- * - **#3 account binding** — `from` is passed through; the orchestrator rejects it unless it's a known
- *   wallet account (`AccountMismatch`). Callers must *also* have verified `from` against the
- *   session-approved account (`WalletConnectSigner.requireSignerMatches`) before approval.
+ * - **#3 account binding (by-construction)** — the dApp-supplied `from` must be one of the
+ *   **session-approved accounts** ([approvedAccounts]), not merely *any* wallet account. Without this a
+ *   dApp could name a different wallet account (one the user never approved for the session) as `from`;
+ *   `WalletConnectSigner.requireSignerMatches` alone only proves the signer derives to `from`, not that
+ *   the session authorized it. Fail-closed: an empty approved set rejects everything. The orchestrator
+ *   then *also* re-checks `from` against the wallet accounts when resolving the signing index.
  * - **#4 chain binding (replay)** — the CAIP-2 chain must resolve to a supported [EvmChain] **and**, if
  *   [approvedChainIds] is non-empty, be one the session approved; else [WalletConnectException].
  * - recipient required — a `to`-less tx (contract creation) is **unsupported** via WC send (fail-closed).
@@ -25,12 +29,23 @@ import com.tneff.cyppie.walletcore.EvmChain
 object WcSendAdapter {
 
     /**
-     * Maps [params] to the orchestrator's [SendInput]. [approvedChainIds] are the session-approved
-     * chain ids (chain binding, #4); empty means "any supported chain".
+     * Maps [params] to the orchestrator's [SendInput], binding `from` to the session-approved set.
+     * [approvedAccounts] are the addresses the user approved for this WC session (account binding, #3).
+     * [approvedChainIds] are the session-approved chain ids (chain binding, #4); empty means "any supported".
      *
-     * @throws WalletConnectException.UnsupportedRequest on an unsupported/unapproved chain or a missing recipient.
+     * @throws WalletConnectException.UnsupportedRequest on an unapproved sender/chain or a missing recipient.
      */
-    fun toSendInput(params: SendTransactionParams, approvedChainIds: Set<Long> = emptySet()): SendInput {
+    fun toSendInput(
+        params: SendTransactionParams,
+        approvedAccounts: Set<EvmAddress>,
+        approvedChainIds: Set<Long> = emptySet(),
+    ): SendInput {
+        // #3 account binding — the request's `from` must be an account the user approved for this session.
+        if (params.from !in approvedAccounts) {
+            throw WalletConnectException.UnsupportedRequest(
+                "Sender ${params.from} is not an approved account for this WalletConnect session",
+            )
+        }
         val chain = resolveChain(params.chainId)
         if (approvedChainIds.isNotEmpty() && chain.chainId !in approvedChainIds) {
             throw WalletConnectException.UnsupportedRequest(
@@ -77,6 +92,10 @@ object WcSendAdapter {
  */
 suspend fun SendOrchestrator.prepareWalletConnectSend(
     params: SendTransactionParams,
-    accounts: List<EvmAccount>,
+    approvedAccounts: List<EvmAccount>,
     approvedChainIds: Set<Long> = emptySet(),
-): PreparedSend = prepare(WcSendAdapter.toSendInput(params, approvedChainIds), accounts)
+): PreparedSend {
+    // The session-approved accounts bind `from` (#3) here AND resolve the signing index in prepare().
+    val input = WcSendAdapter.toSendInput(params, approvedAccounts.map { it.address }.toSet(), approvedChainIds)
+    return prepare(input, approvedAccounts)
+}
