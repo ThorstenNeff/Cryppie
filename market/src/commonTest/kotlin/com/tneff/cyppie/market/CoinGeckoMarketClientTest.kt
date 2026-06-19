@@ -55,6 +55,36 @@ class CoinGeckoMarketClientTest {
     }
 
     @Test
+    fun parsesCoinSpotPricesById() = runTest {
+        val c = client("""{"ethereum":{"usd":2451.778899,"usd_24h_change":1.5,"last_updated_at":1700000000}}""")
+        val out = c.coinSpotPrices(listOf("ethereum"), "usd")
+        val p = out.getValue("ethereum")
+        assertEquals("2451.778899", p.priceDecimal) // full precision
+        assertEquals("1.5", p.change24hPct)
+        assertEquals(1700000000L, p.lastUpdatedEpochSeconds)
+    }
+
+    @Test
+    fun parsesCoinsMarketsStats() = runTest {
+        val c = client(
+            """[{"id":"bitcoin","market_cap":1361000000000,"circulating_supply":19700000.0,"total_volume":28000000000}]""",
+        )
+        val out = c.coinsMarkets(listOf("bitcoin"), "usd")
+        val s = out.getValue("bitcoin")
+        assertEquals("1361000000000", s.marketCap) // decimal string, no float round-trip
+        assertEquals("19700000.0", s.circulatingSupply)
+        assertEquals("28000000000", s.volume24h)
+        assertEquals("usd", s.vs)
+    }
+
+    @Test
+    fun emptyIdListSkipsRequest() = runTest {
+        val c = client("{}")
+        assertEquals(emptyMap(), c.coinSpotPrices(emptyList(), "usd"))
+        assertEquals(emptyMap(), c.coinsMarkets(emptyList(), "usd"))
+    }
+
+    @Test
     fun nonSuccessStatusThrowsUpstream() = runTest {
         val c = client("rate limited", HttpStatusCode.TooManyRequests)
         assertFailsWith<MarketException.Upstream> { c.coinOhlc("ethereum", "usd", "1") }

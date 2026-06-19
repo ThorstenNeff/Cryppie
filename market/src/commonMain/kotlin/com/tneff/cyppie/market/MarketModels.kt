@@ -48,3 +48,15 @@ data class SpotPrice(
 
 /** A single historical price sample (decimal string + epoch seconds). */
 data class PricePoint(val epochSeconds: Long, val priceDecimal: String)
+
+/**
+ * Market-wide statistics for one asset (MD-1, KAN-132). All figures are **decimal strings** for precision
+ * (FR-6) — never parsed via float. Any field is null when the source omits it. [vs] is the fiat the
+ * [marketCap]/[volume24h] are denominated in; [circulatingSupply] is a token count (fiat-independent).
+ */
+data class MarketStats(
+    val marketCap: String? = null,
+    val circulatingSupply: String? = null,
+    val volume24h: String? = null,
+    val vs: String,
+)

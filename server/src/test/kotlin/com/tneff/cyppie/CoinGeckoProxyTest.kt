@@ -26,6 +26,7 @@ class CoinGeckoProxyTest {
         assertTrue(isAllowedCoinGeckoTail("coins/ethereum/contract/0x1111111111111111111111111111111111111111/market_chart"))
         assertTrue(isAllowedCoinGeckoTail("coins/base/contract/0xaBcdef0000000000000000000000000000000001/market_chart/range"))
         assertTrue(isAllowedCoinGeckoTail("coins/bitcoin/ohlc"))
+        assertTrue(isAllowedCoinGeckoTail("coins/markets")) // KAN-132: market stats (ids ride in the query)
     }
 
     @Test
@@ -34,6 +35,7 @@ class CoinGeckoProxyTest {
         assertFalse(isAllowedCoinGeckoTail("coins/ethereum/contract/not-an-address/market_chart")) // bad address
         assertFalse(isAllowedCoinGeckoTail("coins/ethereum/contract/0x1111111111111111111111111111111111111111/tickers")) // wrong leaf
         assertFalse(isAllowedCoinGeckoTail("coins/bitcoin/market_chart/range/extra")) // not an allowed shape
+        assertFalse(isAllowedCoinGeckoTail("coins/markets/extra")) // KAN-132: only the bare coins/markets shape
         assertFalse(isAllowedCoinGeckoTail("onchain/networks/eth/pools")) // arbitrary path
         assertFalse(isAllowedCoinGeckoTail("../../admin")) // traversal-ish → no shape match
         assertFalse(isAllowedCoinGeckoTail(""))
@@ -98,6 +100,19 @@ class CoinGeckoProxyTest {
         assertFalse("zz" in captured.url, captured.url) // case-insensitive strip
         assertEquals(1, Regex("x_cg_pro_api_key=").findAll(captured.url).count(), captured.url) // exactly the server key, no dup
         assertTrue("x_cg_pro_api_key=CG_KEY" in captured.url, captured.url)
+    }
+
+    @Test
+    fun coinsMarketsTailReachesUpstreamWithServerKey() = testApplication {
+        val captured = Captured()
+        application { module(ProxyConfig(alchemyApiKey = "A", coinGeckoApiKey = "CG_KEY"), mockClient(captured)) }
+
+        val response = client.get("/coingecko/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum")
+
+        assertEquals(HttpStatusCode.OK, response.status) // KAN-132 stats endpoint allowed
+        assertTrue("/coins/markets" in captured.url, captured.url)
+        assertTrue("x_cg_pro_api_key=CG_KEY" in captured.url, captured.url)
+        assertTrue("ids=bitcoin" in captured.url, captured.url) // catalog ids relayed
     }
 
     @Test

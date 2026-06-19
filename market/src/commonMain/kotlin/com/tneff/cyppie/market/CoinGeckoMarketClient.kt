@@ -55,6 +55,57 @@ class CoinGeckoMarketClient(
         }
     }
 
+    /** `/simple/price` — spot by **coin id** (for native coins that have no contract); id → [SpotPrice]. */
+    suspend fun coinSpotPrices(ids: List<String>, vs: String): Map<String, SpotPrice> {
+        if (ids.isEmpty()) return emptyMap()
+        val text = getText("$baseUrl/simple/price") {
+            parameter("ids", ids.joinToString(","))
+            parameter("vs_currencies", vs)
+            parameter("include_24hr_change", "true")
+            parameter("include_last_updated_at", "true")
+        }
+        val obj = parse(text).jsonObject
+        return buildMap {
+            for ((id, v) in obj) {
+                val row = v.jsonObject
+                val price = row[vs]?.jsonPrimitive?.contentOrNull ?: continue
+                put(
+                    id,
+                    SpotPrice(
+                        priceDecimal = price,
+                        vs = vs,
+                        change24hPct = row["${vs}_24h_change"]?.jsonPrimitive?.contentOrNull,
+                        lastUpdatedEpochSeconds = row["last_updated_at"]?.jsonPrimitive?.longOrNull,
+                    ),
+                )
+            }
+        }
+    }
+
+    /** `/coins/markets` — market stats (cap / circulating supply / 24h volume) by coin id; id → [MarketStats]. */
+    suspend fun coinsMarkets(ids: List<String>, vs: String): Map<String, MarketStats> {
+        if (ids.isEmpty()) return emptyMap()
+        val text = getText("$baseUrl/coins/markets") {
+            parameter("vs_currency", vs)
+            parameter("ids", ids.joinToString(","))
+        }
+        return buildMap {
+            for (row in parse(text).jsonArray) {
+                val o = row.jsonObject
+                val id = o["id"]?.jsonPrimitive?.contentOrNull ?: continue
+                put(
+                    id,
+                    MarketStats(
+                        marketCap = o["market_cap"]?.jsonPrimitive?.contentOrNull,
+                        circulatingSupply = o["circulating_supply"]?.jsonPrimitive?.contentOrNull,
+                        volume24h = o["total_volume"]?.jsonPrimitive?.contentOrNull,
+                        vs = vs,
+                    ),
+                )
+            }
+        }
+    }
+
     /** `/coins/{platform}/contract/{contract}/market_chart/range` — historical price points by contract. */
     suspend fun contractMarketChartRange(
         platform: String,

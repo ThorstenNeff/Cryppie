@@ -17,6 +17,13 @@ interface MarketDataApi {
 
     /** Historical price samples for [asset] in [vs] fiat over [range] at [interval]. */
     suspend fun priceHistory(asset: MarketAsset, vs: String, interval: CandleInterval, range: TimeRange): List<PricePoint>
+
+    /**
+     * Market statistics (cap / circulating supply / 24h volume) for [assets] in [vs] fiat (MD-1, KAN-132).
+     * Assets the source can't resolve are omitted from the map. Default empty so spot/candle-only sources
+     * need not implement it.
+     */
+    suspend fun marketStats(assets: List<MarketAsset>, vs: String): Map<MarketAsset, MarketStats> = emptyMap()
 }
 
 /** Market-data failure (upstream error, unmappable asset, malformed payload). Fail-closed at the edges. */

@@ -118,6 +118,8 @@ internal fun isAllowedCoinGeckoTail(tail: String): Boolean {
             COINGECKO_HEX_ADDRESS.matches(s[3]) && s[4] == "market_chart" && (s.size == 5 || s[5] == "range") -> true
         // coins/{id}/ohlc — candles by coin id
         s.size == 3 && s[0] == "coins" && COINGECKO_ID.matches(s[1]) && s[2] == "ohlc" -> true
+        // coins/markets — market stats (cap/supply/24h volume); coin ids ride in the (relayed) query
+        s.size == 2 && s[0] == "coins" && s[1] == "markets" -> true
         else -> false
     }
 }
