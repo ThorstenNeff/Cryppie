@@ -7,6 +7,20 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-112 — Alchemy/RPC key-proxy (`:server`, ADR-0021, security).** The Ktor `:server` module now
+  fronts Alchemy (Data / Prices / NFT REST + JSON-RPC) as a **pass-through proxy** so **no API key ships
+  in the client binary** (reverses the "on-device, no backend" line specifically for key safety). The
+  key is read **server-side only** at startup — JVM system property `alchemyApiKey` (the build bridges it
+  from the machine-wide `~/.gradle/gradle.properties`, never committed) or `$ALCHEMY_API_KEY` (deploy);
+  the build wires the gradle property into the `run` task so `./gradlew :server:run` just works locally.
+  Proxy routes `/alchemy/{data|prices|nft|rpc}/...` inject the key into the upstream URL and relay
+  method/query/body + upstream status/body **verbatim**. Abuse guards: a network **allow-list**
+  (eth-mainnet / base-mainnet — no open relay), a per-client in-memory **rate limit** (dependency-free
+  fixed window), and a **503** when the key is unconfigured. Client side, `:rpc` gains `AlchemyProxyConfig`
+  (produces the proxy base URLs the Alchemy clients expect) + shared `AlchemyNetworks` mapping; a down /
+  keyless proxy already maps to `RpcException.AllProvidersFailed` → clean **degraded** behaviour (FR-4),
+  no key, no leak. 7 `:server` + 3 `:rpc` tests (key-injection, pass-through, query forwarding, network
+  reject, missing-key 503, rate-limit, health-no-leak). ADR-0021 (Key-Proxy-Architektur) drafted separately.
 - **KAN-103 — Live Wallet-Home (app-shell Home wired end-to-end).** The Home destination renders the
   real wallet instead of a placeholder: a new non-web `SeedSession` (`:storage`) holds the unlocked
   `SecureSeedSource` (set by unlock, cleared by auto-lock), and a `WalletShell` (`:feature:wallet`)

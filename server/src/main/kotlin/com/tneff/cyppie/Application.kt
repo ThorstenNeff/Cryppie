@@ -1,20 +1,45 @@
 package com.tneff.cyppie
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.server.application.Application
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import org.slf4j.LoggerFactory
+
+private val log = LoggerFactory.getLogger("com.tneff.cyppie.KeyProxy")
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
+    val config = ProxyConfig.fromEnvironment()
+    if (!config.keyConfigured) {
+        log.warn(
+            "ALCHEMY key not configured (set gradle property 'alchemyApiKey' in ~/.gradle/gradle.properties " +
+                "or env ALCHEMY_API_KEY). Proxy endpoints will answer 503 until a key is present.",
+        )
+    }
+    val port = (System.getProperty("server.port") ?: System.getenv("PORT"))?.toIntOrNull() ?: 8080
+    embeddedServer(Netty, port = port, host = "0.0.0.0", module = { module(config) }).start(wait = true)
 }
 
-fun Application.module() {
-    routing {
-        get("/") {
-            call.respondText(sayHello("Ktor"))
-        }
+/**
+ * Wires the KAN-112 key-proxy. [config], the forwarding [client] and the [rateLimiter] are injectable
+ * so a test can supply a `MockEngine` client + a fixed/keyed config (ADR-0021).
+ */
+fun Application.module(
+    config: ProxyConfig = ProxyConfig.fromEnvironment(),
+    client: HttpClient = defaultProxyClient(),
+    rateLimiter: FixedWindowRateLimiter = FixedWindowRateLimiter(config.rateLimitPerMinute),
+) {
+    installKeyProxy(config, client, rateLimiter)
+}
+
+/** CIO-backed forwarding client. `expectSuccess = false` so upstream error statuses relay verbatim. */
+internal fun defaultProxyClient(): HttpClient = HttpClient(CIO) {
+    expectSuccess = false
+    install(HttpTimeout) {
+        requestTimeoutMillis = 20_000
+        connectTimeoutMillis = 10_000
+        socketTimeoutMillis = 20_000
     }
 }
