@@ -51,6 +51,8 @@ kotlin {
             api(projects.walletcore)
             // SeedSession — the unlocked seed source the wallet shell builds the repository from (KAN-103).
             implementation(projects.storage)
+            // Send orchestrator (KAN-91/ADR-0019) — the Send UI (KAN-110) renders prepare→disclose→sign.
+            implementation(projects.send)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

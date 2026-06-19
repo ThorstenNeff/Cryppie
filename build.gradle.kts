@@ -32,7 +32,8 @@ run {
         Triple(
             "feature:wallet",
             file("feature/wallet/src/commonMain/composeResources"),
-            listOf("wallet_", "receive_", "home_", "token_", "nft_", "common_"),
+            // send_ lives here too: the Send UI (KAN-110) is part of :feature:wallet.
+            listOf("wallet_", "receive_", "home_", "token_", "nft_", "send_", "common_"),
         ),
         Triple(
             "feature:portfolio",
@@ -42,7 +43,7 @@ run {
     )
     // Prefixes owned by modules not yet on develop — keys here are intentionally not synced (no module),
     // but must still be "covered" so the unmapped-key check below doesn't flag them as lost.
-    val pendingPrefixes = listOf("send_", "wc_")
+    val pendingPrefixes = listOf("wc_")
 
     tasks.register("syncI18n") {
         group = "i18n"

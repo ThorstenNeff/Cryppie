@@ -51,4 +51,35 @@ object WalletTestTags {
     /** NFT tile, `nft_item_<contract>_<tokenId>`. */
     fun nftItem(contract: String, tokenId: String): String =
         "nft_item_${contract.lowercase()}_$tokenId"
+
+    // Send flow (KAN-110) — testTags mirror the i18n keys (one vocabulary for design/copy/tests).
+    const val SEND_ASSET_SELECT = "send_asset_select"
+    const val SEND_AMOUNT_FIELD = "send_amount_field"
+    const val SEND_MAX = "send_max"
+    const val SEND_RECIPIENT_FIELD = "send_recipient_field"
+    const val SEND_RECIPIENT_ERROR = "send_recipient_error"
+    const val SEND_FEE = "send_fee"
+    const val SEND_CONTINUE = "send_continue"
+    const val SEND_INSUFFICIENT = "send_err_insufficient"
+    const val SEND_NETWORK_BANNER = "send_err_network"
+    const val SEND_FEESPIKE_BANNER = "send_err_feespike"
+    const val SEND_DISCLOSURE = "send_disclosure"
+    const val SEND_DISCLOSURE_TO = "send_disclosure_to"
+    const val SEND_DISCLOSURE_NONCE = "send_disclosure_nonce"
+    const val SEND_DISCLOSURE_GAS = "send_disclosure_gas"
+    const val SEND_DISCLOSURE_TOTAL = "send_disclosure_total"
+    const val SEND_SIGN = "send_sign"
+    const val SEND_STATUS_PENDING = "send_status_pending"
+    const val SEND_STATUS_CONFIRMED = "send_status_confirmed"
+    const val SEND_STATUS_FAILED = "send_status_failed"
+    const val SEND_REJECTED_DIALOG = "send_err_rejected"
+    const val SEND_EXPLORER = "send_explorer"
+    const val SEND_DONE = "send_done"
+
+    /** Asset row in the picker, `send_asset_<chain>_<symbol>`. */
+    fun sendAsset(chain: String, symbol: String): String =
+        "send_asset_${chain.lowercase()}_${symbol.lowercase()}"
+
+    /** Fee tier option, `send_fee_<tier>` (slow/normal/fast). */
+    fun sendFeeTier(tier: String): String = "send_fee_${tier.lowercase()}"
 }
