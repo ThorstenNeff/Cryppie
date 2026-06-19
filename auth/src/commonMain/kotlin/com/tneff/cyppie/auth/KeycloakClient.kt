@@ -48,6 +48,18 @@ class KeycloakClient(
             },
         ).body()
 
+    /** Refresh an expired access token (P1-7) via the refresh token (standard OIDC `grant_type=refresh_token`). */
+    suspend fun refresh(refreshToken: String): TokenResponse =
+        httpClient.submitForm(
+            url = "$base/realms/cyppie/protocol/openid-connect/token",
+            block = { expectSuccess = true },
+            formParameters = parameters {
+                append("grant_type", "refresh_token")
+                append("client_id", CLIENT_ID)
+                append("refresh_token", refreshToken)
+            },
+        ).body()
+
     companion object {
         const val BASE_URL = "https://auth.cyppie.com"
         const val CLIENT_ID = "cyppie-app" // Direct-Grant/ROPC client, no secret (SIWE sig = credential, ADR-0026)
