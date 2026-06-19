@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -51,8 +52,8 @@ private const val NFT_PREFETCH_DISTANCE = 6
 
 /**
  * KAN-105 — read-only NFT grid (PRD-03) over [NftViewModel]. Adaptive lazy grid with `nextPageKey`
- * paging; spam excluded; only Alchemy-cached media is shown (privacy). The media tile is a placeholder
- * until the image-loading library is wired (pending PO decision; the cached `imageUrl` is ready).
+ * paging (a bottom spinner while the next page loads); spam excluded; media via Coil's [AsyncImage]
+ * showing only the Alchemy-cached `imageUrl` (privacy), with a surfaceVariant placeholder when absent.
  */
 @Composable
 fun NftGridScreen(
@@ -132,6 +133,15 @@ fun NftGridScreen(
                 ) {
                     items(state.items, key = { "${it.contract.value}_${it.tokenId}" }) { nft ->
                         NftTile(nft)
+                    }
+                    // Bottom paging spinner while the next page loads (review L3/N1).
+                    if (viewModel.loadingMore) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(spacing.lg),
+                                contentAlignment = Alignment.Center,
+                            ) { ProgressRing(diameter = 32.dp) }
+                        }
                     }
                 }
             }

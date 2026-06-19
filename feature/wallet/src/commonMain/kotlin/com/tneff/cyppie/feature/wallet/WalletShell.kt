@@ -80,7 +80,9 @@ fun WalletShell(onLock: () -> Unit) {
             onBack = { dest = WalletDest.Home },
         )
         WalletDest.Nfts -> {
-            // NFTs for the currently selected account on Ethereum (PRD-03 read-only; KAN-105).
+            // NFTs for the currently selected account (PRD-03 read-only; KAN-105). MVP is **Ethereum
+            // only** by design — unlike Home balances (ETH + Base), the collectibles grid has no chain
+            // selector yet; Base/multi-chain NFTs are a deliberate follow-up (needs a chain switcher UI).
             val account = viewModel.selectedAccount
             val nftViewModel: NftViewModel =
                 viewModel(key = "nft_${account}") { NftViewModel(repository, account, EvmChain.ETHEREUM) }
