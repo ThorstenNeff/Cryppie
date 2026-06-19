@@ -31,6 +31,12 @@ class KtorDcaApi(
 
     private val base = baseUrl.trimEnd('/')
 
+    override suspend fun buildSessionEnable(config: SessionConfig): SessionEnable =
+        httpClient.post("$base/v1/me/sessions/enable") {
+            bearerAuth(bearerToken()); contentType(ContentType.Application.Json)
+            setBody(config)
+        }.body()
+
     override suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult =
         httpClient.post("$base/v1/me/sessions") {
             bearerAuth(bearerToken()); contentType(ContentType.Application.Json)
