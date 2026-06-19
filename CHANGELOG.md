@@ -7,6 +7,18 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-107 — Portfolio Overview UI (PF-1, PRD-03).** New **web-capable** `:feature:portfolio` module
+  (android/ios/jvm/**js/wasmJs**, like `:designsystem`) — depends only on the web-capable `:portfolio`
+  (logic) + `:designsystem`, never on the non-web `:walletcore`, so the portfolio renders on Web too.
+  `PortfolioOverviewScreen` is **state-driven** (`PortfolioOverviewUiState` Loading / Content / Empty /
+  Error + an injected `onRetry`) so DI/nav stay the app shell's job and the module stays web-safe;
+  `PortfolioOverviewViewModel` loads via an injected suspend seam (platform assembler) into the same
+  states. Renders the headline metrics (total value · 24h change · P&L) + asset allocation, **adaptive**
+  single-column → two-column from the Medium width breakpoint (ADR-0012). **FR-9:** any `Approximate`
+  metric (`Metric.confidence`) is marked "≈" and raises a warning caveat banner; robust totals show no
+  caveat. Money/percent formatting is **float-free** (fixed-point string slicing, FR-6). `pf_*` i18n
+  (en base + de; full 14-locale via KAN-109) + `PortfolioTestTags`. 12 tests (format KATs + desktop
+  `runComposeUiTest` over all four states + the ≈/caveat surfacing); compiles on every target incl. web.
 - **KAN-112 — Alchemy/RPC key-proxy (`:server`, ADR-0021, security).** The Ktor `:server` module now
   fronts Alchemy (Data / Prices / NFT REST + JSON-RPC) as a **pass-through proxy** so **no API key ships
   in the client binary** (reverses the "on-device, no backend" line specifically for key safety). The

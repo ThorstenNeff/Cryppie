@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="pf_title">Portfolio</string>
+  <string name="pf_total_value">Total value</string>
+  <string name="pf_change_24h">24h change</string>
+  <string name="pf_pnl">Profit &amp; loss</string>
+  <string name="pf_allocation">Allocation</string>
+  <string name="pf_approximate">Approximate</string>
+  <string name="pf_approximate_caveat">Some figures are estimates reconstructed from on-chain history and may be incomplete.</string>
+  <string name="pf_filter_all_chains">All networks</string>
+  <string name="pf_filter_all_accounts">All accounts</string>
+  <string name="pf_loading">Loading your portfolio…</string>
+  <string name="pf_empty_title">No assets yet</string>
+  <string name="pf_empty_body">When this wallet holds priced assets, your portfolio value and allocation appear here.</string>
+  <string name="pf_error_title">Couldn\'t load your portfolio</string>
+  <string name="pf_retry">Try again</string>
+</resources>

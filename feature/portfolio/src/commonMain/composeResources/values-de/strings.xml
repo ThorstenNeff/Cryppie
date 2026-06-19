@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="pf_title">Portfolio</string>
+  <string name="pf_total_value">Gesamtwert</string>
+  <string name="pf_change_24h">24-Std-Änderung</string>
+  <string name="pf_pnl">Gewinn &amp; Verlust</string>
+  <string name="pf_allocation">Aufteilung</string>
+  <string name="pf_approximate">Näherungswert</string>
+  <string name="pf_approximate_caveat">Einige Werte sind aus der On-Chain-Historie rekonstruierte Schätzungen und können unvollständig sein.</string>
+  <string name="pf_filter_all_chains">Alle Netzwerke</string>
+  <string name="pf_filter_all_accounts">Alle Konten</string>
+  <string name="pf_loading">Portfolio wird geladen…</string>
+  <string name="pf_empty_title">Noch keine Assets</string>
+  <string name="pf_empty_body">Sobald dieses Wallet bewertete Assets hält, erscheinen hier Portfoliowert und Aufteilung.</string>
+  <string name="pf_error_title">Portfolio konnte nicht geladen werden</string>
+  <string name="pf_retry">Erneut versuchen</string>
+</resources>
