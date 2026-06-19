@@ -20,6 +20,7 @@ import com.tneff.cyppie.portfolio.Portfolio
 import com.tneff.cyppie.portfolio.PortfolioConfig
 import com.tneff.cyppie.portfolio.PortfolioPerformance
 import com.tneff.cyppie.portfolio.PortfolioService
+import com.tneff.cyppie.portfolio.PortfolioTimeSeries
 import com.tneff.cyppie.portfolio.RichPortfolio
 import com.tneff.cyppie.portfolio.TokenKey
 import com.tneff.cyppie.rpc.AlchemyDataClient
@@ -111,47 +112,73 @@ private fun buildPortfolioLoader(accounts: () -> List<EvmAddress>): suspend () -
     )
     return {
         val portfolio = service.load(accounts(), AlchemyNetworks.supportedChainIds, vs = "usd")
-        // P&L is heavier (full transfer history per holding) + must never block the priced overview;
-        // a failure (proxy down, no history) just leaves pnl null and FR-9-≈ renders cleanly.
-        val pnl = runCatching { computePnl(portfolio, priceSource, transfersByChain) }.getOrNull()
-        PortfolioOverview(portfolio, pnl)
+        // P&L + 24h are heavier (full transfer history + price history per holding) + must never block the
+        // priced overview; a failure (proxy down, no history) leaves them null and FR-9-≈ renders cleanly.
+        runCatching { computePerformance(portfolio, priceSource, transfersByChain) }
+            .getOrElse { PortfolioOverview(portfolio, pnl = null) }
     }
 }
 
+// Native ETH is priced via its chain's WETH (ETH ≈ WETH) — Alchemy has no price for a null contract;
+// mirrors PortfolioService's internal mapping (KAN-90 audited addresses).
+private val WETH_BY_CHAIN: Map<Long, com.tneff.cyppie.evm.EvmAddress> = mapOf(
+    1L to com.tneff.cyppie.evm.EvmAddress.parse("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"),
+    8453L to com.tneff.cyppie.evm.EvmAddress.parse("0x4200000000000000000000000000000000000006"),
+)
+
+/** The token to price for [t]: itself for ERC-20, the chain's WETH for native ETH. */
+private fun priceTokenFor(t: com.tneff.cyppie.portfolio.PortfolioToken): com.tneff.cyppie.portfolio.PortfolioToken =
+    if (!t.isNative) t
+    else WETH_BY_CHAIN[t.chainId]?.let { com.tneff.cyppie.portfolio.PortfolioToken(t.chainId, it, "WETH", 18) } ?: t
+
 /**
- * KAN-124 — live unrealized P&L = current value − FIFO cost-basis (RichPortfolio/KAN-102). Per holding:
- * pull the full transfer history (paged, both directions) + a daily price history, run FIFO cost-basis
- * priced at each transfer's block time, sum the cost across holdings. A page-capped history propagates
- * [ApproxReason.INCOMPLETE_TRANSFERS] so the metric is visibly approximate (FR-9). Null if there's no
- * current value / no holdings. cents (MONEY_SCALE) throughout — same scale as the valued total.
+ * KAN-124 — live performance over the valued [portfolio]: unrealized P&L (current value − FIFO
+ * cost-basis, RichPortfolio/KAN-102) + 24h change (current holdings × the 24h price delta). Per holding:
+ * full transfer history (paged) + a daily price history (native ETH priced via WETH); cost basis is
+ * priced at each transfer's block time. FR-9: P&L is Approximate (COST_BASIS_AMBIGUITY; +
+ * INCOMPLETE_TRANSFERS when page-capped). cents (MONEY_SCALE) throughout. pnl null if no current value.
  */
-private suspend fun computePnl(
+private suspend fun computePerformance(
     portfolio: Portfolio,
     priceSource: AlchemyPriceSource,
     transfersByChain: Map<Long, AlchemyTransfersClient>,
-): Metric<Money>? {
-    val currentValue = portfolio.totalValue?.value ?: return null
-    if (portfolio.holdings.isEmpty()) return null
+): PortfolioOverview {
+    val currentValue = portfolio.totalValue?.value
+    if (currentValue == null || portfolio.holdings.isEmpty()) return PortfolioOverview(portfolio, pnl = null)
     val now = nowEpochSeconds()
     var totalCostMinor = 0L
     var anyTruncated = false
-    for (h in portfolio.holdings) {
-        val client = transfersByChain[h.token.chainId] ?: continue
+    val pricesNow = HashMap<com.tneff.cyppie.portfolio.PortfolioToken, Money>()
+    val prices24hAgo = HashMap<com.tneff.cyppie.portfolio.PortfolioToken, Money>()
+    // L1 (review): fetch the transfer history ONCE per (account, chain) and reuse it across that group's
+    // holdings — transfers are chain-scoped, so per-holding fetches would re-pull the same history N× and
+    // risk tripping the proxy rate-limit. tokenCostBasis filters the shared transfers by token internally.
+    val byAccountChain = portfolio.holdings.groupBy { it.account to it.token.chainId }
+    for ((accountChain, holdings) in byAccountChain) {
+        val (account, chainId) = accountChain
+        val client = transfersByChain[chainId] ?: continue
         val history = RichPortfolio.fullHistory(
-            h.account,
+            account,
             fetchTransfers = { addr, dir, key -> client.assetTransfers(addr, dir, pageKey = key) },
         )
         anyTruncated = anyTruncated || history.truncated
-        val priceHistory = priceSource.priceHistory(
-            h.token, currentValue.currency, now - PNL_HISTORY_WINDOW_SECONDS, now, ONE_DAY_SECONDS,
-        )
-        val cb = RichPortfolio.tokenCostBasis(h.token, h.account, history.transfers, priceHistory, history.truncated)
-        // Saturate rather than wrap on an absurd sum (same family as PortfolioPerformance's saturatingSub).
-        totalCostMinor = if (totalCostMinor > Long.MAX_VALUE - cb.costBasisCents) Long.MAX_VALUE else totalCostMinor + cb.costBasisCents
+        for (h in holdings) {
+            val priceHistory = priceSource.priceHistory(
+                priceTokenFor(h.token), currentValue.currency, now - PNL_HISTORY_WINDOW_SECONDS, now, ONE_DAY_SECONDS,
+            )
+            val cb = RichPortfolio.tokenCostBasis(h.token, h.account, history.transfers, priceHistory, history.truncated)
+            // Saturate rather than wrap on an absurd sum (same family as PortfolioPerformance's saturatingSub).
+            totalCostMinor = if (totalCostMinor > Long.MAX_VALUE - cb.costBasisCents) Long.MAX_VALUE else totalCostMinor + cb.costBasisCents
+            // 24h change inputs (keyed by the holding's own token): nearest price at/near now vs 24h ago.
+            RichPortfolio.priceAt(priceHistory, now)?.let { pricesNow[h.token] = it }
+            RichPortfolio.priceAt(priceHistory, now - ONE_DAY_SECONDS)?.let { prices24hAgo[h.token] = it }
+        }
     }
     val costBasis = Money(totalCostMinor, currentValue.scale, currentValue.currency)
-    val extra = if (anyTruncated) listOf(ApproxReason.INCOMPLETE_TRANSFERS) else emptyList()
-    return PortfolioPerformance.unrealizedPnl(currentValue, costBasis, extra)
+    val pnlExtra = if (anyTruncated) listOf(ApproxReason.INCOMPLETE_TRANSFERS) else emptyList()
+    val pnl = PortfolioPerformance.unrealizedPnl(currentValue, costBasis, pnlExtra)
+    val change24h = PortfolioTimeSeries.change24h(portfolio.holdings, pricesNow, prices24hAgo, currentValue.currency)
+    return PortfolioOverview(portfolio.copy(change24h = change24h), pnl)
 }
 
 /**
