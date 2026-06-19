@@ -7,6 +7,17 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-127 — `:walletconnect-e2e` debug-only module: `FakeWalletConnectController` + `WcE2eScript` + `WcE2e`.**
+  Deterministic WalletConnect test double (no relay, offline, CI-safe) so QA can drive the KAN-50 WC approval/sign
+  **E2E** (Maestro): a `WcE2eScript` (env `CYPPIE_WC_E2E` / deep-link `cyppie://wc-e2e`) scripts the `WcEvent`s —
+  `pair`→proposal, `approveSession`→settled + replayed requests — and records outbound calls for assertions.
+  **Defense-in-depth prod-separation** (security review): the fake lives in a **separate module the app binds via
+  `debugImplementation` only**, so it is physically absent from the release binary — the KMP `androidLibrary` plugin
+  has no debug/release build-types, so a `src/androidDebug` set could not achieve this inside `:walletconnect`.
+  🔒 **never mainnet:** `WcE2eScript.parse` rejects `PRODUCTION_MAINNET_CHAIN_IDS` ({1, 8453}) at parse (testnet-only).
+  🔒 **L2 belt:** `WcE2e.fakeOrNull(scriptJson, isDebugBuild)` returns `null` unless `isDebugBuild` (release → null).
+  L3 (debug-only deep-link intent-filter + `debugImplementation` wiring) is the app's KAN-126 debug-DI. The 3 CAIP
+  helpers (`caip2ChainIdOrNull`/`approvedChainIdsFrom`/`approvedAddressesFrom`) are now `public` for the module to reuse.
 - **KAN-127 (prod-safe split) — `WcTransport` interface + `approvedAccounts(topic)` (Dev-1 M3 account-binding).**
   Extracted a common **`WcTransport`** interface that the real `WalletConnectController` now implements, so the
   send-VM/app can depend on the seam (and a debug-only E2E double can later be injected — the harness itself lands

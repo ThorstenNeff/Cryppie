@@ -85,7 +85,7 @@ object WcSendAdapter {
  * keep only the EVM chains they actually support. Shared by [WcSendAdapter] (#4 resolution) and the
  * [WalletConnectController.approvedChains] actuals.
  */
-internal fun caip2ChainIdOrNull(caip2: String): Long? {
+fun caip2ChainIdOrNull(caip2: String): Long? {
     if (':' !in caip2) return caip2.toLongOrNull()
     val (namespace, reference) = caip2.split(':', limit = 2)
     return if (namespace.equals("eip155", ignoreCase = true)) reference.toLongOrNull() else null
@@ -99,7 +99,7 @@ internal fun caip2ChainIdOrNull(caip2: String): Long? {
  * refs are dropped. The platform `actual`s fetch the raw lists from the SDK session store and call this; the
  * result feeds [WcSendAdapter.toSendInput]'s `approvedChainIds` (#4 chain-binding, replay defence).
  */
-internal fun approvedChainIdsFrom(chains: List<String>, accounts: List<String>): Set<Long> =
+fun approvedChainIdsFrom(chains: List<String>, accounts: List<String>): Set<Long> =
     (chains + accounts.map { it.substringBeforeLast(':') })
         .mapNotNull { caip2ChainIdOrNull(it) }
         .toSet()
@@ -109,7 +109,7 @@ internal fun approvedChainIdsFrom(chains: List<String>, accounts: List<String>):
  * namespace, a malformed ref, or an unparseable address — so non-EVM accounts are dropped. Mirrors
  * [caip2ChainIdOrNull] for the address half of the session store.
  */
-internal fun caip10AddressOrNull(caip10: String): EvmAddress? {
+fun caip10AddressOrNull(caip10: String): EvmAddress? {
     val parts = caip10.split(':')
     if (parts.size != 3 || !parts[0].equals("eip155", ignoreCase = true)) return null
     val bytes = Hex.decodeOrNull(parts[2]) ?: return null
@@ -122,7 +122,7 @@ internal fun caip10AddressOrNull(caip10: String): EvmAddress? {
  * this. Feeds the WC-sign **account binding** (#3 / M3) — `req.address ∈ approvedAccounts(topic)`, so a request
  * may only sign with an address the session actually authorized, not merely any known wallet account.
  */
-internal fun approvedAddressesFrom(accounts: List<String>): Set<EvmAddress> =
+fun approvedAddressesFrom(accounts: List<String>): Set<EvmAddress> =
     accounts.mapNotNull { caip10AddressOrNull(it) }.toSet()
 
 /**
