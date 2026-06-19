@@ -62,3 +62,43 @@ Die offenen Fragen sind entschieden; diese Beschlüsse sind **verbindlich** für
 - **Q7 Limit-Semantik → Rolling-Window + Per-Op + Gesamt-Exposure-Cap** (über alle aktiven Session-Keys eines Users).
 
 **Build:** AA-Foundation-Build-Plan = **KAN-139** (Proposal Backend-Agent → PO → sequenziert Backend + App-Seite Dev-1/Dev-2).
+
+## Harm-Reduction — Threat-Model: On-Device-Signing der AA-Sign-Kette (Ph1, approach C)
+
+> Quelle: Dev-2 Ph1-Integrations-Security-Review (KAN-141) + P0-Reconcile, 2026-06-19. **Finaler Text** nach User-Entscheid **(C)** + V1+decode. Implementiert in KAN-143/KAN-144 (`:evm`). Operationalisiert die obige Harm-Reduction für den on-device-Signing-Pfad.
+
+### Asymmetrie: ENABLE (Grant) vs. OP (DCA)
+
+Die App zeigt menschenlesbare Daten und signiert on-device einen 32-Byte-Digest. Zwei Pfade, **unterschiedliche Risiko-Klasse**:
+
+- **GRANT / session-enable = P0 (unbounded).** Der Enable-Digest **setzt** die Smart-Session-Policy (Scope/Selector/Limits) → „on-chain-Caps schützen" ist hier **zirkulär** (der Enable *definiert* die Caps). Ein blind-signierter, manipulierter Enable könnte eine Session mit abweichender/unbeschränkter Policy anlegen → der Session-Key (Ph1 on-device) wäre **Drain-fähig** → bricht „Worst-Case = gecappte Befugnis".
+- **DCA-OP = bounded (MED).** Die Per-Op-Signatur läuft durch die **bereits enabled** Session; Scope/Selector/Limits werden **on-chain erzwungen**, out-of-policy revertet. Worst-Case = eine Op **innerhalb der konsentierten Caps**.
+
+### Mitigation (User-Entscheid C + V1+decode, 2026-06-19) — implementiert
+
+Der GRANT wird in Ph1 **on-device kryptografisch verifiziert** (nicht mehr Rest-Trust), über eine einzige fail-closed Funktion `SmartSessionGrantVerifier.verifyGrant` (`:evm`), bevor signiert wird:
+
+1. **Enable-Digest-Recompute:** die App rechnet den EIP-712-Digest über die `MultiChainSession` aus der disclosed `SessionConfig` selbst nach (`Eip712`/`SmartSessionEnableDigest`, byte-exakt gegen 4 SDK==raw-viem-Vektoren bewiesen) und signiert **nur**, wenn `recomputed == backend.digestToSign`.
+2. **Policy-Adress-Pinning:** die Spending-Limit- + Time-Frame-**Policy-Adressen sind client-feste Konstanten** (Rhinestone GLOBAL_CONSTANTS, on-chain verifiziert, CREATE2-uniform ETH+Base) — eine getauschte Policy wird gefangen.
+3. **Cap-/Window-Decode (schließt den Cap-Blind):** ein reiner Digest-Match ließe die Spending-**Cap** opak (Backend könnte „Cap 5" zeigen, Riesen-Cap encoden → Digest matcht über die Riesen-Cap-Bytes → Value-Loss bis Token-Balance via die erlaubte Action). Die App **decodet** daher die Policy-`initData` (`abi.encode(address token, uint256 cap)` / `(uint start, uint end)`) und zeigt **`token`/`cap`/`window` aus den signierten Bytes** → Anzeige == signierte Realität, kann nicht lügen. (**Decode** statt Re-Encode: kann den ehrlichen Grant nie brechen.)
+4. **Broad-Access-Gate:** `permitAdminAccess`/`permitGenericPolicy`/`ignoreSecurityAttestations` müssen aus sein (sonst Scope über die angezeigte Action hinaus) → fail-closed.
+
+→ Die UI rendert **ausschließlich** das zurückgegebene `VerifiedGrant`, nie die rohen Backend-Felder. Der P0 ist geschlossen: der User verifiziert kryptografisch Struktur **und** Cap/Token/Window der Session, die er enabled.
+
+**⚠️ Soundness-Bedingung (kritisch).** Domain + Modul-Bindung sind **client-gepinnt, nie backend-geliefert:** EIP-712-Domain `{name:"SmartSession",version:"1"}` (Chain-Bindung im Body: `ChainSession.chainId` + `SignedSession.smartSession`); `smartSession`-Adresse + die Policy-Adressen + `account`-SCA (= Geräte-Owner-EOA, 7702 same-address) als Code-Konstanten. Sonst validierte der Recompute einen Digest für ein gespooftes Modul/Policy/Account.
+
+### DCA-OP — bounded Rest-Trust (akzeptiert für Ph1)
+
+Innerhalb des **verifizierten** Scopes vertraut die App darauf, dass das Backend den Op-Digest korrekt aus der angezeigten Op berechnet; wirksamer Guardrail = die on-chain Smart-Session-Policy (jetzt vom User verifiziert). Off-chain-Exposure-Pre-Check (Q7) + Pause/Revoke-Kill-Switch begrenzen den Blast-Radius.
+
+### Ph2-Defense-in-Depth (geplant)
+
+On-device-**userOpHash-Recompute** für den Op-Pfad (volles EntryPoint-0.7-Packing + Kernel-callData) → schließt auch die Op-Display↔Hash-Lücke. Höherer Aufwand, version-gekoppelt, geringerer Grenzgewinn (Op ist bereits bounded) → Ph2.
+
+### Owner-Bind (beide Pfade)
+
+Jede Signatur ist owner-gebunden: der Signer muss zur SCA/SIWE-Identität (`m/44'/60'/0'/0/0`) ableiten, sonst `SignerMismatch`.
+
+### Scope
+
+GRANT-Verify (`verifyGrant`) gilt für `GrantViewModel.grant()` (`enable.digestToSign`). Op-Rest-Trust gilt für `DcaViewModel.signPending()` (`userOpHash`).
