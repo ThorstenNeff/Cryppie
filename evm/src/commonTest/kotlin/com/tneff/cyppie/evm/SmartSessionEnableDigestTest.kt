@@ -83,6 +83,25 @@ class SmartSessionEnableDigestTest {
         assertEquals("612b0831cbca241f4726678f3f8a17db5de2eb6838447f416514b635331b9ddd", digest(8453L, permissionsB))
     }
 
+    // ── Vector C — DCA SPONSORED (= B but permitERC4337Paymaster=true): the real Pimlico-sponsored enable ──
+    private val permissionsC = permissionsB.copy(permitERC4337Paymaster = true)
+
+    @Test
+    fun vectorC_paymasterTrue_chain1() {
+        assertEquals("3829dee4858a5943584350f109b100cd6e8a6c1a17bc94fcf45d0357bc0c4d39", digest(1L, permissionsC))
+    }
+
+    @Test
+    fun vectorC_paymasterTrue_base() {
+        assertEquals("e85a3ea587b69870b1584e165e4b700d6e5c89fd0ddf2e56e56a4ecc31ebe320", digest(8453L, permissionsC))
+    }
+
+    @Test
+    fun paymasterFlagChangesDigest() {
+        // Flipping permitERC4337Paymaster (B→C) must change the digest (it's a signed SignedPermissions field).
+        assertEquals(false, digest(1L, permissionsB) == digest(1L, permissionsC))
+    }
+
     @Test
     fun chainBindingChangesDigest() {
         // chainId 1 vs 8453 must differ (binding lives in ChainSession.chainId, not the domain).
