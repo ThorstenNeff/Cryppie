@@ -132,7 +132,10 @@ fun BiometricsScreen(
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = stringResource(if (neutral) Res.string.onb_bio_unavail_body else Res.string.onb_bio_body),
+                // onb_bio_body has a %1$s for the biometry method name (KAN-101 i18n-Low); the unavail
+                // copy has no placeholder. Pass the name only for the substituting string.
+                text = if (neutral) stringResource(Res.string.onb_bio_unavail_body)
+                else stringResource(Res.string.onb_bio_body, support.biometryTypeName()),
                 style = CryptasaTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,

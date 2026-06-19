@@ -55,6 +55,9 @@ actual class BiometricSupport(private val activity: FragmentActivity) {
         }
     }
 
+    // Android doesn't expose the modality (face/fingerprint) pre-auth → a generic name (KAN-101 i18n-Low).
+    actual fun biometryTypeName(): String = "Biometrics"
+
     /** Shows the system prompt; returns the biometric-authenticated cipher, or null on error/cancel. */
     private suspend fun prompt(cipher: Cipher): Cipher? {
         val title = getString(Res.string.onb_bio_title)
