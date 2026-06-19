@@ -18,8 +18,8 @@ fun main() {
                 "or env ALCHEMY_API_KEY). Proxy endpoints will answer 503 until a key is present.",
         )
     }
-    val port = (System.getProperty("server.port") ?: System.getenv("PORT"))?.toIntOrNull() ?: 8080
-    embeddedServer(Netty, port = port, host = "0.0.0.0", module = { module(config) }).start(wait = true)
+    // ADR-0022 D: in prod, bind 127.0.0.1 (PROXY_BIND_HOST) so only the local reverse proxy reaches Ktor.
+    embeddedServer(Netty, port = config.port, host = config.bindHost, module = { module(config) }).start(wait = true)
 }
 
 /**

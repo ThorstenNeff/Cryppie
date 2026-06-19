@@ -3,6 +3,7 @@ package com.tneff.cyppie
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -169,5 +170,63 @@ class KeyProxyTest {
         val response = client.get("/alchemy/nft/v3/eth-mainnet/getContractsForOwner?owner=0x1")
         assertEquals(HttpStatusCode.NotFound, response.status)
         assertEquals("", captured.url)
+    }
+
+    // ---- KAN-125 (ADR-0022): prod hardening ----
+
+    @Test
+    fun rpcMethodAllowListForwardsAllowedRejectsOthers() = testApplication {
+        val captured = Captured()
+        application { module(ProxyConfig(alchemyApiKey = "K"), mockClient(captured)) }
+        // Allowed read → forwarded.
+        val ok = client.post("/alchemy/rpc/v2/eth-mainnet") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}""")
+        }
+        assertEquals(HttpStatusCode.OK, ok.status)
+        assertEquals("https://eth-mainnet.g.alchemy.com/v2/K", captured.url)
+        // Not on the read/broadcast allow-list → 403, never reaches upstream.
+        captured.url = ""
+        val forbidden = client.post("/alchemy/rpc/v2/eth-mainnet") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}""")
+        }
+        assertEquals(HttpStatusCode.Forbidden, forbidden.status)
+        assertEquals("", captured.url)
+    }
+
+    @Test
+    fun oversizedBodyIsRejectedWith413() = testApplication {
+        val captured = Captured()
+        application { module(ProxyConfig(alchemyApiKey = "K", maxBodyBytes = 16), mockClient(captured)) }
+        val response = client.post("/alchemy/data/v1/assets/tokens/by-address") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"addresses":["0x1234567890abcdef","0xdeadbeef"]}""") // > 16 bytes
+        }
+        assertEquals(HttpStatusCode.PayloadTooLarge, response.status)
+        assertEquals("", captured.url)
+    }
+
+    @Test
+    fun rateLimitKeysOnXForwardedForBehindReverseProxy() = testApplication {
+        // 1 trusted hop, budget 1/min → each distinct forwarded client gets its own window.
+        application {
+            module(ProxyConfig(alchemyApiKey = "K", rateLimitPerMinute = 1, trustedProxyHops = 1), mockClient(Captured()))
+        }
+        suspend fun call(xff: String) = client.get("/alchemy/nft/v3/eth-mainnet/getNFTsForOwner?owner=0x1") {
+            header("X-Forwarded-For", xff)
+        }
+        assertEquals(HttpStatusCode.OK, call("1.1.1.1").status) // client A, 1st
+        assertEquals(HttpStatusCode.OK, call("2.2.2.2").status) // client B, 1st (distinct → not throttled)
+        assertEquals(HttpStatusCode.TooManyRequests, call("1.1.1.1").status) // client A, 2nd → over budget
+    }
+
+    @Test
+    fun realClientIpResolvesTrustedHop() {
+        assertEquals("10.0.0.1", realClientIp("10.0.0.1", null, trustedHops = 0))
+        assertEquals("10.0.0.1", realClientIp("10.0.0.1", "1.1.1.1", trustedHops = 0)) // don't trust XFF
+        assertEquals("2.2.2.2", realClientIp("10.0.0.1", "1.1.1.1, 2.2.2.2", trustedHops = 1)) // rightmost = our proxy saw
+        assertEquals("1.1.1.1", realClientIp("10.0.0.1", "1.1.1.1, 2.2.2.2", trustedHops = 2))
+        assertEquals("10.0.0.1", realClientIp("10.0.0.1", null, trustedHops = 1)) // missing header → peer
     }
 }

@@ -16,9 +16,11 @@ class FixedWindowRateLimiter(
     private class Window(var startMs: Long, var count: Int)
 
     private val windows = ConcurrentHashMap<String, Window>()
+    private val sinceSweep = java.util.concurrent.atomic.AtomicInteger(0)
 
     /** @return true if the request is within budget; false if [clientId] exceeded its window quota. */
     fun allow(clientId: String): Boolean {
+        maybeEvictStale()
         val t = now()
         val window = windows.getOrPut(clientId) { Window(t, 0) }
         synchronized(window) {
@@ -30,5 +32,21 @@ class FixedWindowRateLimiter(
             window.count++
             return true
         }
+    }
+
+    /**
+     * Bound memory (ADR-0022 B): with one entry per client IP the map would grow unbounded under a
+     * public load / spoofed IPs. Every [SWEEP_INTERVAL] calls, drop windows whose interval has fully
+     * elapsed — an evicted client simply gets a fresh window on its next request (same as a reset).
+     */
+    private fun maybeEvictStale() {
+        if (sinceSweep.incrementAndGet() < SWEEP_INTERVAL) return
+        sinceSweep.set(0)
+        val cutoff = now() - windowMillis
+        windows.entries.removeIf { (_, w) -> synchronized(w) { w.startMs < cutoff } }
+    }
+
+    private companion object {
+        const val SWEEP_INTERVAL = 1_000
     }
 }

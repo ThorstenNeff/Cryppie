@@ -13,20 +13,65 @@ data class ProxyConfig(
     val allowedNetworks: Set<String> = DEFAULT_NETWORKS,
     /** Per-client request budget per minute (abuse guard). */
     val rateLimitPerMinute: Int = DEFAULT_RATE_LIMIT,
+    /**
+     * Number of trusted reverse-proxy hops in front of this server (ADR-0022 B). `0` = the server is
+     * reached directly (dev), so the rate-limiter keys on the socket peer. `>0` = behind a trusted
+     * reverse proxy (Caddy/nginx), so the real client IP is the Nth-from-rightmost `X-Forwarded-For`
+     * entry — otherwise every request looks like the proxy and the limit collapses globally.
+     */
+    val trustedProxyHops: Int = 0,
+    /** Max request body the proxy will forward; larger → `413` (abuse guard, ADR-0022). */
+    val maxBodyBytes: Long = DEFAULT_MAX_BODY_BYTES,
+    /** JSON-RPC methods allowed on `/alchemy/rpc` — wallet reads + broadcast only; others → `403`. */
+    val allowedRpcMethods: Set<String> = DEFAULT_RPC_METHODS,
+    /** Bind host: `0.0.0.0` (dev/container) or `127.0.0.1` (prod behind the reverse proxy, ADR-0022 D). */
+    val bindHost: String = "0.0.0.0",
+    /** Bind port (the reverse proxy fronts it; not public in prod). */
+    val port: Int = 8080,
 ) {
     val keyConfigured: Boolean get() = !alchemyApiKey.isNullOrBlank()
 
     companion object {
         val DEFAULT_NETWORKS: Set<String> = setOf("eth-mainnet", "base-mainnet")
         const val DEFAULT_RATE_LIMIT: Int = 120
+        const val DEFAULT_MAX_BODY_BYTES: Long = 256 * 1024 // 256 KiB — generous for batched JSON-RPC
 
-        /** Reads the key from the system property (build-bridged gradle prop) then the env var. */
+        /** Read-only + broadcast JSON-RPC the wallet actually uses (read/broadcast-only proxy, ADR-0022). */
+        val DEFAULT_RPC_METHODS: Set<String> = setOf(
+            "eth_blockNumber", "eth_chainId", "eth_getBalance", "eth_call", "eth_getCode",
+            "eth_getTransactionCount", "eth_gasPrice", "eth_maxPriorityFeePerGas", "eth_feeHistory",
+            "eth_estimateGas", "eth_getBlockByNumber", "eth_getTransactionByHash", "eth_getTransactionReceipt",
+            "eth_getLogs", "eth_sendRawTransaction", "alchemy_getAssetTransfers", "alchemy_getTokenBalances",
+        )
+
+        /** Reads the key + prod knobs from system properties / env vars (deploy sets these; never the repo). */
         fun fromEnvironment(): ProxyConfig {
             val key = System.getProperty("alchemyApiKey")?.takeIf { it.isNotBlank() }
                 ?: System.getenv("ALCHEMY_API_KEY")?.takeIf { it.isNotBlank() }
-            return ProxyConfig(alchemyApiKey = key)
+            fun env(name: String): String? = System.getProperty(name) ?: System.getenv(name)
+            return ProxyConfig(
+                alchemyApiKey = key,
+                rateLimitPerMinute = env("PROXY_RATE_LIMIT")?.toIntOrNull() ?: DEFAULT_RATE_LIMIT,
+                trustedProxyHops = env("PROXY_TRUSTED_HOPS")?.toIntOrNull() ?: 0,
+                maxBodyBytes = env("PROXY_MAX_BODY_BYTES")?.toLongOrNull() ?: DEFAULT_MAX_BODY_BYTES,
+                bindHost = env("PROXY_BIND_HOST") ?: "0.0.0.0",
+                port = env("server.port")?.toIntOrNull() ?: env("PORT")?.toIntOrNull() ?: 8080,
+            )
         }
     }
+}
+
+/**
+ * Extracts the real client IP for rate-limiting (ADR-0022 B). With [trustedHops] = 0 we trust only the
+ * socket peer ([remoteHost]). With N trusted reverse-proxy hops, the client is the entry N-from-the-end
+ * of `X-Forwarded-For` (each trusted hop appends one); anything beyond what the proxy could have set is
+ * attacker-controlled and ignored. Falls back to [remoteHost] if the header is missing/short.
+ */
+fun realClientIp(remoteHost: String, xForwardedFor: String?, trustedHops: Int): String {
+    if (trustedHops <= 0 || xForwardedFor.isNullOrBlank()) return remoteHost
+    val hops = xForwardedFor.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+    // The rightmost entry is the closest trusted proxy; step back `trustedHops` to reach the real client.
+    return hops.getOrNull(hops.size - trustedHops) ?: hops.firstOrNull() ?: remoteHost
 }
 
 /**

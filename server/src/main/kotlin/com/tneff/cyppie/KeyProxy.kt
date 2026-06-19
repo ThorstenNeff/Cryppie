@@ -11,6 +11,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.Application
+import io.ktor.server.request.contentLength
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondBytes
@@ -19,6 +20,11 @@ import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * Installs the KAN-112 key-proxy routes (ADR-0021). Every Alchemy/RPC request the app makes is routed
@@ -68,10 +74,10 @@ fun Application.installKeyProxy(
                 }
             }
         }
-        // JSON-RPC (eth_* + alchemy_getAssetTransfers) — network is path-scoped.
+        // JSON-RPC (eth_* + alchemy_getAssetTransfers) — network is path-scoped + method allow-listed.
         route("/alchemy/rpc/v2/{network}") {
             handle {
-                proxy(config, client, rateLimiter) { key ->
+                proxy(config, client, rateLimiter, enforceRpcMethods = true) { key ->
                     allowedNetwork(config)?.let { AlchemyUpstream.rpc(it, key) }
                 }
             }
@@ -95,6 +101,29 @@ private fun RoutingContext.allowedNetwork(config: ProxyConfig): String? =
     call.parameters["network"]?.takeIf { it in config.allowedNetworks }
 
 /**
+ * True iff every JSON-RPC call in [body] (single object or batch array) uses an [allowed] method.
+ * Fail-closed: unparseable or method-less requests are rejected (the proxy is read/broadcast-only).
+ */
+private val rpcParseJson = Json { ignoreUnknownKeys = true; isLenient = true }
+private fun rpcMethodsAllowed(body: ByteArray, allowed: Set<String>): Boolean {
+    val element = try {
+        rpcParseJson.parseToJsonElement(body.decodeToString())
+    } catch (e: Exception) {
+        return false
+    }
+    val requests = when (element) {
+        is JsonArray -> element
+        is JsonObject -> listOf(element)
+        else -> return false
+    }
+    if (requests.isEmpty()) return false
+    return requests.all { req ->
+        val method = (req as? JsonObject)?.get("method")?.let { (it as? JsonPrimitive)?.contentOrNull }
+        method != null && method in allowed
+    }
+}
+
+/**
  * Core forward: rate-limit → key gate → build upstream (allow-list) → faithfully relay method/query/
  * body → return upstream status + body. [buildUpstreamUrl] returns null when the target is rejected
  * (e.g. a network outside the allow-list).
@@ -103,9 +132,15 @@ private suspend fun RoutingContext.proxy(
     config: ProxyConfig,
     client: HttpClient,
     rateLimiter: FixedWindowRateLimiter,
+    enforceRpcMethods: Boolean = false,
     buildUpstreamUrl: RoutingContext.(key: String) -> String?,
 ) {
-    val clientId = call.request.local.remoteHost
+    // ADR-0022 B: behind a reverse proxy the socket peer is the proxy, so rate-limit on the real client.
+    val clientId = realClientIp(
+        remoteHost = call.request.local.remoteHost,
+        xForwardedFor = call.request.headers["X-Forwarded-For"],
+        trustedHops = config.trustedProxyHops,
+    )
     if (!rateLimiter.allow(clientId)) {
         call.respondText("Rate limit exceeded", status = HttpStatusCode.TooManyRequests)
         return
@@ -122,8 +157,23 @@ private suspend fun RoutingContext.proxy(
     }
 
     val method = call.request.httpMethod
+    // ADR-0022: cap request bodies (the reverse proxy enforces a hard edge cap too; this is defence-in-depth).
+    val declaredLength = call.request.contentLength()
+    if (declaredLength != null && declaredLength > config.maxBodyBytes) {
+        call.respondText("Request body too large", status = HttpStatusCode.PayloadTooLarge)
+        return
+    }
     val requestBody: ByteArray? =
         if (method != HttpMethod.Get && method != HttpMethod.Head) call.receive<ByteArray>() else null
+    if (requestBody != null && requestBody.size > config.maxBodyBytes) {
+        call.respondText("Request body too large", status = HttpStatusCode.PayloadTooLarge)
+        return
+    }
+    // JSON-RPC method allow-list (read/broadcast-only proxy) — reject anything else before it reaches upstream.
+    if (enforceRpcMethods && requestBody != null && !rpcMethodsAllowed(requestBody, config.allowedRpcMethods)) {
+        call.respondText("JSON-RPC method not allowed", status = HttpStatusCode.Forbidden)
+        return
+    }
 
     val response: HttpResponse = try {
         client.request(upstreamUrl) {

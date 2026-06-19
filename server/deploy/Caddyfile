@@ -1,0 +1,37 @@
+# Cyppie key-proxy — TLS reverse proxy (ADR-0022 A/B/D). Template: replace `proxy.example.com` with the
+# real DNS name pointing at this Mac Mini. Caddy obtains + AUTO-RENEWS a Let's Encrypt cert for that name
+# (ports 80 + 443 must be reachable from the internet) and forces HTTP→HTTPS.
+#
+# Deploy:  brew install caddy  →  put this at /opt/cyppie/Caddyfile  →  `caddy run --config /opt/cyppie/Caddyfile`
+#          (or `brew services start caddy`). The Ktor server binds 127.0.0.1:8080 (PROXY_BIND_HOST), so it is
+#          NOT publicly reachable — only Caddy fronts it (ADR-0022 D).
+
+proxy.example.com {
+	encode gzip
+
+	# (B) Anti-spoof X-Forwarded-For: OVERWRITE it with the real socket peer so a client can't forge it.
+	#     The server runs with PROXY_TRUSTED_HOPS=1 and reads this single entry as the rate-limit key.
+	# (D) Hard edge cap on request bodies (defence-in-depth; the server also caps at PROXY_MAX_BODY_BYTES).
+	request_body {
+		max_size 256KB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Only the proxy API surface is exposed; everything else → 404 (no open relay).
+	@api path /alchemy/* /healthz
+	handle @api {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+	handle {
+		respond 404
+	}
+}

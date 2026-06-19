@@ -7,6 +7,21 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-125 — Key-proxy production hardening + deploy artifacts (`:server`, ADR-0022, security/GA).** Prepares
+  the key-proxy for the public Mac Mini deployment (a P0 GA-blocker — a shipped client can't reach `localhost`).
+  Server-side hardening (testable): the rate-limiter now keys on the **real client IP from `X-Forwarded-For`**
+  (`PROXY_TRUSTED_HOPS`, behind a trusted reverse proxy — else the limit collapses globally) + **bounded
+  window-map eviction**; a **request-body cap** (`PROXY_MAX_BODY_BYTES`, default 256 KiB → `413`); a **JSON-RPC
+  method allow-list** on `/alchemy/rpc` (wallet reads + `eth_sendRawTransaction` broadcast + `alchemy_getAssetTransfers`;
+  anything else → `403`, fail-closed, single + batch); a **configurable bind host** (`PROXY_BIND_HOST` = `127.0.0.1`
+  in prod so only the reverse proxy reaches Ktor, ADR-0022 D); key/upstream-URL never logged (E). Deploy artifacts
+  in `server/deploy/`: **`Caddyfile`** (TLS reverse proxy — Let's Encrypt auto-renew, HTTP→HTTPS, HSTS, anti-spoof
+  `X-Forwarded-For`, body cap, only `/alchemy/*`+`/healthz` exposed) and a **launchd plist** (auto-restart +
+  boot-persist; key is a host-set placeholder, never committed). `server/HARDENING.md` extended into the full
+  **deployment runbook** (build / key / service / TLS / client URL / verify / cert-renewal / key-rotation /
+  incident / scaling-exit). 14 `:server` tests (incl. rpc-method 403, oversized 413, X-Forwarded-For rate-limit,
+  `realClientIp`). All env-config, no secrets in repo. *(Actual public exposure — DNS, ports, cert issuance,
+  SSH hardening, running the deploy — is the operator step.)*
 - **KAN-62 — WalletConnect transport (`:walletconnect`, ADR-0015) + WC-Send adapter + verification-metadata regen.**
   L4 WC transport: new non-web `:walletconnect` module (android · iosArm64 · iosSimulatorArm64 · jvm) —
   `WalletConnectController` (`expect`/`actual`, `Flow<WcEvent>`; Android = Reown WalletKit, iOS = reown-swift

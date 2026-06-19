@@ -18,6 +18,8 @@ dependencies {
     // injecting the API key server-side so no key ships in the app binary.
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
+    // KAN-125 (ADR-0022): parse the JSON-RPC method for the read/broadcast-only allow-list.
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.ktor.serverTestHost)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.kotlin.testJunit)

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Cyppie key-proxy launchd service (ADR-0022 C): keep-alive + run-at-boot supervision for the Ktor proxy.
+  TEMPLATE — install to /Library/LaunchDaemons/com.tneff.cyppie.keyproxy.plist on the host, then:
+    sudo launchctl bootstrap system /Library/LaunchDaemons/com.tneff.cyppie.keyproxy.plist
+  Build the runnable jar with `./gradlew :server:shadowJar` → server/build/libs/server-all.jar → /opt/cyppie/.
+
+  🔒 ALCHEMY_API_KEY is intentionally a PLACEHOLDER — set the real key in the HOST copy of this file only
+     (never commit it; ADR-0022 E / ADR-0021). The repo template must never contain the key.
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.tneff.cyppie.keyproxy</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/bin/java</string>
+		<string>-jar</string>
+		<string>/opt/cyppie/key-proxy.jar</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>ALCHEMY_API_KEY</key>
+		<string>__SET_REAL_KEY_ON_HOST__</string>
+		<key>PROXY_BIND_HOST</key>
+		<string>127.0.0.1</string>
+		<key>PROXY_TRUSTED_HOPS</key>
+		<string>1</string>
+		<key>PORT</key>
+		<string>8080</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>10</integer>
+	<key>StandardOutPath</key>
+	<string>/var/log/cyppie/keyproxy.out.log</string>
+	<key>StandardErrorPath</key>
+	<string>/var/log/cyppie/keyproxy.err.log</string>
+</dict>
+</plist>
