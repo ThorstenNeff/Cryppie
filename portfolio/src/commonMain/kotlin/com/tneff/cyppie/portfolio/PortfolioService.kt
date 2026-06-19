@@ -38,10 +38,6 @@ class PortfolioService(
         return PortfolioValuator.value(holdings, prices, config, clockEpochSeconds())
     }
 
-    /** The token to price for [token] — itself for ERC-20, the chain's WETH for native ETH. */
-    private fun priceTokenFor(token: PortfolioToken): PortfolioToken? =
-        if (token.isNative) NATIVE[token.chainId]?.weth else token
-
     private fun RawTokenHolding.toHolding(): Holding? {
         val decimals = decimals ?: return null // can't value without decimals
         return Holding(
@@ -53,9 +49,18 @@ class PortfolioService(
 
     private data class NativeMeta(val eth: PortfolioToken, val weth: PortfolioToken)
 
-    private companion object {
+    companion object {
+        /**
+         * The single source of truth for "what token to price for [token]" — itself for an ERC-20, the
+         * chain's audited WETH for native ETH (ETH ≈ WETH; null if the chain is unknown). Used by both
+         * the live valuation here AND the P&L/24h assembler (KAN-124) so native ETH is priced against the
+         * SAME WETH everywhere — no second address table to drift (review M1).
+         */
+        fun priceTokenFor(token: PortfolioToken): PortfolioToken? =
+            if (token.isNative) NATIVE[token.chainId]?.weth else token
+
         // Audited WETH addresses (KAN-90) — native ETH is valued at the WETH price.
-        val NATIVE: Map<Long, NativeMeta> = mapOf(
+        private val NATIVE: Map<Long, NativeMeta> = mapOf(
             1L to NativeMeta(
                 eth = PortfolioToken(1L, null, "ETH", 18),
                 weth = PortfolioToken(1L, EvmAddress.parse("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"), "WETH", 18),
