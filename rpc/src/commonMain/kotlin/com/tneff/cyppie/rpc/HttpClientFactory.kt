@@ -34,3 +34,11 @@ internal fun defaultRpcHttpClient(): HttpClient = platformHttpClient {
         exponentialDelay(randomizationMs = 1_000) // jitter; respects Retry-After by default
     }
 }
+
+/**
+ * Public JSON [HttpClient] (platform engine + ContentNegotiation + timeouts + retry) for the modules that
+ * depend on `:rpc` for "shared HTTP plumbing" — the User-Service ([com.tneff.cyppie.aa.KtorDcaApi]) and
+ * Keycloak SIWE ([com.tneff.cyppie.auth.KeycloakClient]) clients. Same lenient JSON + resilience as the RPC
+ * clients (the User-Service / Keycloak may add fields we don't model).
+ */
+fun jsonHttpClient(): HttpClient = defaultRpcHttpClient()

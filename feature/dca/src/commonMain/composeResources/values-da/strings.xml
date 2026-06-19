@@ -42,4 +42,6 @@
   <string name="dca_err_submit">DCA-signaturen kunne ikke sendes</string>
   <string name="dca_err_authorize">Sessionen kunne ikke autoriseres</string>
   <string name="dca_err_amount">Indtast et beløb</string>
+  <string name="dca_selector">Tilladt funktion</string>
+  <string name="dca_rolling">Rullende grænsevindue</string>
 </resources>

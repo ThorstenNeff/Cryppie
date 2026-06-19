@@ -81,6 +81,7 @@ fun WalletHomeScreen(
     onPortfolio: () -> Unit = {},
     onConnect: () -> Unit = {},
     onMarket: () -> Unit = {},
+    onDca: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -189,6 +190,15 @@ fun WalletHomeScreen(
                 onClick = onMarket,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag("home_market"),
+            )
+
+            // DCA / Auto-Invest entry (PRD-05 Ph1, KAN-138) — full-width secondary. Label is pre-i18n
+            // (home_dca = UX follow-up, same as home_market was); the destination is JWT-gated (SIWE).
+            CryptasaButton(
+                text = "Auto-Invest",
+                onClick = onDca,
+                style = CryptasaButtonStyle.Secondary,
+                modifier = Modifier.fillMaxWidth().testTag("home_dca"),
             )
 
             // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).

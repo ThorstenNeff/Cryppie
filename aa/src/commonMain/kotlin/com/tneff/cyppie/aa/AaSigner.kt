@@ -28,7 +28,7 @@ class AaSigner(private val accountIndex: Int = UserOpSigner.OWNER_ACCOUNT_INDEX)
         val bytes = try {
             UserOpSigner(EvmKeyManager(seedSource)).sign(digest, expectedOwner, accountIndex)
         } finally {
-            (seedSource as? AutoCloseable)?.close()
+            zeroize(seedSource)
         }
         return "0x" + Hex.encode(bytes)
     }
@@ -36,7 +36,20 @@ class AaSigner(private val accountIndex: Int = UserOpSigner.OWNER_ACCOUNT_INDEX)
     /** Convenience: decode a `0x`-prefixed hex [digestHex] (e.g. [PendingDca.userOpHash]) then sign. */
     fun signDigest(digestHex: String, expectedOwner: EvmAddress, seedSource: SeedSource): String {
         val bytes = Hex.decodeOrNull(digestHex.removePrefix("0x"))
-            ?: run { (seedSource as? AutoCloseable)?.close(); throw IllegalArgumentException("digest not valid hex") }
+            ?: run { zeroize(seedSource); throw IllegalArgumentException("digest not valid hex") }
         return signDigest(bytes, expectedOwner, seedSource)
+    }
+
+    /**
+     * P2 (zeroize-cast harden): the single seed-zeroize path. A re-auth [SeedSource] is a closeable
+     * `SecureSeedSource` (M1) — close it. A NON-closeable source would silently skip zeroize, which for the
+     * signing path is a key-material leak, so we fail loudly in debug rather than pass it by; only the
+     * deliberate ambient-session read wrapper (never the signing path) is non-closeable, and it never
+     * reaches here. (Interface-wide zeroization seam = KAN-71.)
+     */
+    private fun zeroize(seedSource: SeedSource) {
+        val closeable = seedSource as? AutoCloseable
+        check(closeable != null) { "AaSigner seed source is not zeroizable — refusing to leak key material" }
+        closeable.close()
     }
 }

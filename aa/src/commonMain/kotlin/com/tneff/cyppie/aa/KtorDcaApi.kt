@@ -1,5 +1,6 @@
 package com.tneff.cyppie.aa
 
+import com.tneff.cyppie.rpc.jsonHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.expectSuccess
@@ -26,44 +27,57 @@ private data class SignatureRequest(val signature: String)
  */
 class KtorDcaApi(
     private val baseUrl: String,
-    private val httpClient: HttpClient,
     private val bearerToken: suspend () -> String,
+    private val httpClient: HttpClient = jsonHttpClient(),
 ) : DcaApi {
 
     private val base = baseUrl.trimEnd('/')
 
+    init {
+        // P2 (https-pin): a JWT-bearing User-Service must be TLS — never ship the bearer over cleartext.
+        // Loopback dev hosts (proxy / Android-emulator 10.0.2.2) are the only http exception.
+        require(base.startsWith("https://") || base.startsWith("http://localhost") || base.startsWith("http://10.0.2.2")) {
+            "User-Service base URL must be HTTPS (got: $base)"
+        }
+    }
+
+    /** P2 (bearer fail-closed): never send a request with a blank/absent bearer — a null token (not signed
+     *  in / failed refresh) must fail BEFORE the call, not hit the User-Service unauthenticated. */
+    private suspend fun bearer(): String =
+        bearerToken().ifBlank { throw IllegalStateException("no auth token — sign in required") }
+
     override suspend fun buildSessionEnable(config: SessionConfig): SessionEnable =
         httpClient.post("$base/v1/me/sessions/enable") {
-            expectSuccess = true; bearerAuth(bearerToken()); contentType(ContentType.Application.Json)
+            expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)
             setBody(config)
         }.body()
 
     override suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult =
         httpClient.post("$base/v1/me/sessions") {
-            expectSuccess = true; bearerAuth(bearerToken()); contentType(ContentType.Application.Json)
+            expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)
             setBody(GrantRequest(config, enableSignature))
         }.body()
 
     override suspend fun listSessions(): List<SessionConfig> =
-        httpClient.get("$base/v1/me/sessions") { expectSuccess = true; bearerAuth(bearerToken()) }.body()
+        httpClient.get("$base/v1/me/sessions") { expectSuccess = true; bearerAuth(bearer()) }.body()
 
     override suspend fun revokeSession(sessionId: String) {
-        httpClient.delete("$base/v1/me/sessions/$sessionId") { expectSuccess = true; bearerAuth(bearerToken()) }
+        httpClient.delete("$base/v1/me/sessions/$sessionId") { expectSuccess = true; bearerAuth(bearer()) }
     }
 
     override suspend fun pendingDca(): List<PendingDca> =
-        httpClient.get("$base/v1/me/dca/pending") { expectSuccess = true; bearerAuth(bearerToken()) }.body()
+        httpClient.get("$base/v1/me/dca/pending") { expectSuccess = true; bearerAuth(bearer()) }.body()
 
     override suspend fun submitSignature(dcaId: String, signature: String) {
         httpClient.post("$base/v1/me/dca/$dcaId/signature") {
-            expectSuccess = true; bearerAuth(bearerToken()); contentType(ContentType.Application.Json)
+            expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)
             setBody(SignatureRequest(signature))
         }
     }
 
     override suspend fun opStatus(chainId: Long, userOpHash: String): OpStatus =
-        httpClient.get("$base/v1/userop/$chainId/$userOpHash") { expectSuccess = true; bearerAuth(bearerToken()) }.body()
+        httpClient.get("$base/v1/userop/$chainId/$userOpHash") { expectSuccess = true; bearerAuth(bearer()) }.body()
 
     override suspend fun aaStatus(): AaStatus =
-        httpClient.get("$base/v1/me/aa/status") { expectSuccess = true; bearerAuth(bearerToken()) }.body()
+        httpClient.get("$base/v1/me/aa/status") { expectSuccess = true; bearerAuth(bearer()) }.body()
 }

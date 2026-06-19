@@ -42,4 +42,6 @@
   <string name="dca_err_submit">Nie można wysłać podpisu DCA</string>
   <string name="dca_err_authorize">Nie można autoryzować sesji</string>
   <string name="dca_err_amount">Wprowadź kwotę</string>
+  <string name="dca_selector">Dozwolona funkcja</string>
+  <string name="dca_rolling">Ruchome okno limitu</string>
 </resources>

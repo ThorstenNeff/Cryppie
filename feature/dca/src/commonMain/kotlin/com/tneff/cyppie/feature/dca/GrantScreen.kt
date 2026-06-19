@@ -13,6 +13,8 @@ import com.tneff.cyppie.feature.dca.generated.resources.dca_max_buys
 import com.tneff.cyppie.feature.dca.generated.resources.dca_new
 import com.tneff.cyppie.feature.dca.generated.resources.dca_password
 import com.tneff.cyppie.feature.dca.generated.resources.dca_router
+import com.tneff.cyppie.feature.dca.generated.resources.dca_selector
+import com.tneff.cyppie.feature.dca.generated.resources.dca_rolling
 import com.tneff.cyppie.feature.dca.generated.resources.dca_spend_token
 import com.tneff.cyppie.feature.dca.generated.resources.dca_you_authorize
 import org.jetbrains.compose.resources.stringResource
@@ -101,14 +103,14 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                 ) {
                     // P1-10: disclose EVERY signed policy field; external strings sanitized (BidiSanitizer).
                     Text(stringResource(Res.string.dca_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
-                    DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(action.target), ltr = true)
-                    DisclosureRow("Function", BidiSanitizer.sanitize(action.selector), ltr = true) // dca_selector key = UX follow
+                    DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(action.target), ltr = true, truncate = false)
+                    DisclosureRow(stringResource(Res.string.dca_selector), BidiSanitizer.sanitize(action.selector), ltr = true, truncate = false)
                     action.spendingLimits.firstOrNull()?.let {
-                        DisclosureRow(stringResource(Res.string.dca_spend_token), BidiSanitizer.sanitize(it.token), ltr = true)
+                        DisclosureRow(stringResource(Res.string.dca_spend_token), BidiSanitizer.sanitize(it.token), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_cap_per_buy), BidiSanitizer.sanitize(it.cap), ltr = true, valueTestTag = "dca_grant_cap")
                     }
                     DisclosureRow(stringResource(Res.string.dca_frequency), (if (viewModel.frequency == DcaFrequency.DAILY) freqDaily else freqWeekly), ltr = true)
-                    DisclosureRow("Rolling window (s)", action.rollingWindowSeconds.toString(), ltr = true) // dca_rolling key = UX follow
+                    DisclosureRow(stringResource(Res.string.dca_rolling), action.rollingWindowSeconds.toString(), ltr = true)
                     DisclosureRow(stringResource(Res.string.dca_max_buys), action.usageLimit.toString(), ltr = true)
                     DisclosureRow(stringResource(Res.string.dca_expires), action.validUntil.toString(), ltr = true)
                 }

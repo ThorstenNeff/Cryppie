@@ -42,4 +42,6 @@
   <string name="dca_err_submit">تعذّر إرسال توقيع DCA</string>
   <string name="dca_err_authorize">تعذّر تفويض الجلسة</string>
   <string name="dca_err_amount">أدخل مبلغًا</string>
+  <string name="dca_selector">الدالة المسموح بها</string>
+  <string name="dca_rolling">نافذة الحد المتجدّدة</string>
 </resources>

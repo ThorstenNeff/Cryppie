@@ -42,4 +42,6 @@
   <string name="dca_err_submit">Не удалось отправить подпись DCA</string>
   <string name="dca_err_authorize">Не удалось разрешить сессию</string>
   <string name="dca_err_amount">Введите сумму</string>
+  <string name="dca_selector">Разрешённая функция</string>
+  <string name="dca_rolling">Скользящее окно лимита</string>
 </resources>

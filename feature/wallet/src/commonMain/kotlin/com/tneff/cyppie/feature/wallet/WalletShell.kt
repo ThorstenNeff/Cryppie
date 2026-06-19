@@ -1,6 +1,38 @@
 package com.tneff.cyppie.feature.wallet
 
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Text
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import com.tneff.cyppie.aa.AaSigner
+import com.tneff.cyppie.aa.KtorDcaApi
+import com.tneff.cyppie.auth.AuthSession
+import com.tneff.cyppie.auth.Eip191SiweSigner
+import com.tneff.cyppie.auth.InMemoryTokenVault
+import com.tneff.cyppie.auth.KeycloakClient
+import com.tneff.cyppie.auth.SiweMessage
+import com.tneff.cyppie.designsystem.components.CryptasaBanner
+import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
+import com.tneff.cyppie.designsystem.components.CryptasaButton
+import com.tneff.cyppie.designsystem.components.ProgressRing
+import com.tneff.cyppie.designsystem.theme.CryptasaTheme
+import com.tneff.cyppie.feature.dca.DcaGrantParams
+import com.tneff.cyppie.feature.dca.DcaOverviewScreen
+import com.tneff.cyppie.feature.dca.DcaViewModel
+import com.tneff.cyppie.feature.dca.GrantScreen
+import com.tneff.cyppie.feature.dca.GrantViewModel
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,7 +90,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -119,6 +151,32 @@ private val marketWatchlist: List<WatchedAsset> by lazy {
     }.orEmpty()
     listOf(eth) + erc20s
 }
+
+/**
+ * PRD-05 Ph1 (KAN-138/KAN-141) — DCA / AA endpoints.
+ * - [KEYCLOAK_BASE_URL]: the SIWE realm (KAN-141, real).
+ * - [USER_SERVICE_BASE_URL]: the JWT User-Service (Ph0 §4). HTTPS placeholder until the backend publishes
+ *   its surface — unreachable today → the DCA VM maps the failure to Error (FR-4 graceful), exactly like
+ *   Market degrades on a 503. The nav + SIWE flow are live; only the live data awaits the backend.
+ */
+private const val KEYCLOAK_BASE_URL = "https://auth.cyppie.com"
+private const val USER_SERVICE_BASE_URL = "https://api.cyppie.com"
+
+/** The fixed DCA grant routing/token config (MVP). The real allowed router/selector/spend-token are
+ *  backend-published (Ph1); these mainnet defaults drive the grant UX + disclosure until then. */
+private val dcaGrantParams: DcaGrantParams by lazy {
+    DcaGrantParams(
+        chainId = 1L,
+        router = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",     // Uniswap UniversalRouter (mainnet) — placeholder
+        swapSelector = "0x3593564c",                                // execute(bytes,bytes[],uint256)
+        spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC (mainnet)
+        spendTokenDecimals = 6,                                      // USDC = 6
+    )
+}
+
+/** RFC3339 UTC (…Z) — AuthSession pins SIWE `issuedAt` to UTC (P1-9); the stdlib Instant renders as `…Z`. */
+@OptIn(kotlin.time.ExperimentalTime::class)
+private fun nowIso8601Utc(): String = kotlin.time.Clock.System.now().toString()
 
 /** Daily price-history window for FIFO cost-basis (covers most holding ages; older buys approximate). */
 private const val PNL_HISTORY_WINDOW_SECONDS = 3L * 365 * 86_400
@@ -228,6 +286,30 @@ fun WalletShell(onLock: () -> Unit) {
     // The market asset tapped in MD-3, rendered by MD-1 (MarketDetail). Not saveable (transient nav arg).
     var marketAsset by remember { mutableStateOf<WatchedAsset?>(null) }
 
+    // --- DCA / AA graph (PRD-05 Ph1, KAN-141), shared across the Dca + DcaGrant destinations ---
+    // owner = account index 0: the SIWE identity AND the AA owner (UserOpSigner.OWNER_ACCOUNT_INDEX).
+    val dcaOwner = remember(seedSource) { repository.receiveInfo(0, EvmChain.ETHEREUM).address }
+    // The SIWE auth session: holds the (in-memory) JWT + drives nonce→sign→Keycloak→token, with headless
+    // refresh (P1-7). Defaults wire the real Keycloak (auth.cyppie.com) + the shared jsonHttpClient.
+    val authSession = remember(seedSource) {
+        AuthSession(
+            keycloak = KeycloakClient(KEYCLOAK_BASE_URL),
+            siweSigner = Eip191SiweSigner(),
+            vault = InMemoryTokenVault(),
+            owner = dcaOwner,
+            nowEpochSeconds = ::nowEpochSeconds,
+            nowIso8601 = ::nowIso8601Utc,
+        )
+    }
+    // The User-Service client: bearer = the session JWT (fail-closed — KtorDcaApi.bearer() throws on blank).
+    val dcaApi = remember(seedSource) { KtorDcaApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
+    val aaSigner = remember { AaSigner() }
+    // AA-op signing uses a FRESH per-op re-auth source (explicit consent per funds-moving signature), like
+    // Send/WC — distinct from the light post-unlock SIWE consent (ambient session, identity only).
+    val dcaReauth: suspend (String) -> SeedSource? = remember {
+        { pw -> withContext(Dispatchers.Default) { runCatching { SeedVault(CiphertextStore.defaultFile()).unlock(pw.toCharArray()) }.getOrNull() } }
+    }
+
     when (dest) {
         WalletDest.Home -> WalletHomeScreen(
             onReceive = { dest = WalletDest.Receive },
@@ -237,6 +319,7 @@ fun WalletShell(onLock: () -> Unit) {
             onPortfolio = { dest = WalletDest.Portfolio },
             onConnect = { dest = WalletDest.WalletConnect },
             onMarket = { dest = WalletDest.Market },
+            onDca = { dest = WalletDest.Dca },
             viewModel = viewModel,
         )
         WalletDest.Receive -> {
@@ -339,6 +422,100 @@ fun WalletShell(onLock: () -> Unit) {
                     MarketViewModel(watched.asset, vs = "usd", data = marketDataApi, nowEpochSeconds = ::nowEpochSeconds)
                 }
                 MarketScreen(viewModel = detailVm, assetTitle = watched.label, onBack = { dest = WalletDest.Market })
+            }
+        }
+        WalletDest.Dca -> {
+            // PRD-05 Ph1 (KAN-138/KAN-141): SIWE-gated DCA overview. First visit → light no-blind consent
+            // ("Sign in to Cyppie") → post-unlock SIWE sign-in (ambient session, no 2nd password); then the
+            // DCA overview over the JWT User-Service. AA-op signing inside uses fresh re-auth.
+            DcaGate(authSession = authSession, ambient = seedSource, onLock = onLock) {
+                val dcaVm: DcaViewModel = viewModel(key = "dca_overview") {
+                    DcaViewModel(api = dcaApi, signer = aaSigner, owner = dcaOwner, reauth = dcaReauth)
+                }
+                DcaOverviewScreen(
+                    viewModel = dcaVm,
+                    onCreate = { dest = WalletDest.DcaGrant },
+                    onBack = { dest = WalletDest.Home },
+                )
+            }
+        }
+        WalletDest.DcaGrant -> {
+            // Smart-Session grant: build the §2 config (no-blind disclosure) → re-auth → on-device enable-sign.
+            val grantVm: GrantViewModel = viewModel(key = "dca_grant") {
+                GrantViewModel(
+                    api = dcaApi,
+                    signer = aaSigner,
+                    owner = dcaOwner,
+                    params = dcaGrantParams,
+                    nowEpochSeconds = ::nowEpochSeconds,
+                    reauth = dcaReauth,
+                )
+            }
+            GrantScreen(viewModel = grantVm, onDone = { dest = WalletDest.Dca }, onBack = { dest = WalletDest.Dca })
+        }
+    }
+}
+
+/**
+ * SIWE sign-in gate (KAN-141): probes the [authSession] for a valid JWT; if present → [content]. If not,
+ * shows the **light no-blind consent** ("Sign in to Cyppie") and, on confirm, runs the post-unlock SIWE
+ * sign-in with the [ambient] unlocked session wrapped **non-closeable** (the signer zeroizes its source —
+ * we must not let it zeroize the live session; close() becomes a no-op). A failed sign-in shows a retry.
+ */
+@Composable
+private fun DcaGate(
+    authSession: AuthSession,
+    ambient: SeedSource,
+    onLock: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+    var signedIn by remember { mutableStateOf<Boolean?>(null) }
+    var signing by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val siweSource = remember(ambient) {
+        object : SeedSource { override fun <R> withSeed(block: (ByteArray) -> R): R = ambient.withSeed(block) }
+    }
+
+    LaunchedEffect(Unit) { signedIn = runCatching { authSession.token() != null }.getOrDefault(false) }
+
+    when (signedIn) {
+        true -> content()
+        null -> Box(Modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.Center) {
+            ProgressRing(diameter = 32.dp)
+        }
+        false -> Box(Modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.Center) {
+            Column(
+                modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth().padding(spacing.xl).testTag("dca_siwe_consent"),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(spacing.lg),
+            ) {
+                Text(SiweMessage.STATEMENT, style = CryptasaTheme.typography.titleLarge, color = colors.onSurface)
+                Text(
+                    "Sign a one-time message to ${SiweMessage.DOMAIN} to enable Auto-Invest. No funds move; this only proves you own this wallet.",
+                    style = CryptasaTheme.typography.body,
+                    color = colors.onSurfaceVariant,
+                )
+                if (failed) {
+                    CryptasaBanner(title = "Sign-in failed. Please try again.", tone = CryptasaBannerTone.Danger, modifier = Modifier.testTag("dca_siwe_error"))
+                }
+                CryptasaButton(
+                    text = if (signing) "Signing in…" else SiweMessage.STATEMENT,
+                    enabled = !signing,
+                    onClick = {
+                        signing = true; failed = false
+                        scope.launch {
+                            val ambientGone = SeedSession.current == null
+                            if (ambientGone) { onLock(); return@launch }
+                            val ok = runCatching { authSession.signIn(siweSource) }.isSuccess
+                            signing = false
+                            if (ok) signedIn = true else failed = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("dca_siwe_signin"),
+                )
             }
         }
     }

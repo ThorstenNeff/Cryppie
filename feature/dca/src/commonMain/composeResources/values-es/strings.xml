@@ -42,4 +42,6 @@
   <string name="dca_err_submit">No se pudo enviar la firma del DCA</string>
   <string name="dca_err_authorize">No se pudo autorizar la sesión</string>
   <string name="dca_err_amount">Introduce un importe</string>
+  <string name="dca_selector">Función permitida</string>
+  <string name="dca_rolling">Ventana de límite móvil</string>
 </resources>

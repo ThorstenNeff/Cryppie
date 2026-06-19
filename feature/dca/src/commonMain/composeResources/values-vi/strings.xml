@@ -42,4 +42,6 @@
   <string name="dca_err_submit">Không thể gửi chữ ký DCA</string>
   <string name="dca_err_authorize">Không thể ủy quyền phiên</string>
   <string name="dca_err_amount">Nhập số tiền</string>
+  <string name="dca_selector">Hàm được phép</string>
+  <string name="dca_rolling">Cửa sổ giới hạn luân phiên</string>
 </resources>

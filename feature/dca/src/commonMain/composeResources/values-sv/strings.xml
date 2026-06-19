@@ -42,4 +42,6 @@
   <string name="dca_err_submit">Det gick inte att skicka DCA-signaturen</string>
   <string name="dca_err_authorize">Det gick inte att auktorisera sessionen</string>
   <string name="dca_err_amount">Ange ett belopp</string>
+  <string name="dca_selector">Tillåten funktion</string>
+  <string name="dca_rolling">Rullande gränsfönster</string>
 </resources>

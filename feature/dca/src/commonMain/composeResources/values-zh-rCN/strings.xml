@@ -42,4 +42,6 @@
   <string name="dca_err_submit">无法提交 DCA 签名</string>
   <string name="dca_err_authorize">无法授权该会话</string>
   <string name="dca_err_amount">请输入金额</string>
+  <string name="dca_selector">允许的函数</string>
+  <string name="dca_rolling">滚动限额时间窗口</string>
 </resources>

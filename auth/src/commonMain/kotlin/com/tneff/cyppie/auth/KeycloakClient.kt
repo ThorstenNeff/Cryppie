@@ -1,5 +1,6 @@
 package com.tneff.cyppie.auth
 
+import com.tneff.cyppie.rpc.jsonHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.expectSuccess
@@ -28,8 +29,8 @@ data class TokenResponse(
  * must have `ContentNegotiation(Json)`.
  */
 class KeycloakClient(
-    private val baseUrl: String,
-    private val httpClient: HttpClient,
+    private val baseUrl: String = BASE_URL,
+    private val httpClient: HttpClient = jsonHttpClient(),
 ) {
     private val base = baseUrl.trimEnd('/')
 

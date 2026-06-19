@@ -42,4 +42,6 @@
   <string name="dca_err_submit">DCA imzası gönderilemedi</string>
   <string name="dca_err_authorize">Oturum yetkilendirilemedi</string>
   <string name="dca_err_amount">Bir tutar gir</string>
+  <string name="dca_selector">İzin verilen işlev</string>
+  <string name="dca_rolling">Kayan limit penceresi</string>
 </resources>

@@ -42,4 +42,6 @@
   <string name="dca_err_submit">Kunne ikke sende DCA-signaturen</string>
   <string name="dca_err_authorize">Kunne ikke autorisere økten</string>
   <string name="dca_err_amount">Skriv inn et beløp</string>
+  <string name="dca_selector">Tillatt funksjon</string>
+  <string name="dca_rolling">Rullerende grensevindu</string>
 </resources>

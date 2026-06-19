@@ -68,6 +68,15 @@ kotlin {
             // proxy CoinGecko + keyless Binance clients.
             implementation(projects.feature.market)
             implementation(projects.market)
+            // DCA / AA (PRD-05 Ph1, KAN-138/KAN-141): the DCA/Grant screens+VMs (:feature:dca), the AA
+            // sign-orchestration + User-Service client (:aa), and the SIWE auth session (:auth) the shell
+            // DI-s to KtorDcaApi(bearer=AuthSession::token) over the JWT User-Service. Native-only — fits
+            // this module's android/ios/jvm targets.
+            implementation(projects.feature.dca)
+            implementation(projects.aa)
+            implementation(projects.auth)
+            // shared HTTP plumbing (jsonHttpClient for the DCA/Keycloak clients) + base-url config.
+            implementation(projects.rpc)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

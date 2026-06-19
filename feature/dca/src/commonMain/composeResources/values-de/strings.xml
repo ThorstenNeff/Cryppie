@@ -42,4 +42,6 @@
   <string name="dca_err_submit">DCA-Signatur konnte nicht gesendet werden</string>
   <string name="dca_err_authorize">Session konnte nicht autorisiert werden</string>
   <string name="dca_err_amount">Betrag eingeben</string>
+  <string name="dca_selector">Erlaubte Funktion</string>
+  <string name="dca_rolling">Rollendes Limit-Fenster</string>
 </resources>

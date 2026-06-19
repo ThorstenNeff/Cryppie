@@ -42,4 +42,6 @@
   <string name="dca_err_submit">Couldn't submit the DCA signature</string>
   <string name="dca_err_authorize">Couldn't authorize the session</string>
   <string name="dca_err_amount">Enter an amount</string>
+  <string name="dca_selector">Allowed function</string>
+  <string name="dca_rolling">Rolling limit window</string>
 </resources>

@@ -42,4 +42,6 @@
   <string name="dca_err_submit">Impossible d'envoyer la signature DCA</string>
   <string name="dca_err_authorize">Impossible d'autoriser la session</string>
   <string name="dca_err_amount">Saisissez un montant</string>
+  <string name="dca_selector">Fonction autorisée</string>
+  <string name="dca_rolling">Fenêtre de limite glissante</string>
 </resources>

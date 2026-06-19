@@ -20,6 +20,8 @@ import com.tneff.cyppie.feature.dca.generated.resources.dca_receive_token
 import com.tneff.cyppie.feature.dca.generated.resources.dca_review_sign
 import com.tneff.cyppie.feature.dca.generated.resources.dca_revoke
 import com.tneff.cyppie.feature.dca.generated.resources.dca_router
+import com.tneff.cyppie.feature.dca.generated.resources.dca_selector
+import com.tneff.cyppie.feature.dca.generated.resources.dca_rolling
 import com.tneff.cyppie.feature.dca.generated.resources.dca_sign_submit
 import com.tneff.cyppie.feature.dca.generated.resources.dca_spend
 import com.tneff.cyppie.feature.dca.generated.resources.dca_title
@@ -150,9 +152,9 @@ private fun PendingCard(
     ) {
         // No-blind disclosure of the op the user is about to authorize.
         DisclosureRow(stringResource(Res.string.dca_spend), BidiSanitizer.sanitize(dca.action.amountIn), ltr = true, valueTestTag = "dca_amount_in")
-        DisclosureRow(stringResource(Res.string.dca_pay_token), BidiSanitizer.sanitize(dca.action.tokenIn), ltr = true)
-        DisclosureRow(stringResource(Res.string.dca_receive_token), BidiSanitizer.sanitize(dca.action.tokenOut), ltr = true)
-        DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(dca.action.router), ltr = true)
+        DisclosureRow(stringResource(Res.string.dca_pay_token), BidiSanitizer.sanitize(dca.action.tokenIn), ltr = true, truncate = false)
+        DisclosureRow(stringResource(Res.string.dca_receive_token), BidiSanitizer.sanitize(dca.action.tokenOut), ltr = true, truncate = false)
+        DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(dca.action.router), ltr = true, truncate = false)
         if (isSigning) {
             // Re-auth gate (ADR-0009) — a correct password yields a fresh seed source that AaSigner zeroizes.
             CryptasaTextField(
@@ -181,17 +183,17 @@ private fun SessionCard(session: SessionConfig, onRevoke: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(spacing.xs),
     ) {
         // P1-10: disclose every signed policy field of the active session (external strings sanitized).
-        DisclosureRow(stringResource(Res.string.dca_account), BidiSanitizer.sanitize(session.account), ltr = true)
+        DisclosureRow(stringResource(Res.string.dca_account), BidiSanitizer.sanitize(session.account), ltr = true, truncate = false)
         DisclosureRow(stringResource(Res.string.dca_chain), session.chainId.toString(), ltr = true)
         session.actions.firstOrNull()?.let { a ->
-            DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(a.target), ltr = true)
-            DisclosureRow("Function", BidiSanitizer.sanitize(a.selector), ltr = true)
+            DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(a.target), ltr = true, truncate = false)
+            DisclosureRow(stringResource(Res.string.dca_selector), BidiSanitizer.sanitize(a.selector), ltr = true, truncate = false)
             a.spendingLimits.firstOrNull()?.let { DisclosureRow(stringResource(Res.string.dca_cap), BidiSanitizer.sanitize(it.cap), ltr = true) }
-            DisclosureRow("Rolling window (s)", a.rollingWindowSeconds.toString(), ltr = true)
+            DisclosureRow(stringResource(Res.string.dca_rolling), a.rollingWindowSeconds.toString(), ltr = true)
             DisclosureRow(stringResource(Res.string.dca_max_ops), a.usageLimit.toString(), ltr = true)
             DisclosureRow(stringResource(Res.string.dca_expires), a.validUntil.toString(), ltr = true)
         }
-        session.totalExposureCap?.let { DisclosureRow("Total exposure cap", BidiSanitizer.sanitize(it.cap), ltr = true) }
+        session.totalExposureCap?.let { DisclosureRow("Total exposure cap", BidiSanitizer.sanitize(it.cap), ltr = true) } // dca_total_cap = UX follow
         CryptasaButton(text = stringResource(Res.string.dca_revoke), onClick = onRevoke, style = CryptasaButtonStyle.Secondary, modifier = Modifier.fillMaxWidth().padding(top = spacing.sm).testTag("dca_revoke"))
     }
 }
