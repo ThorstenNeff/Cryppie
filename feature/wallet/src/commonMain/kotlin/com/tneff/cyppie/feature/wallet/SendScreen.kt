@@ -476,7 +476,7 @@ private fun Centered(text: String, style: androidx.compose.ui.text.TextStyle, co
 
 /** Wraps content in a forced-LTR scope (addresses/amounts/hashes stay LTR even in RTL locales). */
 @Composable
-private fun LtrIsland(content: @Composable () -> Unit) {
+internal fun LtrIsland(content: @Composable () -> Unit) {
     androidx.compose.runtime.CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { content() }
 }
 

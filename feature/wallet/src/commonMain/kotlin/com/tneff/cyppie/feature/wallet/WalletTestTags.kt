@@ -100,4 +100,8 @@ object WalletTestTags {
     const val WC_PAIRING_INPUT = "wc_pairing_input"
     const val WC_PAIRING_CONNECT = "wc_pairing_connect"
     const val WC_ERROR = "wc_error"
+    const val WC_PROPOSAL = "wc_proposal"
+    const val WC_VERIFY = "wc_verify"
+    const val WC_APPROVE = "wc_approve"
+    const val WC_REJECT = "wc_reject"
 }

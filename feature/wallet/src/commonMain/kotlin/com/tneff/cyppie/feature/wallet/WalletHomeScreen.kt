@@ -348,4 +348,4 @@ private fun CenteredBox(content: @Composable () -> Unit) {
 }
 
 /** Middle-truncated EIP-55 address for compact display. */
-private fun EvmAddress.short(): String = value.let { "${it.take(6)}…${it.takeLast(4)}" }
+internal fun EvmAddress.short(): String = value.let { "${it.take(6)}…${it.takeLast(4)}" }
