@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Markedsdata kunne ikke indlæses</string>
   <string name="mkt_retry">Prøv igen</string>
+  <string name="mkt_overview_title">Markeder</string>
+  <string name="mkt_live">Live</string>
+  <string name="mkt_last_updated">Senest opdateret %1$s</string>
+  <string name="mkt_stale">Priser forsinket (senest opdateret %1$s)</string>
+  <string name="mkt_section_market">Marked</string>
+  <string name="mkt_marketcap">Markedsværdi</string>
+  <string name="mkt_volume_24h">24h volumen</string>
+  <string name="mkt_supply">Cirkulerende udbud</string>
+  <string name="mkt_change_24h">24h ændring</string>
+  <string name="mkt_open_portfolio">Vis i portefølje</string>
+  <string name="mkt_empty">Ingen markedsdata tilgængelige.</string>
+  <string name="mkt_watchlist_empty">Ingen aktiver på din overvågningsliste endnu.</string>
 </resources>

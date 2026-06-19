@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Couldn't load market data</string>
   <string name="mkt_retry">Retry</string>
+  <string name="mkt_overview_title">Markets</string>
+  <string name="mkt_live">Live</string>
+  <string name="mkt_last_updated">Last updated %1$s</string>
+  <string name="mkt_stale">Prices delayed (last updated %1$s)</string>
+  <string name="mkt_section_market">Market</string>
+  <string name="mkt_marketcap">Market cap</string>
+  <string name="mkt_volume_24h">24h volume</string>
+  <string name="mkt_supply">Circulating supply</string>
+  <string name="mkt_change_24h">24h change</string>
+  <string name="mkt_open_portfolio">View in portfolio</string>
+  <string name="mkt_empty">No market data available.</string>
+  <string name="mkt_watchlist_empty">No assets in your watchlist yet.</string>
 </resources>

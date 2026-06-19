@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">تعذّر تحميل بيانات السوق</string>
   <string name="mkt_retry">إعادة المحاولة</string>
+  <string name="mkt_overview_title">الأسواق</string>
+  <string name="mkt_live">مباشر</string>
+  <string name="mkt_last_updated">آخر تحديث %1$s</string>
+  <string name="mkt_stale">الأسعار متأخرة (آخر تحديث %1$s)</string>
+  <string name="mkt_section_market">السوق</string>
+  <string name="mkt_marketcap">القيمة السوقية</string>
+  <string name="mkt_volume_24h">حجم التداول خلال 24h</string>
+  <string name="mkt_supply">المعروض المتداول</string>
+  <string name="mkt_change_24h">التغير خلال 24h</string>
+  <string name="mkt_open_portfolio">عرض في المحفظة</string>
+  <string name="mkt_empty">لا تتوفر بيانات السوق.</string>
+  <string name="mkt_watchlist_empty">لا توجد أصول في قائمة متابعتك بعد.</string>
 </resources>

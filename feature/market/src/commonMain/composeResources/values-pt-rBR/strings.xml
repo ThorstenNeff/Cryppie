@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Não foi possível carregar os dados de mercado</string>
   <string name="mkt_retry">Tentar novamente</string>
+  <string name="mkt_overview_title">Mercados</string>
+  <string name="mkt_live">Ao vivo</string>
+  <string name="mkt_last_updated">Última atualização %1$s</string>
+  <string name="mkt_stale">Preços com atraso (última atualização %1$s)</string>
+  <string name="mkt_section_market">Mercado</string>
+  <string name="mkt_marketcap">Capitalização de mercado</string>
+  <string name="mkt_volume_24h">Volume em 24h</string>
+  <string name="mkt_supply">Oferta em circulação</string>
+  <string name="mkt_change_24h">Variação em 24h</string>
+  <string name="mkt_open_portfolio">Ver no Portfólio</string>
+  <string name="mkt_empty">Nenhum dado de mercado disponível.</string>
+  <string name="mkt_watchlist_empty">Ainda não há ativos na sua lista de favoritos.</string>
 </resources>

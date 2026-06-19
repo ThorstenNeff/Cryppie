@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Marktdaten konnten nicht geladen werden</string>
   <string name="mkt_retry">Erneut versuchen</string>
+  <string name="mkt_overview_title">Märkte</string>
+  <string name="mkt_live">Live</string>
+  <string name="mkt_last_updated">Zuletzt aktualisiert %1$s</string>
+  <string name="mkt_stale">Preise verzögert (zuletzt aktualisiert %1$s)</string>
+  <string name="mkt_section_market">Markt</string>
+  <string name="mkt_marketcap">Marktkapitalisierung</string>
+  <string name="mkt_volume_24h">24h-Volumen</string>
+  <string name="mkt_supply">Umlaufmenge</string>
+  <string name="mkt_change_24h">24h-Änderung</string>
+  <string name="mkt_open_portfolio">Im Portfolio ansehen</string>
+  <string name="mkt_empty">Keine Marktdaten verfügbar.</string>
+  <string name="mkt_watchlist_empty">Noch keine Assets in deiner Watchlist.</string>
 </resources>

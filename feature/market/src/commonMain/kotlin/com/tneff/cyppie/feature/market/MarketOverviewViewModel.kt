@@ -13,10 +13,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-/** MD-3 market-overview UI state (PRD-04). */
+/** MD-3 market-overview UI state (PRD-04). [freshness] drives the header stale/live badge (SPEC §2). */
 sealed interface MarketOverviewUiState {
     data object Loading : MarketOverviewUiState
-    data class Content(val rows: List<MarketOverviewRow>) : MarketOverviewUiState
+    data class Content(val rows: List<MarketOverviewRow>, val freshness: Freshness?) : MarketOverviewUiState
     data object Error : MarketOverviewUiState
 }
 
@@ -53,7 +53,7 @@ class MarketOverviewViewModel(
                 // Batched spot for the whole watchlist (one upstream call); failure → Error.
                 val spots = data.spotPrices(watched.map { it.asset }, vs)
                 // Per-asset sparkline, concurrent + best-effort (failure → empty, row still renders).
-                coroutineScope {
+                val rows = coroutineScope {
                     watched.map { w ->
                         async {
                             val sparkline = runCatching {
@@ -64,10 +64,11 @@ class MarketOverviewViewModel(
                         }
                     }.awaitAll()
                 }
-            }.fold(
-                onSuccess = { MarketOverviewUiState.Content(it) },
-                onFailure = { MarketOverviewUiState.Error },
-            )
+                // Freshness from the oldest spot stamp across the list (header stale/live badge, SPEC §2).
+                val stamps = rows.mapNotNull { it.spot?.lastUpdatedEpochSeconds }
+                val freshness = freshnessOf(stamps.minOrNull(), hasSpot = rows.any { it.spot != null }, now = now)
+                MarketOverviewUiState.Content(rows, freshness)
+            }.getOrElse { MarketOverviewUiState.Error }
         }
     }
 }

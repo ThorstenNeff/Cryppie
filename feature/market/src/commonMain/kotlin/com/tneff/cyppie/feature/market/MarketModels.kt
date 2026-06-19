@@ -19,11 +19,16 @@ data class CandleBar(
 }
 
 /**
- * MD-1 token-detail market metrics (24h window). [high24h]/[low24h] keep the source decimal-String
- * (FR-6 — the value is the original, no float); [volume24h] is a render-aggregate Double (sum across the
- * window, null if no source reports volume). Visual layout deferred to the UX MD-1 design.
+ * MD-1 token-detail market metrics (SPEC_MD_detail §4: Market cap / 24h volume / Circulating supply).
+ * All decimal-String (FR-6 — no float in values; display formats at the render edge). [volume24h] is
+ * derived from the 24h candle volumes; [marketCap]/[circulatingSupply] are **not in `MarketDataApi`** yet
+ * (data gap — the bridge would supply them via CoinGecko `/coins`), so they're null → rendered as "—".
  */
-data class MarketMetrics(val high24h: String?, val low24h: String?, val volume24h: Double?)
+data class MarketMetrics(
+    val marketCap: String? = null,
+    val volume24h: String? = null,
+    val circulatingSupply: String? = null,
+)
 
 /** Chart time ranges (PRD-04 market detail) → a (CandleInterval, TimeRange) query against MarketDataApi. */
 enum class MarketRange { DAY, WEEK, MONTH, YEAR }
