@@ -7,6 +7,20 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-106 — Gradle dependency-verification gate (ADR-0018(A), supply-chain security).** Committed a
+  strict `gradle/verification-metadata.xml` (`verify-metadata=true`) — **1539 artifacts sha256-pinned**,
+  generated via `./gradlew --refresh-dependencies --write-verification-metadata sha256`. With the file
+  present Gradle **fails any build on a missing/mismatched checksum** (CI fail-closed is automatic — no
+  extra config). Verified **fresh (`--refresh-dependencies`) and green** across the real build set:
+  `:app:androidApp:assembleDebug`, `:app:desktopApp:assemble`, `:app:webApp:assemble` (js + wasm),
+  `:server:build`, the `jvmTest` gate + `testDebugUnitTest`, and `compileKotlinIos{SimulatorArm64,Arm64}`.
+  Also committed the `kotlin-js-store` `yarn.lock`s (js + wasm npm pins) for reproducible web builds.
+  **Scope/limits (documented):** pins what *these* targets resolve — `assembleRelease`, Android lint,
+  running native/js/wasm tests, and connected tests are out of the verified set (extend the metadata if
+  CI adds them). **`verify-signatures=false`** for now (all-sha256); PGP for the signed `com.reown:*`
+  (ADR-0018(D)) lands with KAN-62. **Sequencing:** this pins *current develop* deps; **KAN-62's merge
+  must regenerate the metadata** to add its JitPack/Reown pins (that is ADR-0018(A), a KAN-62 condition)
+  — else the WC deps are unpinned and the build breaks.
 - **KAN-97 — `.gitignore` audit: drop the blanket `*.md` (build/repo bug).** The repo-wide `*.md`
   ignore had silently swept *needed* docs out of git (the whole `docs/adr` set — KAN-89/91 — only the
   ADRs had been rescued via a `!docs/**/*.md` negation; READMEs / `CHANGELOG` / `server/HARDENING.md`
