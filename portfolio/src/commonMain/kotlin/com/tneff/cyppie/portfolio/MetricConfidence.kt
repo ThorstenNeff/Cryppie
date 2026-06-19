@@ -15,6 +15,7 @@ sealed interface MetricConfidence {
 enum class ApproxReason {
     COST_BASIS_AMBIGUITY, // FIFO assumption; no user-confirmed cost basis
     INCOMPLETE_TRANSFERS, // missing / gapped transfer history
+    INCOMPLETE_PRICE_DATA, // a holding was dropped from the aggregate for want of a price (sparse history)
     UNVERIFIED_TOKENS, // spam / unpriced tokens excluded or unpriced
     WALLET_PREDATES_TRACKING, // holdings acquired before the tracked window
     STALE_PRICES, // a price was older than the freshness window

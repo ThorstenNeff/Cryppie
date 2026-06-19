@@ -119,24 +119,14 @@ private fun buildPortfolioLoader(accounts: () -> List<EvmAddress>): suspend () -
     }
 }
 
-// Native ETH is priced via its chain's WETH (ETH ≈ WETH) — Alchemy has no price for a null contract;
-// mirrors PortfolioService's internal mapping (KAN-90 audited addresses).
-private val WETH_BY_CHAIN: Map<Long, com.tneff.cyppie.evm.EvmAddress> = mapOf(
-    1L to com.tneff.cyppie.evm.EvmAddress.parse("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"),
-    8453L to com.tneff.cyppie.evm.EvmAddress.parse("0x4200000000000000000000000000000000000006"),
-)
-
-/** The token to price for [t]: itself for ERC-20, the chain's WETH for native ETH. */
-private fun priceTokenFor(t: com.tneff.cyppie.portfolio.PortfolioToken): com.tneff.cyppie.portfolio.PortfolioToken =
-    if (!t.isNative) t
-    else WETH_BY_CHAIN[t.chainId]?.let { com.tneff.cyppie.portfolio.PortfolioToken(t.chainId, it, "WETH", 18) } ?: t
-
 /**
  * KAN-124 — live performance over the valued [portfolio]: unrealized P&L (current value − FIFO
  * cost-basis, RichPortfolio/KAN-102) + 24h change (current holdings × the 24h price delta). Per holding:
- * full transfer history (paged) + a daily price history (native ETH priced via WETH); cost basis is
- * priced at each transfer's block time. FR-9: P&L is Approximate (COST_BASIS_AMBIGUITY; +
- * INCOMPLETE_TRANSFERS when page-capped). cents (MONEY_SCALE) throughout. pnl null if no current value.
+ * full transfer history (paged) + a daily price history; native ETH is priced via the chain's WETH using
+ * [PortfolioService.priceTokenFor] — the SAME single source the valuation uses (review M1: no duplicate
+ * address table to drift). A holding with no priceable token is skipped (matches the valuation, which
+ * also can't price it). FR-9: P&L is Approximate (COST_BASIS_AMBIGUITY; + INCOMPLETE_TRANSFERS when
+ * page-capped). cents (MONEY_SCALE) throughout. pnl null if no current value.
  */
 private suspend fun computePerformance(
     portfolio: Portfolio,
@@ -163,8 +153,9 @@ private suspend fun computePerformance(
         )
         anyTruncated = anyTruncated || history.truncated
         for (h in holdings) {
+            val priceToken = PortfolioService.priceTokenFor(h.token) ?: continue // unpriceable chain → skip (as the valuation does)
             val priceHistory = priceSource.priceHistory(
-                priceTokenFor(h.token), currentValue.currency, now - PNL_HISTORY_WINDOW_SECONDS, now, ONE_DAY_SECONDS,
+                priceToken, currentValue.currency, now - PNL_HISTORY_WINDOW_SECONDS, now, ONE_DAY_SECONDS,
             )
             val cb = RichPortfolio.tokenCostBasis(h.token, h.account, history.transfers, priceHistory, history.truncated)
             // Saturate rather than wrap on an absurd sum (same family as PortfolioPerformance's saturatingSub).
