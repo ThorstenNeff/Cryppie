@@ -64,6 +64,10 @@ kotlin {
             // the wallet shell wires to the live proxy clients.
             implementation(projects.feature.portfolio)
             implementation(projects.portfolio)
+            // Market (KAN-131): the MD-1/MD-3 screens/VMs + the BridgeMarketDataApi the shell DI-s to the
+            // proxy CoinGecko + keyless Binance clients.
+            implementation(projects.feature.market)
+            implementation(projects.market)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

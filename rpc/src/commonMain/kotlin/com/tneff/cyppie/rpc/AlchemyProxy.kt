@@ -36,6 +36,10 @@ data class AlchemyProxyConfig(val proxyBaseUrl: String) {
     /** JSON-RPC endpoint for [chainId] (`AlchemyTransfersClient` / `EvmJsonRpcClient` POST here). */
     fun rpcUrl(chainId: Long): String = "$base/alchemy/rpc/v2/${network(chainId)}"
 
+    /** CoinGecko v3 prefix (KAN-131) — `CoinGeckoMarketClient` appends `/simple/...` · `/coins/...`. The
+     *  proxy injects the dedicated CoinGecko key server-side; unset key → 503 → market degrades (FR-4). */
+    fun coinGeckoBaseUrl(): String = "$base/coingecko/v3"
+
     private fun network(chainId: Long): String =
         AlchemyNetworks.of(chainId) ?: error("Unsupported chainId for Alchemy proxy: $chainId")
 }

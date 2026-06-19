@@ -45,7 +45,6 @@ internal fun freshnessOf(lastUpdatedEpochSeconds: Long?, hasSpot: Boolean, now: 
     return Freshness.Delayed(label = "${agoMin}m", stale = now - updated > STALE_THRESHOLD_SECONDS)
 }
 
-private const val METRICS_WINDOW_SECONDS = 86_400L // 24h
 private const val STALE_THRESHOLD_SECONDS = 300L // spot older than 5 min → "delayed" (SPEC NFR-2 stale-served)
 
 /**
@@ -94,10 +93,13 @@ class MarketViewModel(
                         }
                     }
                     val spotDeferred = async { data.spotPrices(listOf(asset), vs)[asset] }
-                    // Metrics best-effort: a 24h-window failure leaves them null, the screen still renders.
+                    // Cap/supply/volume via MarketDataApi.marketStats (KAN-132, CoinGecko /coins/markets).
+                    // Best-effort: a failure (or no CoinGecko key → 503) leaves them null, the screen renders.
                     val metrics = async {
                         runCatching {
-                            metricsFrom(data.candles(asset, CandleInterval.H1, TimeRange(now - METRICS_WINDOW_SECONDS, now)))
+                            data.marketStats(listOf(asset), vs)[asset]?.let {
+                                MarketMetrics(marketCap = it.marketCap, volume24h = it.volume24h, circulatingSupply = it.circulatingSupply)
+                            }
                         }.getOrNull()
                     }
                     val spot = spotDeferred.await()
@@ -105,13 +107,5 @@ class MarketViewModel(
                 }
             }.getOrElse { MarketUiState.Error }
         }
-    }
-
-    /** 24h metrics from a candle window (SPEC §4). Volume = decimal-String render-sum of candle volumes;
-     *  market cap + circulating supply aren't in MarketDataApi (data gap) → null → "—". */
-    private fun metricsFrom(candles: List<Candle>): MarketMetrics {
-        val volumes = candles.mapNotNull { it.volume?.toDoubleOrNull() }
-        val volume24h = if (volumes.isEmpty()) null else formatCompact(volumes.sum())
-        return MarketMetrics(marketCap = null, volume24h = volume24h, circulatingSupply = null)
     }
 }

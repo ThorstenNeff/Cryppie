@@ -21,6 +21,7 @@ import kotlin.test.assertTrue
 private class FakeMarketDataApi(
     val candlesResult: List<Candle> = emptyList(),
     val throwOnCandles: Boolean = false,
+    val stats: com.tneff.cyppie.market.MarketStats? = null,
 ) : MarketDataApi {
     val intervalsSeen = mutableListOf<CandleInterval>()
 
@@ -35,6 +36,9 @@ private class FakeMarketDataApi(
 
     override suspend fun priceHistory(asset: MarketAsset, vs: String, interval: CandleInterval, range: TimeRange) =
         emptyList<com.tneff.cyppie.market.PricePoint>()
+
+    override suspend fun marketStats(assets: List<MarketAsset>, vs: String): Map<MarketAsset, com.tneff.cyppie.market.MarketStats> =
+        stats?.let { s -> assets.associateWith { s } } ?: emptyMap()
 }
 
 private fun candle(open: String, high: String, low: String, close: String) =
@@ -114,10 +118,22 @@ class MarketViewModelTest {
         )
         val vm = MarketViewModel(eth, "usd", api, nowEpochSeconds = { 100_000L })
         advanceUntilIdle()
+        // No marketStats configured → metrics null (the rows render "—"); chart still loads.
+        assertEquals(null, (vm.uiState as MarketUiState.Content).metrics)
+    }
+
+    @Test
+    fun metricsFromMarketStats() = runTest(dispatcher) {
+        val api = FakeMarketDataApi(
+            candlesResult = listOf(candle("1", "1", "1", "1")),
+            stats = com.tneff.cyppie.market.MarketStats(marketCap = "1.2T", circulatingSupply = "120M", volume24h = "15B", vs = "usd"),
+        )
+        val vm = MarketViewModel(eth, "usd", api, nowEpochSeconds = { 1L })
+        advanceUntilIdle()
         val metrics = (vm.uiState as MarketUiState.Content).metrics!!
-        assertEquals("150", metrics.volume24h) // compact render-sum of candle volumes (100 + 50)
-        assertEquals(null, metrics.marketCap) // not in MarketDataApi (data gap) → "—"
-        assertEquals(null, metrics.circulatingSupply)
+        assertEquals("1.2T", metrics.marketCap)
+        assertEquals("15B", metrics.volume24h)
+        assertEquals("120M", metrics.circulatingSupply)
     }
 
     @Test

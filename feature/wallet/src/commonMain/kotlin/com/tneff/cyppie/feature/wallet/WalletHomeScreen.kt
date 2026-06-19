@@ -79,6 +79,7 @@ fun WalletHomeScreen(
     onNfts: () -> Unit = {},
     onPortfolio: () -> Unit = {},
     onConnect: () -> Unit = {},
+    onMarket: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -179,6 +180,15 @@ fun WalletHomeScreen(
                 onClick = onConnect,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.HOME_CONNECT),
+            )
+
+            // Market overview entry (KAN-131, MD-3) — full-width secondary. Label is pre-i18n ("Markets");
+            // a home_market key is a tiny UX follow-up (no composeResources change → checkI18n stays green).
+            CryptasaButton(
+                text = "Markets",
+                onClick = onMarket,
+                style = CryptasaButtonStyle.Secondary,
+                modifier = Modifier.fillMaxWidth().testTag("home_market"),
             )
 
             // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).

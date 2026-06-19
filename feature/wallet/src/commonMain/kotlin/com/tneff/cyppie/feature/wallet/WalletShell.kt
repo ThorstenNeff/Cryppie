@@ -12,10 +12,20 @@ import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.feature.portfolio.PortfolioOverview
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewScreen
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewViewModel
+import com.tneff.cyppie.feature.market.MarketOverviewScreen
+import com.tneff.cyppie.feature.market.MarketOverviewViewModel
+import com.tneff.cyppie.feature.market.MarketScreen
+import com.tneff.cyppie.feature.market.MarketViewModel
+import com.tneff.cyppie.feature.market.WatchedAsset
 import com.tneff.cyppie.market.AlchemyPriceSource
 import com.tneff.cyppie.portfolio.toMarketAsset
 import com.tneff.cyppie.portfolio.ApproxReason
 import com.tneff.cyppie.portfolio.Metric
+import com.tneff.cyppie.market.BinanceMarketClient
+import com.tneff.cyppie.market.BridgeMarketDataApi
+import com.tneff.cyppie.market.CoinGeckoMarketClient
+import com.tneff.cyppie.market.MarketAsset
+import com.tneff.cyppie.market.MarketDataApi
 import com.tneff.cyppie.market.Money
 import com.tneff.cyppie.portfolio.Portfolio
 import com.tneff.cyppie.portfolio.PortfolioConfig
@@ -48,7 +58,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -88,6 +98,27 @@ private val portfolioKnownGood: Set<TokenKey> by lazy {
 
 @OptIn(kotlin.time.ExperimentalTime::class)
 private fun nowEpochSeconds(): Long = kotlin.time.Clock.System.now().epochSeconds
+
+/** KAN-131 — the live market-data API: [BridgeMarketDataApi] over the proxy CoinGecko (key injected
+ *  server-side) + keyless Binance. No CoinGecko key → 503 → MD screens degrade cleanly (FR-4); Binance
+ *  candles still render. */
+private val marketDataApi: MarketDataApi by lazy {
+    BridgeMarketDataApi(
+        coinGecko = CoinGeckoMarketClient(alchemyProxy.coinGeckoBaseUrl()),
+        binance = BinanceMarketClient(),
+        clockEpochSeconds = ::nowEpochSeconds,
+    )
+}
+
+/** MD-3 watchlist (curated MVP): native ETH + the chain-1 catalog majors. Labels are display-only;
+ *  assets the market catalog can't map degrade per-row (FR-4) — the row still renders. */
+private val marketWatchlist: List<WatchedAsset> by lazy {
+    val eth = WatchedAsset(MarketAsset.Native(1L), "Ethereum")
+    val erc20s = EvmChain.fromChainId(1L)?.let { chain ->
+        TokenCatalog.forChain(chain).take(4).map { WatchedAsset(MarketAsset.Erc20(1L, it.address), it.symbol) }
+    }.orEmpty()
+    listOf(eth) + erc20s
+}
 
 /** Daily price-history window for FIFO cost-basis (covers most holding ages; older buys approximate). */
 private const val PNL_HISTORY_WINDOW_SECONDS = 3L * 365 * 86_400
@@ -194,6 +225,8 @@ fun WalletShell(onLock: () -> Unit) {
     }
     val viewModel: WalletHomeViewModel = viewModel { WalletHomeViewModel(repository, tokensByChain) }
     var dest by rememberSaveable { mutableStateOf(WalletDest.Home) }
+    // The market asset tapped in MD-3, rendered by MD-1 (MarketDetail). Not saveable (transient nav arg).
+    var marketAsset by remember { mutableStateOf<WatchedAsset?>(null) }
 
     when (dest) {
         WalletDest.Home -> WalletHomeScreen(
@@ -203,6 +236,7 @@ fun WalletShell(onLock: () -> Unit) {
             onNfts = { dest = WalletDest.Nfts },
             onPortfolio = { dest = WalletDest.Portfolio },
             onConnect = { dest = WalletDest.WalletConnect },
+            onMarket = { dest = WalletDest.Market },
             viewModel = viewModel,
         )
         WalletDest.Receive -> {
@@ -281,6 +315,31 @@ fun WalletShell(onLock: () -> Unit) {
                 )
             }
             WalletConnectRoot(viewModel = wcViewModel, onExit = { dest = WalletDest.Home })
+        }
+        WalletDest.Market -> {
+            // MD-3 watchlist overview over the live BridgeMarketDataApi; tap a row → MD-1 detail.
+            val overviewVm: MarketOverviewViewModel = viewModel(key = "market_overview") {
+                MarketOverviewViewModel(marketWatchlist, vs = "usd", data = marketDataApi, nowEpochSeconds = ::nowEpochSeconds)
+            }
+            MarketOverviewScreen(
+                viewModel = overviewVm,
+                onAssetClick = { asset ->
+                    marketAsset = marketWatchlist.firstOrNull { it.asset == asset } ?: WatchedAsset(asset, "")
+                    dest = WalletDest.MarketDetail
+                },
+                onBack = { dest = WalletDest.Home },
+            )
+        }
+        WalletDest.MarketDetail -> {
+            val watched = marketAsset
+            if (watched == null) {
+                dest = WalletDest.Market // no asset selected → back to the list (defensive)
+            } else {
+                val detailVm: MarketViewModel = viewModel(key = "market_detail_${watched.label}") {
+                    MarketViewModel(watched.asset, vs = "usd", data = marketDataApi, nowEpochSeconds = ::nowEpochSeconds)
+                }
+                MarketScreen(viewModel = detailVm, assetTitle = watched.label, onBack = { dest = WalletDest.Market })
+            }
         }
     }
 }
