@@ -137,4 +137,5 @@
   <string name="send_auth_error">Contraseña incorrecta.</string>
   <string name="home_portfolio">Portfolio</string>
   <string name="wc_signer_label">Cuenta de firma</string>
+  <string name="wc_send_amount_label">Importe</string>
 </resources>

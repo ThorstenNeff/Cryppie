@@ -137,4 +137,5 @@
   <string name="send_auth_error">密码错误。</string>
   <string name="home_portfolio">投资组合</string>
   <string name="wc_signer_label">签名账户</string>
+  <string name="wc_send_amount_label">金额</string>
 </resources>

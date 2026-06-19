@@ -35,6 +35,7 @@ import com.tneff.cyppie.designsystem.BidiSanitizer
 import com.tneff.cyppie.designsystem.NumberFormatProfile
 import com.tneff.cyppie.send.DecodedCall
 import com.tneff.cyppie.walletconnect.SendTransactionParams
+import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
@@ -80,6 +81,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_approve_send
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_approve_sign
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_method
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_raw
+import com.tneff.cyppie.feature.wallet.generated.resources.wc_send_amount_label
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_sign_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_typed_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_sign_message_label
@@ -386,7 +388,18 @@ private fun SendTxBody(viewModel: WalletConnectViewModel, params: SendTransactio
     val recipient = (d.call as? DecodedCall.Erc20Transfer)?.recipient?.value ?: d.to.value
     DisclosureRow(stringResource(Res.string.send_disclosure_to), BidiSanitizer.sanitize(recipient), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TO)
     DisclosureRow(stringResource(Res.string.send_disclosure_network), d.chain.displayName)
-    DisclosureRow("ETH", "${formatTokenAmount(d.value, 18, profile)} ETH", ltr = true)
+    // Amount (review Medium, no-blind-signing): for an ERC-20 `transfer` the token AMOUNT is in the
+    // calldata, not `value` — decode + show it. Resolve decimals/symbol from the curated TokenCatalog by
+    // the contract (`d.to`); an unknown token shows RAW integer units + the contract (never mis-scaled).
+    val amountText = when (val c = d.call) {
+        is DecodedCall.Erc20Transfer -> {
+            val token = TokenCatalog.forChain(d.chain).firstOrNull { it.address == d.to }
+            if (token != null) "${formatTokenAmount(c.amount, token.decimals, profile)} ${token.symbol}"
+            else "${formatTokenAmount(c.amount, 0, profile)} units (${d.to.short()})"
+        }
+        else -> "${formatTokenAmount(d.value, 18, profile)} ETH" // native ETH value
+    }
+    DisclosureRow(stringResource(Res.string.wc_send_amount_label), amountText, ltr = true, valueTestTag = WalletTestTags.WC_SEND_AMOUNT)
     DisclosureRow(stringResource(Res.string.send_disclosure_nonce), d.nonce.toLong().toString(), ltr = true)
     DisclosureRow(stringResource(Res.string.send_disclosure_gas), d.gasLimit.toLong().toString(), ltr = true)
     DisclosureRow(stringResource(Res.string.send_disclosure_maxfee), "${formatTokenAmount(d.maxFeePerGas, 9, profile)} gwei", ltr = true)

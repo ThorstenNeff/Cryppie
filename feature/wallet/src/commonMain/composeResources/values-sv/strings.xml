@@ -137,4 +137,5 @@
   <string name="send_auth_error">Felaktigt lösenord.</string>
   <string name="home_portfolio">Portfölj</string>
   <string name="wc_signer_label">Signeringskonto</string>
+  <string name="wc_send_amount_label">Belopp</string>
 </resources>

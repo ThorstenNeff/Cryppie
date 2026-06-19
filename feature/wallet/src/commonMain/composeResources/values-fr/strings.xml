@@ -137,4 +137,5 @@
   <string name="send_auth_error">Mot de passe incorrect.</string>
   <string name="home_portfolio">Portefeuille</string>
   <string name="wc_signer_label">Compte signataire</string>
+  <string name="wc_send_amount_label">Montant</string>
 </resources>

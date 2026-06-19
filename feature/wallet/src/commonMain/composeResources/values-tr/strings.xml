@@ -137,4 +137,5 @@
   <string name="send_auth_error">Yanlış parola.</string>
   <string name="home_portfolio">Portföy</string>
   <string name="wc_signer_label">İmzalayan hesap</string>
+  <string name="wc_send_amount_label">Tutar</string>
 </resources>

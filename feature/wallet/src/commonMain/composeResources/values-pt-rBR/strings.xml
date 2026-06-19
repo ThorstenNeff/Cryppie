@@ -137,4 +137,5 @@
   <string name="send_auth_error">Senha incorreta.</string>
   <string name="home_portfolio">Portfólio</string>
   <string name="wc_signer_label">Conta de assinatura</string>
+  <string name="wc_send_amount_label">Valor</string>
 </resources>

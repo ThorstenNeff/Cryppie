@@ -137,4 +137,5 @@
   <string name="send_auth_error">Mật khẩu không đúng.</string>
   <string name="home_portfolio">Danh mục</string>
   <string name="wc_signer_label">Tài khoản ký</string>
+  <string name="wc_send_amount_label">Số tiền</string>
 </resources>
