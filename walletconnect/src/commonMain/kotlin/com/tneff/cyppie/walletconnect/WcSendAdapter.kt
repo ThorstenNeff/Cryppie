@@ -1,6 +1,7 @@
 package com.tneff.cyppie.walletconnect
 
 import com.tneff.cyppie.evm.EvmAddress
+import com.tneff.cyppie.evm.Hex
 import com.tneff.cyppie.send.PreparedSend
 import com.tneff.cyppie.send.SendInput
 import com.tneff.cyppie.send.SendOrchestrator
@@ -102,6 +103,27 @@ internal fun approvedChainIdsFrom(chains: List<String>, accounts: List<String>):
     (chains + accounts.map { it.substringBeforeLast(':') })
         .mapNotNull { caip2ChainIdOrNull(it) }
         .toSet()
+
+/**
+ * Extracts the EVM address from a CAIP-10 account ref (`eip155:1:0xabc…`). Returns `null` for a non-`eip155`
+ * namespace, a malformed ref, or an unparseable address — so non-EVM accounts are dropped. Mirrors
+ * [caip2ChainIdOrNull] for the address half of the session store.
+ */
+internal fun caip10AddressOrNull(caip10: String): EvmAddress? {
+    val parts = caip10.split(':')
+    if (parts.size != 3 || !parts[0].equals("eip155", ignoreCase = true)) return null
+    val bytes = Hex.decodeOrNull(parts[2]) ?: return null
+    return runCatching { EvmAddress.fromBytes(bytes) }.getOrNull()
+}
+
+/**
+ * The EVM addresses a session approved, from its namespace [accounts] (CAIP-10). Same single-source pattern as
+ * [approvedChainIdsFrom]: the platform `actual`s fetch the raw account list from the SDK session store and call
+ * this. Feeds the WC-sign **account binding** (#3 / M3) — `req.address ∈ approvedAccounts(topic)`, so a request
+ * may only sign with an address the session actually authorized, not merely any known wallet account.
+ */
+internal fun approvedAddressesFrom(accounts: List<String>): Set<EvmAddress> =
+    accounts.mapNotNull { caip10AddressOrNull(it) }.toSet()
 
 /**
  * Convenience wiring (steps 1–4): decode-side [params] → [SendInput] → [SendOrchestrator.prepare].

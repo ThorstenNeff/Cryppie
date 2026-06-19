@@ -1,5 +1,6 @@
 package com.tneff.cyppie.walletconnect
 
+import com.tneff.cyppie.evm.EvmAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -75,5 +76,34 @@ class WcApprovedChainsTest {
     @Test
     fun emptyWhenNoChainsOrAccounts() {
         assertTrue(approvedChainIdsFrom(chains = emptyList(), accounts = emptyList()).isEmpty())
+    }
+
+    // --- approvedAccounts (#3 / M3 account binding) ---
+
+    private val addr1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    private val addr2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+
+    @Test
+    fun extractsEvmAddressFromCaip10() {
+        assertEquals(EvmAddress.parse(addr1), caip10AddressOrNull("eip155:1:$addr1"))
+        assertEquals(EvmAddress.parse(addr2), caip10AddressOrNull("eip155:11155111:$addr2")) // testnet too
+    }
+
+    @Test
+    fun rejectsNonEvmOrMalformedCaip10() {
+        assertNull(caip10AddressOrNull("cosmos:cosmoshub-4:cosmos1abc")) // non-eip155
+        assertNull(caip10AddressOrNull("eip155:1")) // CAIP-2, not an account
+        assertNull(caip10AddressOrNull("eip155:1:0xnothex")) // unparseable address
+    }
+
+    @Test
+    fun derivesApprovedAddressesAcrossChainsAndDedups() {
+        // The same address on two chains (CAIP-10) collapses to one EvmAddress; non-EVM dropped.
+        assertEquals(
+            setOf(EvmAddress.parse(addr1), EvmAddress.parse(addr2)),
+            approvedAddressesFrom(
+                listOf("eip155:1:$addr1", "eip155:8453:$addr1", "eip155:11155111:$addr2", "cosmos:hub:cosmos1xyz"),
+            ),
+        )
     }
 }

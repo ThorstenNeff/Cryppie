@@ -2,6 +2,7 @@ package com.tneff.cyppie.walletconnect
 
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.tneff.cyppie.evm.EvmAddress
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -15,10 +16,10 @@ import kotlinx.coroutines.flow.asSharedFlow
  * Signing is **not** done here — the app decodes the request ([WcSessionRequest.decode]), completes &
  * discloses it, signs via [WalletConnectSigner], then calls [respondRequest].
  */
-actual class WalletConnectController actual constructor() {
+actual class WalletConnectController actual constructor() : WcTransport {
 
     private val _events = MutableSharedFlow<WcEvent>(extraBufferCapacity = 64)
-    actual val events: Flow<WcEvent> = _events.asSharedFlow()
+    actual override val events: Flow<WcEvent> = _events.asSharedFlow()
 
     // Cache proposals by proposerPublicKey so approveSession can run generateApprovedNamespaces.
     private val proposals = HashMap<String, Wallet.Model.SessionProposal>()
@@ -59,13 +60,13 @@ actual class WalletConnectController actual constructor() {
         })
     }
 
-    actual suspend fun pair(uri: String) {
+    actual override suspend fun pair(uri: String) {
         WalletKit.pair(Wallet.Params.Pair(uri)) { error ->
             _events.tryEmit(WcEvent.OnError(error.throwable.message ?: "Pairing failed"))
         }
     }
 
-    actual suspend fun approveSession(proposalId: String, accounts: List<String>) {
+    actual override suspend fun approveSession(proposalId: String, accounts: List<String>) {
         val proposal = proposals[proposalId]
             ?: throw WalletConnectException.Pairing("Unknown session proposal $proposalId")
         val supported = Wallet.Model.Namespace.Session(
@@ -80,13 +81,13 @@ actual class WalletConnectController actual constructor() {
         }
     }
 
-    actual suspend fun rejectSession(proposalId: String, reason: String) {
+    actual override suspend fun rejectSession(proposalId: String, reason: String) {
         WalletKit.rejectSession(Wallet.Params.SessionReject(proposalId, reason)) { error ->
             _events.tryEmit(WcEvent.OnError(error.throwable.message ?: "Reject failed"))
         }
     }
 
-    actual suspend fun approvedChains(topic: String): Set<Long> {
+    actual override suspend fun approvedChains(topic: String): Set<Long> {
         // Read from WalletKit's persisted session store (survives app restart) — not a freshly-settled cache.
         // getActiveSessionByTopic throws IllegalStateException if WalletKit isn't initialized; treat as none.
         val session = runCatching { WalletKit.getActiveSessionByTopic(topic) }.getOrNull() ?: return emptySet()
@@ -97,7 +98,12 @@ actual class WalletConnectController actual constructor() {
         )
     }
 
-    actual suspend fun respondRequest(requestId: Long, topic: String, result: String) {
+    actual override suspend fun approvedAccounts(topic: String): Set<EvmAddress> {
+        val session = runCatching { WalletKit.getActiveSessionByTopic(topic) }.getOrNull() ?: return emptySet()
+        return approvedAddressesFrom(session.namespaces.values.flatMap { it.accounts })
+    }
+
+    actual override suspend fun respondRequest(requestId: Long, topic: String, result: String) {
         val response = Wallet.Params.SessionRequestResponse(
             sessionTopic = topic,
             jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(id = requestId, result = result),
@@ -107,7 +113,7 @@ actual class WalletConnectController actual constructor() {
         }
     }
 
-    actual suspend fun rejectRequest(requestId: Long, topic: String, reason: String) {
+    actual override suspend fun rejectRequest(requestId: Long, topic: String, reason: String) {
         val response = Wallet.Params.SessionRequestResponse(
             sessionTopic = topic,
             jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(id = requestId, code = 4001, message = reason),
@@ -117,7 +123,7 @@ actual class WalletConnectController actual constructor() {
         }
     }
 
-    actual suspend fun disconnect(topic: String) {
+    actual override suspend fun disconnect(topic: String) {
         WalletKit.disconnectSession(Wallet.Params.SessionDisconnect(topic)) { error ->
             _events.tryEmit(WcEvent.OnError(error.throwable.message ?: "Disconnect failed"))
         }

@@ -1,5 +1,6 @@
 package com.tneff.cyppie.walletconnect
 
+import com.tneff.cyppie.evm.EvmAddress
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -25,6 +26,13 @@ interface WalletConnectBridge {
      * EVM chain ids. Empty for an unknown session. Keeps chain-id parsing single-sourced in Kotlin.
      */
     fun approvedChains(topic: String): List<String>
+
+    /**
+     * The approved **CAIP-10 accounts** for session [topic] (e.g. `eip155:1:0x…`), from reown-swift's session
+     * store. The Kotlin side extracts the [EvmAddress] (non-EVM dropped) — address parsing single-sourced in
+     * Kotlin. Empty for an unknown session.
+     */
+    fun approvedAccounts(topic: String): List<String>
 }
 
 /**
@@ -94,20 +102,23 @@ object WalletConnectIos {
  * iOS `actual` — delegates to the app-provided [WalletConnectBridge] over reown-swift. Fails fast
  * with [WalletConnectException.Unsupported] if the bridge isn't wired (e.g. on a Desktop-like build).
  */
-actual class WalletConnectController actual constructor() {
-    actual val events: Flow<WcEvent> = WalletConnectIos.events.asSharedFlow()
+actual class WalletConnectController actual constructor() : WcTransport {
+    actual override val events: Flow<WcEvent> = WalletConnectIos.events.asSharedFlow()
 
-    actual suspend fun pair(uri: String) = bridge().pair(uri)
-    actual suspend fun approveSession(proposalId: String, accounts: List<String>) = bridge().approveSession(proposalId, accounts)
-    actual suspend fun rejectSession(proposalId: String, reason: String) = bridge().rejectSession(proposalId, reason)
+    actual override suspend fun pair(uri: String) = bridge().pair(uri)
+    actual override suspend fun approveSession(proposalId: String, accounts: List<String>) = bridge().approveSession(proposalId, accounts)
+    actual override suspend fun rejectSession(proposalId: String, reason: String) = bridge().rejectSession(proposalId, reason)
     // Parse the shim's refs robustly whether they arrive as CAIP-2 or CAIP-10 (passing the list as both
     // `chains` and `accounts` lets approvedChainIdsFrom normalize each form; the Set dedups).
-    actual suspend fun approvedChains(topic: String): Set<Long> =
+    actual override suspend fun approvedChains(topic: String): Set<Long> =
         bridge().approvedChains(topic).let { refs -> approvedChainIdsFrom(refs, refs) }
 
-    actual suspend fun respondRequest(requestId: Long, topic: String, result: String) = bridge().respondRequest(requestId, topic, result)
-    actual suspend fun rejectRequest(requestId: Long, topic: String, reason: String) = bridge().rejectRequest(requestId, topic, reason)
-    actual suspend fun disconnect(topic: String) = bridge().disconnect(topic)
+    actual override suspend fun approvedAccounts(topic: String): Set<EvmAddress> =
+        approvedAddressesFrom(bridge().approvedAccounts(topic))
+
+    actual override suspend fun respondRequest(requestId: Long, topic: String, result: String) = bridge().respondRequest(requestId, topic, result)
+    actual override suspend fun rejectRequest(requestId: Long, topic: String, reason: String) = bridge().rejectRequest(requestId, topic, reason)
+    actual override suspend fun disconnect(topic: String) = bridge().disconnect(topic)
 
     private fun bridge(): WalletConnectBridge =
         WalletConnectIos.bridge ?: throw WalletConnectException.Unsupported("iOS WalletConnect bridge not initialized")

@@ -7,6 +7,15 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-127 (prod-safe split) — `WcTransport` interface + `approvedAccounts(topic)` (Dev-1 M3 account-binding).**
+  Extracted a common **`WcTransport`** interface that the real `WalletConnectController` now implements, so the
+  send-VM/app can depend on the seam (and a debug-only E2E double can later be injected — the harness itself lands
+  separately in KAN-127's debug source set). Added **`WcTransport.approvedAccounts(topic): Set<EvmAddress>`** (sibling
+  of `approvedChains`): the session's approved EVM addresses from the SDK session store (Android WalletKit / iOS bridge
+  `approvedAccounts` / Desktop `emptySet()`), via common `approvedAddressesFrom`/`caip10AddressOrNull` (CAIP-10 → address,
+  non-EVM dropped — same single-source pattern as `approvedChains`). Backs WC-sign **account binding**: a request may
+  sign only with `address ∈ approvedAccounts(topic)`, not merely any known wallet account. Unit-tested (`WcApprovedChainsTest`).
+  Verified incl. `:app:shared:linkDebugFrameworkIos*` + `:app:androidApp:assembleDebug` (KAN-114 export integrity held).
 - **KAN-122 — `WalletConnectController.approvedChains(topic): Set<Long>` (closes the #4 chain-binding gap).**
   A `WcSessionRequest` carries only its *own* `chainId`, so the WC send VM had to fall back to "any supported
   chain" — a replay surface. The new accessor reads the **approved EIP-155 chain ids from the SDK session

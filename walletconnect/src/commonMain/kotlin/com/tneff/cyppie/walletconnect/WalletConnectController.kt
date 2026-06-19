@@ -1,5 +1,6 @@
 package com.tneff.cyppie.walletconnect
 
+import com.tneff.cyppie.evm.EvmAddress
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -19,19 +20,19 @@ import kotlinx.coroutines.flow.Flow
  * the Reown / `kethereum` types live solely in this module's platform sources (`androidMain` + the
  * iOS Swift shim) — never in `:wallet`/`:evm` — so no WC/SDK type touches the derivation/signing path.
  */
-expect class WalletConnectController() {
+expect class WalletConnectController() : WcTransport {
 
     /** Cold stream of session/request lifecycle events. */
-    val events: Flow<WcEvent>
+    override val events: Flow<WcEvent>
 
     /** Pair with a dapp from a `wc:` URI (scanned QR / pasted). */
-    suspend fun pair(uri: String)
+    override suspend fun pair(uri: String)
 
     /** Approve a session proposal, granting [accounts] (CAIP-10, e.g. "eip155:1:0xabc…"). */
-    suspend fun approveSession(proposalId: String, accounts: List<String>)
+    override suspend fun approveSession(proposalId: String, accounts: List<String>)
 
     /** Reject a session proposal. */
-    suspend fun rejectSession(proposalId: String, reason: String)
+    override suspend fun rejectSession(proposalId: String, reason: String)
 
     /**
      * The EIP-155 chain ids the session [topic] approved, read from the SDK session store — so it stays
@@ -43,14 +44,20 @@ expect class WalletConnectController() {
      * the result into [prepareWalletConnectSend]'s `approvedChainIds`, which rejects a request whose chain
      * the session never approved.
      */
-    suspend fun approvedChains(topic: String): Set<Long>
+    override suspend fun approvedChains(topic: String): Set<Long>
+
+    /**
+     * The EVM addresses the session [topic] approved (CAIP-10 accounts → [EvmAddress]) from the SDK session
+     * store; empty when unknown/expired. Backs WC-sign account binding (#3 / M3) — `address ∈ approvedAccounts`.
+     */
+    override suspend fun approvedAccounts(topic: String): Set<EvmAddress>
 
     /** Respond to a request with its [result] (signature hex / tx hash). */
-    suspend fun respondRequest(requestId: Long, topic: String, result: String)
+    override suspend fun respondRequest(requestId: Long, topic: String, result: String)
 
     /** Reject a request (user declined / validation failed). */
-    suspend fun rejectRequest(requestId: Long, topic: String, reason: String)
+    override suspend fun rejectRequest(requestId: Long, topic: String, reason: String)
 
     /** Disconnect a session. */
-    suspend fun disconnect(topic: String)
+    override suspend fun disconnect(topic: String)
 }
