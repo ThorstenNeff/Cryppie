@@ -22,13 +22,11 @@ private class FakeMarketDataApi(
     val candlesResult: List<Candle> = emptyList(),
     val throwOnCandles: Boolean = false,
 ) : MarketDataApi {
-    var lastInterval: CandleInterval? = null
-    var lastRange: TimeRange? = null
+    val intervalsSeen = mutableListOf<CandleInterval>()
 
     override suspend fun candles(asset: MarketAsset, interval: CandleInterval, range: TimeRange): List<Candle> {
         if (throwOnCandles) error("upstream down")
-        lastInterval = interval
-        lastRange = range
+        intervalsSeen += interval
         return candlesResult
     }
 
@@ -103,6 +101,22 @@ class MarketViewModelTest {
         vm.selectRange(MarketRange.YEAR)
         advanceUntilIdle()
         assertEquals(MarketRange.YEAR, vm.range)
-        assertEquals(CandleInterval.D1, api.lastInterval)
+        assertTrue(api.intervalsSeen.contains(CandleInterval.D1)) // chart used the YEAR interval (metrics also fetch H1)
+    }
+
+    @Test
+    fun metrics24hFromCandles() = runTest(dispatcher) {
+        val api = FakeMarketDataApi(
+            candlesResult = listOf(
+                Candle(1L, "10", "12", "9", "11", volume = "100"),
+                Candle(2L, "11", "15", "8", "14", volume = "50"),
+            ),
+        )
+        val vm = MarketViewModel(eth, "usd", api, nowEpochSeconds = { 100_000L })
+        advanceUntilIdle()
+        val metrics = (vm.uiState as MarketUiState.Content).metrics!!
+        assertEquals("15", metrics.high24h) // source String preserved (FR-6), not a float
+        assertEquals("8", metrics.low24h)
+        assertEquals(150.0, metrics.volume24h) // render-aggregate sum
     }
 }

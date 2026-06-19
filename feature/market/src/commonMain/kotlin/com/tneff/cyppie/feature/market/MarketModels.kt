@@ -18,6 +18,13 @@ data class CandleBar(
     val up: Boolean get() = close >= open
 }
 
+/**
+ * MD-1 token-detail market metrics (24h window). [high24h]/[low24h] keep the source decimal-String
+ * (FR-6 — the value is the original, no float); [volume24h] is a render-aggregate Double (sum across the
+ * window, null if no source reports volume). Visual layout deferred to the UX MD-1 design.
+ */
+data class MarketMetrics(val high24h: String?, val low24h: String?, val volume24h: Double?)
+
 /** Chart time ranges (PRD-04 market detail) → a (CandleInterval, TimeRange) query against MarketDataApi. */
 enum class MarketRange { DAY, WEEK, MONTH, YEAR }
 
