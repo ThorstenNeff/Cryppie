@@ -19,6 +19,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.intl.Locale
+import com.tneff.cyppie.designsystem.NumberFormatProfile
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,6 +78,9 @@ fun WalletHomeScreen(
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     val state = viewModel.uiState
+    // Locale-aware amount formatting (KAN-120/KAN-116), float-free.
+    val languageTag = Locale.current.toLanguageTag()
+    val numberProfile = remember(languageTag) { NumberFormatProfile.forLanguageTag(languageTag) }
 
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
         Column(modifier = Modifier.widthIn(max = 480.dp).fillMaxSize().padding(horizontal = spacing.xl)) {
@@ -212,7 +218,7 @@ fun WalletHomeScreen(
                     modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(spacing.lg),
                 ) {
-                    state.balances.forEach { ChainSection(it) }
+                    state.balances.forEach { ChainSection(it, numberProfile) }
                 }
             }
         }
@@ -220,7 +226,7 @@ fun WalletHomeScreen(
 }
 
 @Composable
-private fun ChainSection(balances: ChainBalances) {
+private fun ChainSection(balances: ChainBalances, profile: NumberFormatProfile) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     val chain = balances.chain.displayName
@@ -231,7 +237,7 @@ private fun ChainSection(balances: ChainBalances) {
         Text(text = chain, style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
         BalanceRow(
             symbol = NATIVE_TICKER,
-            amount = formatTokenAmount(balances.native, NATIVE_DECIMALS),
+            amount = formatTokenAmount(balances.native, NATIVE_DECIMALS, profile),
             modifier = Modifier.testTag(WalletTestTags.homeBalanceNative(chain)),
         )
         // Token rows: symbol + decimals come from the curated token metadata (KAN-89 M1 gate — never
@@ -243,7 +249,7 @@ private fun ChainSection(balances: ChainBalances) {
             if (meta != null) {
                 BalanceRow(
                     symbol = meta.symbol,
-                    amount = formatTokenAmount(amount, meta.decimals),
+                    amount = formatTokenAmount(amount, meta.decimals, profile),
                     modifier = Modifier.testTag(WalletTestTags.homeBalanceToken(chain, token.value)),
                 )
             }

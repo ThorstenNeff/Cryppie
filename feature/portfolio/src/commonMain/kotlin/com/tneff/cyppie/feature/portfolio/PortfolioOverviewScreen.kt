@@ -27,6 +27,7 @@ import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
+import com.tneff.cyppie.designsystem.NumberFormatProfile
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.portfolio.generated.resources.Res
 import com.tneff.cyppie.feature.portfolio.generated.resources.pf_allocation

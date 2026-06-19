@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
@@ -39,6 +40,7 @@ import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
 import com.tneff.cyppie.designsystem.components.CryptasaTextField
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
 import com.tneff.cyppie.designsystem.components.ProgressRing
+import com.tneff.cyppie.designsystem.NumberFormatProfile
 import com.tneff.cyppie.designsystem.components.SegmentedControl
 import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
@@ -140,6 +142,7 @@ private fun SendForm(viewModel: SendViewModel, onBack: () -> Unit, modifier: Mod
     val spacing = CryptasaTheme.spacing
     val asset = viewModel.asset ?: return
     val error = viewModel.formError
+    val profile = NumberFormatProfile.forLanguageTag(Locale.current.toLanguageTag()) // locale amount format (KAN-120)
 
     Scaffolded(title = stringResource(Res.string.send_title), onBack = onBack, modifier = modifier) {
         Column(
@@ -162,7 +165,7 @@ private fun SendForm(viewModel: SendViewModel, onBack: () -> Unit, modifier: Mod
                     val avail = viewModel.available
                     if (avail != null) {
                         Text(
-                            stringResource(Res.string.send_available, formatTokenAmount(avail, asset.decimals)),
+                            stringResource(Res.string.send_available, formatTokenAmount(avail, asset.decimals, profile)),
                             style = CryptasaTheme.typography.helper,
                             color = colors.onSurfaceVariant,
                         )
@@ -272,6 +275,7 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
     val d = prepared.disclosure
     val isNative = asset.token == null
     val total = if (isNative) d.value + d.maxNetworkFee else d.maxNetworkFee
+    val profile = NumberFormatProfile.forLanguageTag(Locale.current.toLanguageTag()) // locale amount format (KAN-120)
 
     Scaffolded(title = stringResource(Res.string.send_review_title), onBack = onBack, modifier = modifier) {
         Column(
@@ -281,7 +285,7 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
             // Amount (big, LTR) — from the prepared tx, not the form state (single source of truth, L1).
             LtrIsland {
                 Text(
-                    "${formatTokenAmount(viewModel.disclosedAmount(prepared), asset.decimals)} ${asset.symbol}",
+                    "${formatTokenAmount(viewModel.disclosedAmount(prepared), asset.decimals, profile)} ${asset.symbol}",
                     style = CryptasaTheme.typography.titleLarge,
                     color = colors.onSurface,
                 )
@@ -302,9 +306,9 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
                 DisclosureRow(stringResource(Res.string.send_disclosure_network), d.chain.displayName)
                 DisclosureRow(stringResource(Res.string.send_disclosure_nonce), d.nonce.toLong().toString(), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_NONCE)
                 DisclosureRow(stringResource(Res.string.send_disclosure_gas), d.gasLimit.toLong().toString(), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_GAS)
-                DisclosureRow(stringResource(Res.string.send_disclosure_maxfee), "${formatTokenAmount(d.maxFeePerGas, 9)} gwei", ltr = true)
-                DisclosureRow(stringResource(Res.string.send_disclosure_fee), "${formatTokenAmount(d.maxNetworkFee, 18)} ETH", ltr = true)
-                DisclosureRow(stringResource(Res.string.send_disclosure_total), "${formatTokenAmount(total, 18)} ETH", ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TOTAL)
+                DisclosureRow(stringResource(Res.string.send_disclosure_maxfee), "${formatTokenAmount(d.maxFeePerGas, 9, profile)} gwei", ltr = true)
+                DisclosureRow(stringResource(Res.string.send_disclosure_fee), "${formatTokenAmount(d.maxNetworkFee, 18, profile)} ETH", ltr = true)
+                DisclosureRow(stringResource(Res.string.send_disclosure_total), "${formatTokenAmount(total, 18, profile)} ETH", ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TOTAL)
             }
 
             Text(

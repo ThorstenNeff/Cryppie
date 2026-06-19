@@ -1,5 +1,6 @@
 package com.tneff.cyppie.feature.wallet
 
+import com.tneff.cyppie.designsystem.NumberFormatProfile
 import com.tneff.cyppie.evm.Quantity
 
 /**
@@ -8,16 +9,35 @@ import com.tneff.cyppie.evm.Quantity
  * more than 64 bits, so this never goes through `Long`. The fraction is **truncated** (not rounded)
  * to [maxFractionDigits] and trailing zeros trimmed, so a balance is never overstated. No fiat
  * valuation (PRD-02); UI-layer conversion per `Quantity`'s contract (L2 does no decimal math).
+ *
+ * This **plain** form uses a `.` decimal and no grouping — it round-trips through [parseTokenAmount]
+ * (used for the Send Max → input field). For **display**, use the [NumberFormatProfile] overload.
  */
 fun formatTokenAmount(amount: Quantity, decimals: Int, maxFractionDigits: Int = 6): String {
+    val (intPart, frac) = tokenParts(amount, decimals, maxFractionDigits)
+    return if (frac.isEmpty()) intPart else "$intPart.$frac"
+}
+
+/**
+ * Locale-aware display form (KAN-120): same float-free digits, but the integer part is grouped and the
+ * decimal point uses [profile]'s separators (KAN-116, 14 locales). Display only — NOT for re-parsing.
+ */
+fun formatTokenAmount(amount: Quantity, decimals: Int, profile: NumberFormatProfile, maxFractionDigits: Int = 6): String {
+    val (intPart, frac) = tokenParts(amount, decimals, maxFractionDigits)
+    val grouped = intPart.reversed().chunked(3).joinToString(profile.groupSeparator).reversed()
+    return if (frac.isEmpty()) grouped else "$grouped${profile.decimalSeparator}$frac"
+}
+
+/** Shared digit extraction → (integer digits, truncated+trimmed fraction digits). Float-free. */
+private fun tokenParts(amount: Quantity, decimals: Int, maxFractionDigits: Int): Pair<String, String> {
     val digits = bytesToDecimal(amount.toMinimalBytes())
-    if (decimals <= 0) return digits
+    if (decimals <= 0) return digits to ""
     val padded = digits.padStart(decimals + 1, '0') // guarantee ≥1 integer digit
     val intPart = padded.substring(0, padded.length - decimals)
     var frac = padded.substring(padded.length - decimals)
     if (frac.length > maxFractionDigits) frac = frac.substring(0, maxFractionDigits)
     frac = frac.trimEnd('0')
-    return if (frac.isEmpty()) intPart else "$intPart.$frac"
+    return intPart to frac
 }
 
 /**
