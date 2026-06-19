@@ -110,4 +110,32 @@ class SmartSessionGrantVerifierTest {
         )
         assertFailsWith<GrantVerificationException> { verify(permissions = perms, digest = digest) }
     }
+
+    @Test
+    fun verifiesWithProductionDefaultPins() {
+        // A grant using the REAL (default-pinned) policy addresses verifies with NO override (production path).
+        val perms = SignedPermissions(
+            userOpPolicies = listOf(PolicyData(SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY, spendInitData)),
+            actions = listOf(
+                ActionData(selector, router, listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, timeInitData))),
+            ),
+        )
+        val digest = "0x" + Hex.encode(
+            SmartSessionEnableDigest.enableDigest(account, 1L, sessionValidator, sessionValidatorInitData, salt, nonce, perms),
+        )
+        val grant = SmartSessionGrantVerifier.verifyGrant(
+            account = account, chainId = 1L, sessionValidator = sessionValidator,
+            sessionValidatorInitData = sessionValidatorInitData, salt = salt, nonce = nonce,
+            permissions = perms, digestToSign = digest, // no policy overrides → production default pins
+        )
+        assertEquals("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", grant.spendToken)
+        assertEquals("1000000", grant.capBaseUnits)
+    }
+
+    @Test
+    fun productionPinsAreGlobalConstantsNotLegacy() {
+        // Guard the emitted GLOBAL_CONSTANTS addresses against accidental drift / a legacy-constants.js swap.
+        assertEquals("0x000000000033212e272655d8a22402db819477a6", SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY)
+        assertEquals("0x0000000000D30f611fA3bf652ac6879428586930", SmartSessionGrantVerifier.TIMEFRAME_POLICY)
+    }
 }

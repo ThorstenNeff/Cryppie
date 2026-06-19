@@ -38,11 +38,11 @@ data class VerifiedGrant(
  */
 object SmartSessionGrantVerifier {
 
-    // ⚠️ PLACEHOLDER pins from the backend reference vectors — REPLACE with the real deployed Rhinestone
-    // policy addresses (ETH + Base; same address per CREATE2 expected) before production. Until then the
-    // caller must pass the real addresses explicitly. Tracked as the KAN-144 backend input.
-    const val SPENDING_LIMIT_POLICY: String = "0x0000000000000000000000000000000000000511"
-    const val TIMEFRAME_POLICY: String = "0x0000000000000000000000000000000000000522"
+    // Deployed Rhinestone GLOBAL_CONSTANTS policy addresses — CREATE2-deterministic, identical on ETH + Base
+    // (on-chain verified). These are the addresses actually emitted into `PolicyData.policy` — NOT the SDK's
+    // legacy `constants.js` addresses (pinning those would reject every real session). Compared case-insensitively.
+    const val SPENDING_LIMIT_POLICY: String = "0x000000000033212e272655d8a22402db819477a6"
+    const val TIMEFRAME_POLICY: String = "0x0000000000D30f611fA3bf652ac6879428586930"
 
     /**
      * Verifies [digestToSign] against the disclosed grant material and returns the [VerifiedGrant] to render.
