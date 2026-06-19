@@ -16,6 +16,9 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "Shared"
             isStatic = true
+            // KAN-114-Et4: expose WalletConnectIos / WalletConnectBridge in the Shared framework headers
+            // so the iOS Swift shim (reown-swift, KAN-121) can drive them. Requires the api() dep below.
+            export(projects.walletconnect)
         }
     }
     
@@ -53,6 +56,8 @@ kotlin {
             // exists (no js/wasm; KAN-89 seam). The live wallet shell (KAN-103) is likewise non-web.
             implementation(projects.storage)
             implementation(projects.feature.wallet)
+            // KAN-114-Et4: embed WalletConnect on Android (toolchain-free since KAN-123 / AGP 9.1).
+            implementation(projects.walletconnect)
         }
         jvmMain.dependencies {
             implementation(projects.storage)
@@ -61,6 +66,8 @@ kotlin {
         iosMain.dependencies {
             implementation(projects.storage)
             implementation(projects.feature.wallet)
+            // KAN-114-Et4: api (not implementation) so the framework can export() it to the Swift shim.
+            api(projects.walletconnect)
         }
         commonMain.dependencies {
             api(projects.core)
