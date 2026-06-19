@@ -16,7 +16,9 @@ import com.tneff.cyppie.storage.AndroidSecureKeyStore
 import com.tneff.cyppie.storage.CiphertextStore
 import com.tneff.cyppie.storage.SeedVault
 import com.tneff.cyppie.wallet.SeedSource
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import javax.crypto.Cipher
 
@@ -59,8 +61,10 @@ actual class BiometricSign(private val activity: FragmentActivity) {
         }
         val pwChars = pwBytes.decodeToString().toCharArray()
         return try {
-            // Fresh per-sign source; closed/zeroized by SendOrchestrator.signAndBroadcast (M1).
-            SeedVault(CiphertextStore.defaultFile()).unlock(pwChars)
+            // Fresh per-sign source; closed/zeroized by SendOrchestrator.signAndBroadcast (M1). unlock runs
+            // PBKDF2 (210k) — off the Main thread (review M1: called from a Main-thread LaunchedEffect after
+            // the prompt succeeds, so an inline unlock would ANR; mirrors the password path's withContext).
+            withContext(Dispatchers.Default) { SeedVault(CiphertextStore.defaultFile()).unlock(pwChars) }
         } catch (e: Throwable) {
             null
         } finally {
