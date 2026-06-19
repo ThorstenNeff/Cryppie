@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tneff.cyppie.rpc.EvmRpcClient
 import com.tneff.cyppie.rpc.RpcEndpoint
+import com.tneff.cyppie.send.SendOrchestrator
 import com.tneff.cyppie.storage.SeedSession
 import com.tneff.cyppie.wallet.EvmKeyManager
 import com.tneff.cyppie.wallet.SeedSource
@@ -18,7 +19,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send }
 
 /**
  * Public dev/test RPC endpoints (no API key). Release builds inject Alchemy/Infura keys via build-config
@@ -61,6 +62,7 @@ fun WalletShell(onLock: () -> Unit) {
     when (dest) {
         WalletDest.Home -> WalletHomeScreen(
             onReceive = { dest = WalletDest.Receive },
+            onSend = { if (viewModel.accounts.isNotEmpty()) dest = WalletDest.Send },
             onAddToken = { dest = WalletDest.AddToken },
             onNfts = { dest = WalletDest.Nfts },
             viewModel = viewModel,
@@ -87,6 +89,23 @@ fun WalletShell(onLock: () -> Unit) {
             val nftViewModel: NftViewModel =
                 viewModel(key = "nft_${account}") { NftViewModel(repository, account, EvmChain.ETHEREUM) }
             NftGridScreen(onBack = { dest = WalletDest.Home }, viewModel = nftViewModel)
+        }
+        WalletDest.Send -> {
+            // Send for the selected account (KAN-110). The orchestrator completes + signs the tx; the
+            // ambient unlocked session signs (a non-closeable wrapper keeps it alive — see SendViewModel).
+            val account = viewModel.selectedAccount
+            val sendViewModel: SendViewModel = viewModel(key = "send_${account}") {
+                SendViewModel(
+                    repository = repository,
+                    orchestrator = SendOrchestrator(defaultRpcByChain),
+                    feeData = { chain -> defaultRpcByChain.getValue(chain.chainId).getFeeData() },
+                    awaitReceipt = { chain, hash -> defaultRpcByChain.getValue(chain.chainId).awaitReceipt(hash).status },
+                    seed = { SeedSession.current },
+                    accounts = viewModel.accounts,
+                    accountIndex = account,
+                )
+            }
+            SendFlow(viewModel = sendViewModel, onExit = { dest = WalletDest.Home })
         }
     }
 }

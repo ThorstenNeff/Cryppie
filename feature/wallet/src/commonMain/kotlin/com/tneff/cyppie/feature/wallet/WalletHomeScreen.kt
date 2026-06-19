@@ -48,6 +48,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
 import com.tneff.cyppie.feature.wallet.generated.resources.home_retry
 import com.tneff.cyppie.feature.wallet.generated.resources.home_title
+import com.tneff.cyppie.feature.wallet.generated.resources.wallet_action_send
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -63,6 +64,7 @@ private const val NATIVE_DECIMALS = 18
 @Composable
 fun WalletHomeScreen(
     onReceive: () -> Unit = {},
+    onSend: () -> Unit = {},
     onAddToken: () -> Unit = {},
     onNfts: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
@@ -133,6 +135,13 @@ fun WalletHomeScreen(
                 )
             }
 
+            // Send (KAN-110) — the primary action; full-width above the secondary entry points.
+            CryptasaButton(
+                text = stringResource(Res.string.wallet_action_send),
+                onClick = onSend,
+                modifier = Modifier.fillMaxWidth().padding(top = spacing.sm).testTag(WalletTestTags.HOME_SEND),
+            )
+
             // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = spacing.sm),
@@ -141,6 +150,7 @@ fun WalletHomeScreen(
                 CryptasaButton(
                     text = stringResource(Res.string.home_receive),
                     onClick = onReceive,
+                    style = CryptasaButtonStyle.Secondary,
                     modifier = Modifier.weight(1f).testTag(WalletTestTags.HOME_RECEIVE),
                 )
                 CryptasaButton(
