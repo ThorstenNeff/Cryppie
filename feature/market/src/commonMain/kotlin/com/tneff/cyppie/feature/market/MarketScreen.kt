@@ -10,15 +10,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.components.CryptasaButton
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
 import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.components.SegmentedControl
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
+import com.tneff.cyppie.market.SpotPrice
 
 /** Range chip labels (scaffold — pre-i18n; mkt_* keys land when the copy is finalized). */
 private fun MarketRange.label(): String = when (this) {
@@ -56,6 +60,7 @@ fun MarketScreen(
                             ProgressRing(diameter = 32.dp)
                         }
                     is MarketUiState.Content -> {
+                        PriceHeader(state.spot)
                         MarketChart(points = state.points, modifier = Modifier.padding(top = spacing.md))
                         RangeSelector(viewModel)
                     }
@@ -65,6 +70,33 @@ fun MarketScreen(
                             CryptasaButton(text = "Retry", onClick = viewModel::retry, modifier = Modifier.padding(top = spacing.md).testTag("mkt_retry"))
                         }
                 }
+            }
+        }
+    }
+}
+
+/** Price/Δ header (PRD-04): current spot + 24h change (success/danger). Numeric → LTR island (RTL-safe).
+ *  Values are decimal Strings from `:market` (FR-6 — no float). Pre-i18n; mkt_ copy lands later. */
+@Composable
+private fun PriceHeader(spot: SpotPrice?) {
+    if (spot == null) return
+    val colors = CryptasaTheme.colors
+    Column(modifier = Modifier.fillMaxWidth().testTag("mkt_price_header")) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Text(
+                text = "${spot.priceDecimal} ${spot.vs.uppercase()}",
+                style = CryptasaTheme.typography.titleLarge,
+                color = colors.onSurface,
+            )
+            spot.change24hPct?.let { pct ->
+                val negative = pct.trim().startsWith("-")
+                val sign = if (!negative && !pct.trim().startsWith("+")) "+" else ""
+                Text(
+                    text = "$sign$pct%",
+                    style = CryptasaTheme.typography.body,
+                    color = if (negative) colors.danger else colors.success,
+                    modifier = Modifier.testTag("mkt_change_24h"),
+                )
             }
         }
     }

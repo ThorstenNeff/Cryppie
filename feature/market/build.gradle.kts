@@ -51,7 +51,7 @@ kotlin {
         }
         commonMain.dependencies {
             api(projects.designsystem)
-            // api(projects.market) — wired after Dev-2's :market merge (ADR-0025).
+            api(projects.market) // MarketDataApi + MarketAsset/PricePoint/SpotPrice/CandleInterval/TimeRange (KAN-131)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

@@ -1,20 +1,24 @@
 package com.tneff.cyppie.feature.market
 
+import com.tneff.cyppie.market.CandleInterval
+import com.tneff.cyppie.market.TimeRange
+
 /**
- * A single price-chart sample (UI-facing). Reconciled with Dev-2's `:market` `PricePoint` per ADR-0025
- * once `:market` merges — until then the UI scaffold uses this so it doesn't block on the data layer.
+ * A chart render point (UI-only). [price] is a `Double` for **pixel mapping only** — financial values
+ * stay String/`Money` in `:market` (FR-6); the VM converts `:market`'s decimal-String `PricePoint` here
+ * just to draw the polyline.
  */
 data class MarketChartPoint(val epochSeconds: Long, val price: Double)
 
-/** Chart time ranges (PRD-04 market detail). */
+/** Chart time ranges (PRD-04 market detail) → a (CandleInterval, TimeRange) query against MarketDataApi. */
 enum class MarketRange { DAY, WEEK, MONTH, YEAR }
 
-/**
- * UI-facing market-data contract the [MarketViewModel] consumes. The app shell adapts Dev-2's `:market`
- * `MarketDataApi` (PRD-04 data layer) to this after the `:market` merge + the ADR-0025 PriceSource
- * relocation — keeping the UI module web-safe and free of the data-layer's transitive deps for now.
- */
-interface MarketDataPort {
-    /** Price series for [assetId] over [range] (display fiat resolved by the data layer). */
-    suspend fun series(assetId: String, range: MarketRange): List<MarketChartPoint>
+private const val DAY_SECONDS = 86_400L
+
+/** Maps a [MarketRange] to the `:market` query window ending at [nowEpochSeconds] + a sensible bar width. */
+fun MarketRange.toQuery(nowEpochSeconds: Long): Pair<CandleInterval, TimeRange> = when (this) {
+    MarketRange.DAY -> CandleInterval.M15 to TimeRange(nowEpochSeconds - DAY_SECONDS, nowEpochSeconds)
+    MarketRange.WEEK -> CandleInterval.H1 to TimeRange(nowEpochSeconds - 7 * DAY_SECONDS, nowEpochSeconds)
+    MarketRange.MONTH -> CandleInterval.H4 to TimeRange(nowEpochSeconds - 30 * DAY_SECONDS, nowEpochSeconds)
+    MarketRange.YEAR -> CandleInterval.D1 to TimeRange(nowEpochSeconds - 365 * DAY_SECONDS, nowEpochSeconds)
 }
