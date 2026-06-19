@@ -45,3 +45,17 @@ kotlin {
         }
     }
 }
+
+// KAN-117 — Gate-Hygiene: the `secp256k1-kmp-jni-android` native lib (reached transitively via
+// `:wallet` EvmKeyManager) cannot load on the Robolectric host JVM. The tests that derive accounts /
+// build a WalletRepository run green under `:walletcore:jvmTest`; exclude them from the host-android
+// unit test. Pure-data commonTests (TokenCatalog*/TokenResolver) still run on androidHostTest.
+tasks.withType<Test>().configureEach {
+    if (name == "testAndroidHostTest") {
+        filter {
+            excludeTestsMatching("com.tneff.cyppie.walletcore.NftReadTest")
+            excludeTestsMatching("com.tneff.cyppie.walletcore.WalletRepositoryTest")
+            isFailOnNoMatchingTests = false
+        }
+    }
+}

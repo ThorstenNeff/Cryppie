@@ -69,3 +69,19 @@ kotlin {
         }
     }
 }
+
+// KAN-117 — Gate-Hygiene: `secp256k1-kmp-jni-android` ships device-ABI `.so`s and cannot load on the
+// Robolectric host JVM (`UnsatisfiedLinkError` via `NativeSecp256k1AndroidLoader`). These signing/
+// derivation vectors run green under `:wallet:jvmTest` (`secp256k1-kmp-jni-jvm`), so the crypto gate is
+// jvmTest — exclude exactly the JNI-bound classes from the host-android unit test to keep it green +
+// meaningful. Non-JNI commonTests (e.g. MnemonicTest) still run on androidHostTest.
+tasks.withType<Test>().configureEach {
+    if (name == "testAndroidHostTest") {
+        filter {
+            excludeTestsMatching("com.tneff.cyppie.wallet.Bip44VectorsTest")
+            excludeTestsMatching("com.tneff.cyppie.wallet.EvmKeyManagerTest")
+            excludeTestsMatching("com.tneff.cyppie.wallet.tx.*") // Eip1559Vectors/External + EvmTransactionSigner
+            isFailOnNoMatchingTests = false
+        }
+    }
+}

@@ -46,3 +46,15 @@ kotlin {
         }
     }
 }
+
+// KAN-117 — Gate-Hygiene: SendOrchestrator signing pulls `secp256k1-kmp-jni-android` (via `:wallet`),
+// which cannot load on the Robolectric host JVM. The orchestrator runs green under `:send:jvmTest`;
+// exclude it from the host-android unit test so the gate stays green + meaningful (crypto gate = jvmTest).
+tasks.withType<Test>().configureEach {
+    if (name == "testAndroidHostTest") {
+        filter {
+            excludeTestsMatching("com.tneff.cyppie.send.SendOrchestratorTest")
+            isFailOnNoMatchingTests = false
+        }
+    }
+}
