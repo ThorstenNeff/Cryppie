@@ -16,6 +16,8 @@ data class SiweMessage(
     val chainId: Long,
     val nonce: String,        // single-use, from /siwe/nonce
     val issuedAt: String,     // ISO-8601
+    val expirationTime: String? = null, // ISO-8601 — narrows the signature validity window (LOW-4)
+    val notBefore: String? = null,      // ISO-8601 (optional)
 ) {
     /** The canonical EIP-4361 string the app signs (personal_sign) and sends as `siwe_message`. */
     fun canonical(): String = buildString {
@@ -27,6 +29,8 @@ data class SiweMessage(
         append("Chain ID: ").append(chainId).append('\n')
         append("Nonce: ").append(nonce).append('\n')
         append("Issued At: ").append(issuedAt)
+        expirationTime?.let { append("\nExpiration Time: ").append(it) }
+        notBefore?.let { append("\nNot Before: ").append(it) }
     }
 
     companion object {
@@ -35,8 +39,15 @@ data class SiweMessage(
         const val STATEMENT = "Sign in to Cyppie"   // shown in the no-blind consent; must be non-empty
         const val DEFAULT_CHAIN_ID = 1L             // authenticator accepts 1 or 8453
 
-        /** Builds the Cyppie sign-in message for [address] with the endpoint [nonce] + [issuedAt]. */
-        fun forSignIn(address: EvmAddress, nonce: String, issuedAt: String, chainId: Long = DEFAULT_CHAIN_ID): SiweMessage =
+        /** Builds the Cyppie sign-in message for [address]. [expirationTime] (ISO-8601, e.g. issuedAt +
+         *  ~5min) narrows the signature window beyond the single-use nonce (LOW-4). */
+        fun forSignIn(
+            address: EvmAddress,
+            nonce: String,
+            issuedAt: String,
+            chainId: Long = DEFAULT_CHAIN_ID,
+            expirationTime: String? = null,
+        ): SiweMessage =
             SiweMessage(
                 domain = DOMAIN,
                 address = address.value,
@@ -46,6 +57,7 @@ data class SiweMessage(
                 chainId = chainId,
                 nonce = nonce,
                 issuedAt = issuedAt,
+                expirationTime = expirationTime,
             )
     }
 }

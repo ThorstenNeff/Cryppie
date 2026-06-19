@@ -21,9 +21,10 @@ data class TokenResponse(
 
 /**
  * Keycloak SIWE client (KAN-141). [baseUrl] = `https://auth.cyppie.com`. (1) [nonce] → single-use nonce
- * (300s). (2) [token] → form-urlencoded Direct-Grant SIWE exchange (`grant_type=password`, public PKCE
- * client `cyppie-app` with no secret, `siwe_message` + `siwe_signature`) → RS256 access token. Field
- * names are exact per the backend contract. [httpClient] must have `ContentNegotiation(Json)`.
+ * (300s). (2) [token] → form-urlencoded **Direct-Grant / ROPC** exchange (`grant_type=password`, no client
+ * secret; the **SIWE signature is the credential** per ADR-0026, not a user password) with `siwe_message`
+ * + `siwe_signature` → RS256 access token. Field names are exact per the backend contract. [httpClient]
+ * must have `ContentNegotiation(Json)`.
  */
 class KeycloakClient(
     private val baseUrl: String,
@@ -47,6 +48,6 @@ class KeycloakClient(
 
     companion object {
         const val BASE_URL = "https://auth.cyppie.com"
-        const val CLIENT_ID = "cyppie-app" // public PKCE client, no secret
+        const val CLIENT_ID = "cyppie-app" // Direct-Grant/ROPC client, no secret (SIWE sig = credential, ADR-0026)
     }
 }

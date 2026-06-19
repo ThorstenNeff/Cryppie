@@ -72,18 +72,22 @@ class DcaViewModel(
     fun signPending(dca: PendingDca, password: String) {
         signError = null
         viewModelScope.launch {
-            val source = reauth(password)
-            if (source == null) {
-                signError = DcaError.WRONG_PASSWORD
-                return@launch
-            }
-            val result = runCatching {
-                val signature = signer.signDigest(dca.userOpHash, owner, source) // zeroizes the source
+            // LOW-3: re-check the kill-switch VM-side, fail-closed, right before signing — it may have armed
+            // between the last poll and now; an aaStatus failure is treated as paused (don't sign on unknown).
+            val paused = runCatching { api.aaStatus().paused }.getOrDefault(true)
+            if (paused) { load(); return@launch } // refresh → the screen shows the paused banner; nothing signed
+            // Minimal seed window (HIGH-1 pattern): reauth → sign → zeroize, submit only after.
+            val outcome = runCatching {
+                val source = reauth(password) ?: return@runCatching DcaError.WRONG_PASSWORD
+                val signature = try {
+                    signer.signDigest(dca.userOpHash, owner, source) // zeroizes the source
+                } finally {
+                    (source as? AutoCloseable)?.close() // defensive zeroize even if signing throws
+                }
                 api.submitSignature(dca.id, signature)
-            }
-            if (result.isFailure) {
-                signError = DcaError.SUBMIT_FAILED
-            }
+                null // success
+            }.getOrElse { DcaError.SUBMIT_FAILED }
+            if (outcome != null) signError = outcome
             load()
         }
     }

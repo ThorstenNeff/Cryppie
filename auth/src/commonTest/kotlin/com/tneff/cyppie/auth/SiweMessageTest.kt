@@ -31,4 +31,10 @@ class SiweMessageTest {
         assertTrue(message.statement.isNotEmpty())      // statement must be non-empty
         assertEquals(1L, message.chainId)
     }
+
+    @Test
+    fun canonical_appendsExpirationTime_whenSet() {
+        val message = SiweMessage.forSignIn(address, nonce = "n", issuedAt = "2026-06-19T19:00:00Z", expirationTime = "2026-06-19T19:05:00Z")
+        assertTrue(message.canonical().endsWith("Issued At: 2026-06-19T19:00:00Z\nExpiration Time: 2026-06-19T19:05:00Z"))
+    }
 }
