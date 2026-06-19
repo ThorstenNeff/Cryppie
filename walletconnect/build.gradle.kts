@@ -35,6 +35,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.wallet) // EvmKeyManager / tx signer / EvmAddress
+            // KAN-62 WC-Send adapter: eth_sendTransaction → the one KAN-91 SendOrchestrator (SendInput).
+            api(projects.send)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json) // parse eth_signTypedData_v4 JSON (JsonElement; no plugin)
         }
