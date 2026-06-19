@@ -53,6 +53,10 @@ kotlin {
             implementation(projects.storage)
             // Send orchestrator (KAN-91/ADR-0019) — the Send UI (KAN-110) renders prepare→disclose→sign.
             implementation(projects.send)
+            // Portfolio (KAN-114): the PF-1 screen/VM + the assembler (PortfolioService/AlchemyPriceSource)
+            // the wallet shell wires to the live proxy clients.
+            implementation(projects.feature.portfolio)
+            implementation(projects.portfolio)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

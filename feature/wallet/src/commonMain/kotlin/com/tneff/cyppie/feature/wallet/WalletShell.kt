@@ -8,8 +8,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tneff.cyppie.evm.EvmAddress
+import com.tneff.cyppie.feature.portfolio.PortfolioOverview
+import com.tneff.cyppie.feature.portfolio.PortfolioOverviewScreen
+import com.tneff.cyppie.feature.portfolio.PortfolioOverviewViewModel
+import com.tneff.cyppie.portfolio.AlchemyPriceSource
+import com.tneff.cyppie.portfolio.PortfolioConfig
+import com.tneff.cyppie.portfolio.PortfolioService
+import com.tneff.cyppie.portfolio.TokenKey
+import com.tneff.cyppie.rpc.AlchemyDataClient
 import com.tneff.cyppie.rpc.AlchemyNetworks
 import com.tneff.cyppie.rpc.AlchemyNftClient
+import com.tneff.cyppie.rpc.AlchemyPriceClient
 import com.tneff.cyppie.rpc.AlchemyProxyConfig
 import com.tneff.cyppie.rpc.EvmRpcClient
 import com.tneff.cyppie.rpc.NftReadClient
@@ -27,7 +37,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -54,6 +64,41 @@ private val defaultNftByChain: Map<Long, NftReadClient> by lazy {
 
 private fun buildRepository(seedSource: SeedSource): WalletRepository =
     WalletRepository(AccountManager(EvmKeyManager(seedSource)), defaultRpcByChain, defaultNftByChain)
+
+/** Curated tokens + native ETH per supported chain — the priced/displayed set (KAN-90 known-good). */
+private val portfolioKnownGood: Set<TokenKey> by lazy {
+    AlchemyNetworks.supportedChainIds.flatMap { chainId ->
+        val curated = EvmChain.fromChainId(chainId)
+            ?.let { chain -> TokenCatalog.forChain(chain).map { TokenKey(chainId, it.address) } }
+            .orEmpty()
+        curated + TokenKey(chainId, null) // native ETH
+    }.toSet()
+}
+
+@OptIn(kotlin.time.ExperimentalTime::class)
+private fun nowEpochSeconds(): Long = kotlin.time.Clock.System.now().epochSeconds
+
+/**
+ * KAN-114 — the platform portfolio assembler (PRD-03): prices the [accounts]' holdings via the proxy
+ * Alchemy Data + Prices clients + native balances (RPC), through [PortfolioService]. Unrealized P&L is
+ * left null for now (needs FIFO cost-basis over full transfer history — RichPortfolio/KAN-102 follow-up).
+ * Proxy/RPC down → the clients fail → the VM maps it to Error (FR-4 graceful, no crash).
+ */
+private fun buildPortfolioLoader(accounts: () -> List<EvmAddress>): suspend () -> PortfolioOverview {
+    val dataClient = AlchemyDataClient(alchemyProxy.dataBaseUrl())
+    val priceSource = AlchemyPriceSource(AlchemyPriceClient(alchemyProxy.pricesBaseUrl())) { nowEpochSeconds() }
+    val service = PortfolioService(
+        fetchErc20Holdings = { holders, chainIds -> dataClient.tokenHoldings(holders, chainIds) },
+        fetchNativeBalance = { chainId, account -> defaultRpcByChain.getValue(chainId).getBalance(account) },
+        priceSource = priceSource,
+        config = PortfolioConfig(knownGood = portfolioKnownGood, currency = "usd"),
+        clockEpochSeconds = { nowEpochSeconds() },
+    )
+    return {
+        val portfolio = service.load(accounts(), AlchemyNetworks.supportedChainIds, vs = "usd")
+        PortfolioOverview(portfolio, pnl = null)
+    }
+}
 
 /**
  * KAN-103 — the live wallet shell behind the app-shell Home destination. Builds a [WalletRepository]
@@ -128,6 +173,17 @@ fun WalletShell(onLock: () -> Unit) {
                 )
             }
             SendFlow(viewModel = sendViewModel, onExit = { dest = WalletDest.Home })
+        }
+        WalletDest.Portfolio -> {
+            // PF-1 overview (KAN-107) over the live proxy assembler; aggregates the shown accounts.
+            val pfViewModel: PortfolioOverviewViewModel = viewModel(key = "portfolio") {
+                PortfolioOverviewViewModel(buildPortfolioLoader { viewModel.accounts.map { it.address } })
+            }
+            PortfolioOverviewScreen(
+                state = pfViewModel.uiState,
+                onRetry = pfViewModel::refresh,
+                onBack = { dest = WalletDest.Home },
+            )
         }
     }
 }

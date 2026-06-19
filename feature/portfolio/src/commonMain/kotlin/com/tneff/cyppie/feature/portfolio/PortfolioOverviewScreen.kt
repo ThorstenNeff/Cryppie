@@ -58,12 +58,13 @@ fun PortfolioOverviewScreen(
     state: PortfolioOverviewUiState,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
 ) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
 
     Column(modifier = modifier.fillMaxSize().testTag(PortfolioTestTags.SCREEN)) {
-        CryptasaTopAppBar(title = stringResource(Res.string.pf_title))
+        CryptasaTopAppBar(title = stringResource(Res.string.pf_title), onBack = onBack)
         when (state) {
             PortfolioOverviewUiState.Loading -> CenteredState {
                 CircularProgressIndicator(
