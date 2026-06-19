@@ -37,3 +37,14 @@
 - **Pause/Revoke-Kill-Switch:** der User kann Session-Keys jederzeit on-chain revoken; zusätzlich ein **globaler Pause-Schalter** (Modul/Backend stoppt neue UserOps sofort) für den Incident-Fall.
 
 **(c) Revisit-Trigger (verbindlich):** das **externe Audit wird nachgeschoben — BEVOR die Caps signifikant hochgezogen werden** (d. h. vor dem Übergang von „niedrige Staged-Caps" auf produktive/hohe Limits). Bis das Audit vorliegt, **bleiben die Caps im niedrigen Staged-Bereich**. Weitere Trigger: jeder Modul-relevante Incident/Bounty-Fund → Audit-Vorzug. Diese Risiko-Linie ist die dokumentierte Vorgabe für den **PRD-05/07-Contract-Track**.
+
+## Stack-Konkretisierung (Recon 2026-06-19, Backend-Agent — non-binding, Input für den PRD-05-Kickoff)
+
+Recon via Context7 (permissionless.js/Pimlico, Rhinestone SDK). Beantwortet Q2–Q4 und schärft die Resourcing-/Audit-Linie:
+
+- **Q2 SCA-Stack → ERC-7579** (nicht ERC-6900: 7579 trägt das Ökosystem + die auditierten Module). Basis: **Kernel (ZeroDev)** [7579-nativ, leichtgewichtig, 7702-ready] oder **Safe7579** [maximal auditiert] — beide via permissionless.js. **Session-Key-Modul = Rhinestone Smart Sessions** (auditiertes 7579-Modul): `ScopedAction` (target + selector) + Policies (`SpendingLimits` pro Token, Time-Frame, Usage-Limit) — liefert (A)/(C)/Q7 als **fertige, auditierte** Primitive.
+- **Q3 EOA→SCA → EIP-7702 (same-address)** primär (post-Pectra, ETH + Base): die on-device-EOA wird zur SCA an **derselben Adresse = der SIWE-Platform-Identität** ([[0026]]) → **keine** Adress-/Fund-Migration. Counterfactual-neuer-SCA nur als Fallback wo 7702 nicht verfügbar.
+- **Q4 Bundler/Paymaster → Pimlico** (permissionless.js) primär — ETH + Base, reife 7579/7702/SmartSessions-Integration, Paymaster (Gas-Sponsoring / ERC-20-Gas), EntryPoint 0.7. **Alchemy Account-Kit** = Infra-Synergie-Alternative ([[0021]]-Proxy), aber schwächeres Session-Tooling → Kostenvergleich beim Kickoff.
+- **🎯 Resourcing/Audit (entschärft die GA-Risiko-Linie weiter):** Session-/Policy-Logik = **auditierte Off-the-shelf-Module** (Smart Sessions + Kernel/Safe7579) → **kein/minimaler Custom-Solidity** für **DCA v1** (Standard-Policies target/selector/spending/time genügen). Folge: **(1)** kein Solidity-Spezialist für v1 — die Arbeit ist **Integration** (permissionless.js / Rhinestone-SDK + on-device-Grant-UX + Trigger-Pfad), Dev-machbar; **(2)** die in (B)/Q5 + der GA-Risiko-Akzeptanz beschriebene **„ungeprüfter Funds-Contract"-Fläche schrumpft drastisch** (auditierte Module statt Eigenbau) — das Audit-Restrisiko ist deutlich kleiner als ursprünglich angenommen. Ein bespoke Policy-Modul (mit eigenem on-chain-Audit) erst, falls 06/07 (Copy/Vaults) es brauchen.
+
+Verbindlich gepinnt wird der Stack beim **PRD-05-Kickoff** (zusammen mit Q1 Custody-Modell, Q5 Audit-Timing, Q6 Chain-Support).
