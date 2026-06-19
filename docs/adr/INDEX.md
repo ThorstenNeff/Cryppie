@@ -22,8 +22,9 @@ Stehende *Regeln* stehen in `../../SPEC_Dev_Agent.md`; hier liegen die *Entschei
 | [0015](0015-walletconnect-integration.md) | WalletConnect-Integration (nativ pro Plattform via expect/actual) | Accepted (PRD-02) |
 | [0016](0016-wallet-module-structure.md) | Wallet-/EVM-Modulstruktur (`:evm`/`:wallet`/`:rpc`, Web-read-only) | Accepted (PRD-02) |
 | [0017](0017-portfolio-data-sourcing.md) | Portfolio-Datenbeschaffung & Bewertung (`:portfolio`, on-device) | Accepted (PRD-03) |
-| [0018](0018-supply-chain-jitpack-dependency-verification.md) | Supply-Chain-Policy (JitPack für WC-Android + Dependency-Verification) | **Proposed** (User-Ratifizierung) |
+| [0018](0018-supply-chain-jitpack-dependency-verification.md) | Supply-Chain-Policy (JitPack für WC-Android + Dependency-Verification) | Accepted (KAN-62) |
 | [0019](0019-send-orchestrator-module.md) | `:send`-Modul: ein Send-Orchestrator (In-App + WalletConnect) | Accepted (KAN-91) |
 | 0020 | _(reserviert)_ Charting-ADR (PRD-04) | — |
+| [0021](0021-server-side-api-key-proxy.md) | Server-seitiger API-Key-Proxy (`:server`) für Alchemy/RPC | Accepted (KAN-112) |
 
-**ADRs 0001–0017 + 0019 accepted; 0018 Proposed** (Supply-Chain/JitPack — User-Ratifizierung ausstehend). (Stand 2026-06-18.) 0001–0013 tragen den Onboarding-Slice; **0014/0015/0016** den Wallet-Core-Slice (PRD-02); **0017** den Portfolio-Slice (PRD-03, on-device); **0018** die WC-Android-Supply-Chain; **0019** den Send-Slice (`:send`, PRD-02). 0010 trägt ein accepted Portfolio-Update (REST Data/Prices); Auth-Refresh-Feindetails bleiben offen für PRD-08. **0020** ist für die Charting-ADR (PRD-04) reserviert.
+**ADRs 0001–0019 + 0021 accepted; 0020 reserviert.** (Stand 2026-06-19.) 0001–0013 tragen den Onboarding-Slice; **0014/0015/0016** den Wallet-Core-Slice (PRD-02); **0017** den Portfolio-Slice (PRD-03, on-device); **0018** die WC-Android-Supply-Chain (ratifiziert); **0019** den Send-Slice (`:send`, PRD-02); **0021** den server-seitigen API-Key-Proxy (`:server`, R2/KAN-104). 0010 trägt ein accepted Portfolio-Update (REST Data/Prices); Auth-Refresh-Feindetails bleiben offen für PRD-08. **0020** ist für die Charting-ADR (PRD-04) reserviert.
