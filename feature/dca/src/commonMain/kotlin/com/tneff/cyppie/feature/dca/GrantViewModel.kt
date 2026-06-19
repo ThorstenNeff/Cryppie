@@ -89,6 +89,24 @@ class GrantViewModel(
     private fun scaledCap(): String =
         if (capAmount.isBlank()) "0" else capAmount + "0".repeat(params.spendTokenDecimals)
 
+    /** Estimated number of buys over the duration at the chosen frequency (= the session's `usageLimit`). */
+    fun estimatedBuys(): Int = (durationDays.toLong() * 86_400L / frequency.seconds).toInt().coerceAtLeast(1)
+
+    /** Float-free multiply of a non-negative base-10 string by a small non-negative [factor]. */
+    private fun mulDecimal(dec: String, factor: Long): String {
+        if (factor == 0L || dec == "0") return "0"
+        val digits = IntArray(dec.length) { dec[it] - '0' }
+        val out = ArrayDeque<Char>()
+        var carry = 0L
+        for (i in digits.indices.reversed()) {
+            val prod = digits[i] * factor + carry
+            out.addFirst('0' + (prod % 10).toInt())
+            carry = prod / 10
+        }
+        while (carry > 0) { out.addFirst('0' + (carry % 10).toInt()); carry /= 10 }
+        return out.joinToString("").trimStart('0').ifEmpty { "0" }
+    }
+
     /**
      * The VERIFIED cap rendered in whole units, float-free, via the configured token decimals. If the
      * verified token differs from the one we configured (tamper signal), decimals would be wrong — so we
@@ -109,7 +127,7 @@ class GrantViewModel(
     fun buildConfig(): SessionConfig {
         configCache?.let { return it }
         val validUntil = nowEpochSeconds() + durationDays.toLong() * 86_400L
-        val maxOps = (durationDays.toLong() * 86_400L / frequency.seconds).toInt().coerceAtLeast(1)
+        val maxOps = estimatedBuys()
         return SessionConfig(
             chainId = params.chainId,
             account = owner.value,
@@ -117,8 +135,12 @@ class GrantViewModel(
                 ScopedAction(
                     target = params.router,
                     selector = params.swapSelector,
-                    spendingLimits = listOf(SpendingLimit(token = params.spendToken, cap = scaledCap())),
-                    rollingWindowSeconds = frequency.seconds,
+                    // Cumulative on-chain cap (no window): the FULL budget = per-buy × number-of-buys. The
+                    // spending-limit policy accumulates `alreadySpent` ≤ cap; per-buy alone would exhaust the
+                    // session after the 1st buy. Frequency/"per week" is BACKEND scheduling (off-chain) — NOT
+                    // on-chain-enforced; on-chain guarantees only the cumulative total ≤ cap.
+                    spendingLimits = listOf(SpendingLimit(token = params.spendToken, cap = mulDecimal(scaledCap(), maxOps.toLong()))),
+                    rollingWindowSeconds = frequency.seconds, // off-chain scheduling metadata (not in the signed bytes)
                     usageLimit = maxOps,
                     validUntil = validUntil,
                 ),

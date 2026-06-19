@@ -122,7 +122,8 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                         DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(verified.actionTarget), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_selector), BidiSanitizer.sanitize(verified.actionSelector), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_spend_token), BidiSanitizer.sanitize(verified.spendToken), ltr = true, truncate = false)
-                        DisclosureRow(stringResource(Res.string.dca_total_cap), viewModel.capHuman(verified), ltr = true, valueTestTag = "dca_grant_cap")
+                        // N3: the disclosed cap is the cumulative TOTAL budget; show the per-buy × count breakdown.
+                        DisclosureRow(stringResource(Res.string.dca_total_cap), "${viewModel.capHuman(verified)} (= ${viewModel.capAmount} × ${viewModel.estimatedBuys()})", ltr = true, valueTestTag = "dca_grant_cap")
                         DisclosureRow(stringResource(Res.string.dca_window_start), verified.windowStartEpochSeconds.toString(), ltr = true)
                         DisclosureRow(stringResource(Res.string.dca_expires), verified.windowEndEpochSeconds.toString(), ltr = true)
                     }
