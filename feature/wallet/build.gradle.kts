@@ -37,6 +37,9 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             // Coil3 Ktor engine — Android (KAN-105). Not transitive from :rpc (implementation there).
             implementation(libs.ktor.client.okhttp)
+            // Biometric Send re-auth (KAN-119) — BiometricPrompt + CryptoObject, needs a FragmentActivity host.
+            implementation(libs.androidx.biometric)
+            implementation(libs.androidx.fragment)
         }
         jvmMain.dependencies {
             // Coil3 Ktor engine — Desktop/JVM (KAN-105).

@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -301,13 +302,13 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
                     .testTag(WalletTestTags.SEND_DISCLOSURE),
                 verticalArrangement = Arrangement.spacedBy(spacing.sm),
             ) {
-                DisclosureRow(stringResource(Res.string.send_disclosure_asset), asset.symbol)
+                DisclosureRow(stringResource(Res.string.send_disclosure_asset), asset.symbol, valueTestTag = WalletTestTags.SEND_DISCLOSURE_ASSET)
                 DisclosureRow(stringResource(Res.string.send_disclosure_to), viewModel.disclosedRecipient(prepared).value, ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TO)
-                DisclosureRow(stringResource(Res.string.send_disclosure_network), d.chain.displayName)
+                DisclosureRow(stringResource(Res.string.send_disclosure_network), d.chain.displayName, valueTestTag = WalletTestTags.SEND_DISCLOSURE_NETWORK)
                 DisclosureRow(stringResource(Res.string.send_disclosure_nonce), d.nonce.toLong().toString(), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_NONCE)
                 DisclosureRow(stringResource(Res.string.send_disclosure_gas), d.gasLimit.toLong().toString(), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_GAS)
-                DisclosureRow(stringResource(Res.string.send_disclosure_maxfee), "${formatTokenAmount(d.maxFeePerGas, 9, profile)} gwei", ltr = true)
-                DisclosureRow(stringResource(Res.string.send_disclosure_fee), "${formatTokenAmount(d.maxNetworkFee, 18, profile)} ETH", ltr = true)
+                DisclosureRow(stringResource(Res.string.send_disclosure_maxfee), "${formatTokenAmount(d.maxFeePerGas, 9, profile)} gwei", ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_MAXFEE)
+                DisclosureRow(stringResource(Res.string.send_disclosure_fee), "${formatTokenAmount(d.maxNetworkFee, 18, profile)} ETH", ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_FEE)
                 DisclosureRow(stringResource(Res.string.send_disclosure_total), "${formatTokenAmount(total, 18, profile)} ETH", ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TOTAL)
             }
 
@@ -338,6 +339,15 @@ private fun SendAuthorize(viewModel: SendViewModel, onBack: () -> Unit, modifier
     SecureScreenEffect()
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
+    // KAN-119: on entering the gate, auto-present the biometric prompt. Success → fresh per-sign source
+    // → sign (M1). Cancel/unavailable → fall through to the password field below (always-available
+    // fallback). Fail-closed: only a non-null source ever signs.
+    val biometric = rememberBiometricSign()
+    LaunchedEffect(Unit) {
+        if (biometric.available()) {
+            biometric.authorize()?.let(viewModel::submitBiometricSource)
+        }
+    }
     Scaffolded(title = stringResource(Res.string.send_auth_title), onBack = onBack, modifier = modifier) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),

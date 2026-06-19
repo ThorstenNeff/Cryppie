@@ -195,6 +195,17 @@ class SendViewModel(
         }
     }
 
+    /**
+     * Biometric re-auth (KAN-119): sign with a fresh biometric-unlocked [source] — same fail-closed/M1
+     * path as the password gate ([signWith] signs exactly `prepared`, then zeroizes the source). The
+     * caller (Authorize screen) passes a non-null source only on a successful biometric prompt.
+     */
+    fun submitBiometricSource(source: SeedSource) {
+        if (prepared == null || authorizing || signing) return
+        authPassword = ""
+        signWith(source)
+    }
+
     /** The disclosed amount in the asset's units (from `prepared`, not the form — L1). */
     fun disclosedAmount(p: PreparedSend): Quantity =
         when (val c = p.disclosure.call) {
