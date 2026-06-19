@@ -273,6 +273,8 @@ fun WalletShell(onLock: () -> Unit) {
                             runCatching { SeedVault(CiphertextStore.defaultFile()).unlock(pw) }.getOrNull()
                         }
                     },
+                    // Et.3b: the same Send pipeline drives WC eth_sendTransaction (prepare → sign → broadcast).
+                    sendOrchestrator = SendOrchestrator(defaultRpcByChain),
                 )
             }
             WalletConnectRoot(viewModel = wcViewModel, onExit = { dest = WalletDest.Home })

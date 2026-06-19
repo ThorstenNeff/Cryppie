@@ -454,7 +454,7 @@ private fun TxHashAndExplorer(txHash: String, chain: com.tneff.cyppie.walletcore
 }
 
 @Composable
-private fun DisclosureRow(label: String, value: String, ltr: Boolean = false, valueTestTag: String? = null) {
+internal fun DisclosureRow(label: String, value: String, ltr: Boolean = false, valueTestTag: String? = null) {
     val colors = CryptasaTheme.colors
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = CryptasaTheme.typography.labelSmall, color = colors.onSurfaceVariant)

@@ -30,7 +30,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.intl.Locale
 import com.tneff.cyppie.designsystem.BidiSanitizer
+import com.tneff.cyppie.designsystem.NumberFormatProfile
+import com.tneff.cyppie.send.DecodedCall
+import com.tneff.cyppie.walletconnect.SendTransactionParams
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
@@ -66,8 +70,16 @@ import com.tneff.cyppie.feature.wallet.generated.resources.wc_pairing_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_proposal_note
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_proposal_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_reject
+import com.tneff.cyppie.feature.wallet.generated.resources.send_disclosure_fee
+import com.tneff.cyppie.feature.wallet.generated.resources.send_disclosure_gas
+import com.tneff.cyppie.feature.wallet.generated.resources.send_disclosure_maxfee
+import com.tneff.cyppie.feature.wallet.generated.resources.send_disclosure_network
+import com.tneff.cyppie.feature.wallet.generated.resources.send_disclosure_nonce
+import com.tneff.cyppie.feature.wallet.generated.resources.send_disclosure_to
+import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_approve_send
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_approve_sign
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_method
+import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_raw
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_sign_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_typed_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_sign_message_label
@@ -248,10 +260,15 @@ private fun WcRequestScreen(
             // is blocked (not merely warned), so we never sign a payload the user couldn't see.
             val signReq = (decoded as? WcDecodedRequest.SignNow)?.request
             val typedRoot = (signReq as? WcSigningRequest.SignTypedDataV4)?.let { parseTypedData(it.typedDataJson) }
-            val disclosable = when (signReq) {
-                is WcSigningRequest.PersonalSign -> true
-                is WcSigningRequest.SignTypedDataV4 -> typedRoot != null
-                else -> false // SendTransaction = Et.3b; null = not a sign-now request
+            val isSendTx = decoded is WcDecodedRequest.SendTransaction
+            val disclosable = when (decoded) {
+                is WcDecodedRequest.SignNow -> when (decoded.request) {
+                    is WcSigningRequest.PersonalSign -> true
+                    is WcSigningRequest.SignTypedDataV4 -> typedRoot != null
+                    is WcSigningRequest.SendTransaction -> false
+                }
+                // Et.3b: ready once prepare (complete + #3/#4 bind) succeeded; signs exactly the prepared tx.
+                is WcDecodedRequest.SendTransaction -> viewModel.preparedSend != null
             }
 
             when (decoded) {
@@ -260,21 +277,16 @@ private fun WcRequestScreen(
                     is WcSigningRequest.SignTypedDataV4 -> TypedDataBody(req, typedRoot)
                     is WcSigningRequest.SendTransaction -> Text(stringResource(Res.string.wc_req_method, request.method))
                 }
-                is WcDecodedRequest.SendTransaction -> Text(
-                    // Et.3b: SendTx prepare+broadcast + #4 chain-binding (needs Dev-2's approvedChains).
-                    text = stringResource(Res.string.wc_req_method, request.method),
-                    style = CryptasaTheme.typography.body,
-                    color = colors.onSurfaceVariant,
-                )
+                is WcDecodedRequest.SendTransaction -> SendTxBody(viewModel, decoded.params)
             }
 
             WcErrorBanner(viewModel.error)
 
             if (viewModel.authorizing) {
-                WcAuthorizePanel(viewModel)
+                WcAuthorizePanel(viewModel, sendTx = isSendTx)
             } else {
                 CryptasaButton(
-                    text = stringResource(Res.string.wc_req_approve_sign),
+                    text = stringResource(if (isSendTx) Res.string.wc_req_approve_send else Res.string.wc_req_approve_sign),
                     onClick = { viewModel.startAuthorize() },
                     enabled = disclosable && !viewModel.busy,
                     modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.WC_REQ_APPROVE),
@@ -356,9 +368,46 @@ private fun LeafRow(label: String, value: String) {
     }
 }
 
+/**
+ * Et.3b — SendTx disclosure: the COMPLETED+bound tx (no TOCTOU). While preparing, a spinner; once
+ * prepared, the tx fields (reusing the Send-Confirm [DisclosureRow]) + a `wc_req_raw` expandable with
+ * the raw to/value/data. The signer (`from`) is already in the header (M2). All amounts locale-formatted.
+ */
+@Composable
+private fun SendTxBody(viewModel: WalletConnectViewModel, params: SendTransactionParams) {
+    val colors = CryptasaTheme.colors
+    val prepared = viewModel.preparedSend
+    if (viewModel.preparing) { BusyRing(); return }
+    if (prepared == null) return // failure surfaced by WcErrorBanner
+    val d = prepared.disclosure
+    val profile = remember { NumberFormatProfile.forLanguageTag(Locale.current.toLanguageTag()) }
+    // Recipient: the decoded ERC-20 recipient when present, else the tx `to` (native). Honest either way;
+    // the raw section below shows the literal to/value/data.
+    val recipient = (d.call as? DecodedCall.Erc20Transfer)?.recipient?.value ?: d.to.value
+    DisclosureRow(stringResource(Res.string.send_disclosure_to), BidiSanitizer.sanitize(recipient), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TO)
+    DisclosureRow(stringResource(Res.string.send_disclosure_network), d.chain.displayName)
+    DisclosureRow("ETH", "${formatTokenAmount(d.value, 18, profile)} ETH", ltr = true)
+    DisclosureRow(stringResource(Res.string.send_disclosure_nonce), d.nonce.toLong().toString(), ltr = true)
+    DisclosureRow(stringResource(Res.string.send_disclosure_gas), d.gasLimit.toLong().toString(), ltr = true)
+    DisclosureRow(stringResource(Res.string.send_disclosure_maxfee), "${formatTokenAmount(d.maxFeePerGas, 9, profile)} gwei", ltr = true)
+    DisclosureRow(stringResource(Res.string.send_disclosure_fee), "${formatTokenAmount(d.maxNetworkFee, 18, profile)} ETH", ltr = true)
+
+    var rawShown by remember { mutableStateOf(false) }
+    CryptasaButton(
+        text = stringResource(Res.string.wc_req_raw),
+        onClick = { rawShown = !rawShown },
+        style = CryptasaButtonStyle.Secondary,
+        modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.WC_REQ_RAW),
+    )
+    if (rawShown) {
+        val raw = "to: ${params.to?.value ?: "—"}\nvalue: ${params.value.toLong()}\ndata: 0x${Hex.encode(params.data)}"
+        LtrIsland { Text(raw, style = CryptasaTheme.typography.bodySmall, color = colors.onSurfaceVariant) }
+    }
+}
+
 /** Re-auth panel (mirrors Send): biometric auto-prompt on entry; password is the always-on fallback. */
 @Composable
-private fun WcAuthorizePanel(viewModel: WalletConnectViewModel) {
+private fun WcAuthorizePanel(viewModel: WalletConnectViewModel, sendTx: Boolean) {
     val biometric = rememberBiometricSign()
     LaunchedEffect(Unit) {
         if (biometric.available()) biometric.authorize()?.let(viewModel::submitBiometricSource)
@@ -376,7 +425,7 @@ private fun WcAuthorizePanel(viewModel: WalletConnectViewModel) {
         modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.WC_AUTH_PASSWORD),
     )
     CryptasaButton(
-        text = stringResource(Res.string.wc_req_approve_sign),
+        text = stringResource(if (sendTx) Res.string.wc_req_approve_send else Res.string.wc_req_approve_sign),
         onClick = viewModel::authorizeAndSign,
         enabled = viewModel.authPassword.isNotEmpty() && !viewModel.busy,
         modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.WC_AUTH_SUBMIT),

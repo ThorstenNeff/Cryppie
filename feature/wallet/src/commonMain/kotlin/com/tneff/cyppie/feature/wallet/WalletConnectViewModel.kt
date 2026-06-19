@@ -6,17 +6,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tneff.cyppie.evm.Hex
+import com.tneff.cyppie.send.PreparedSend
+import com.tneff.cyppie.send.SendOrchestrator
 import com.tneff.cyppie.wallet.EvmAccount
 import com.tneff.cyppie.wallet.EvmKeyManager
 import com.tneff.cyppie.wallet.SeedSource
-import com.tneff.cyppie.walletconnect.WalletConnectController
 import com.tneff.cyppie.walletconnect.WalletConnectSigner
+import com.tneff.cyppie.walletconnect.WcTransport
 import com.tneff.cyppie.walletconnect.WcDecodedRequest
 import com.tneff.cyppie.walletconnect.WcEvent
 import com.tneff.cyppie.walletconnect.WcSessionProposal
 import com.tneff.cyppie.walletconnect.WcSessionRequest
 import com.tneff.cyppie.walletconnect.WcSigningRequest
 import com.tneff.cyppie.walletconnect.decode
+import com.tneff.cyppie.walletconnect.prepareWalletConnectSend
 import com.tneff.cyppie.walletcore.EvmChain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,11 +45,17 @@ sealed interface WcUiState {
  * [error] is surfaced by whatever screen is active (controller OnError spans all ops — review L1).
  */
 class WalletConnectViewModel(
-    private val controller: WalletConnectController,
+    private val controller: WcTransport,
     private val accounts: List<EvmAccount>,
     /** Re-auth: decrypt a FRESH per-signature [SeedSource] from the password, or null on a wrong one. */
     private val reauth: suspend (CharArray) -> SeedSource?,
+    /** Send pipeline for eth_sendTransaction (Et.3b): prepare (complete+bind) → sign → broadcast. */
+    private val sendOrchestrator: SendOrchestrator,
 ) : ViewModel() {
+
+    /** The completed+bound SendTx awaiting approval (Et.3b); null until prepared / for non-SendTx. */
+    var preparedSend: PreparedSend? by mutableStateOf(null); private set
+    var preparing: Boolean by mutableStateOf(false); private set
 
     var uiState: WcUiState by mutableStateOf(WcUiState.Idle); private set
     var busy: Boolean by mutableStateOf(false); private set
@@ -98,18 +107,35 @@ class WalletConnectViewModel(
             error = "Unsupported WalletConnect request"
             return
         }
+        preparedSend = null
         uiState = WcUiState.Request(request, decoded)
+        // Et.3b: eth_sendTransaction must be completed (nonce/fees) + bound BEFORE disclosure (no TOCTOU).
+        // Bind to the SESSION-approved accounts (#3) + chains (#4) — both read from the SDK session store.
+        if (decoded is WcDecodedRequest.SendTransaction) {
+            preparing = true
+            viewModelScope.launch {
+                preparedSend = runCatching {
+                    val approvedChainIds = controller.approvedChains(request.topic)
+                    val approvedAccts = accounts.filter { it.address in controller.approvedAccounts(request.topic) }
+                    sendOrchestrator.prepareWalletConnectSend(decoded.params, approvedAccts, approvedChainIds)
+                }.onFailure { error = it.message ?: "Could not prepare the transaction" }.getOrNull()
+                preparing = false
+            }
+        }
     }
 
-    // ---- Sign step (Et.3a: personal_sign / EIP-712) ----
+    // ---- Sign/send step (Et.3a sign-now + Et.3b SendTx) ----
 
-    fun startAuthorize() { if (currentSignRequest() != null) { authorizing = true; authError = false } }
+    /** Whether the request is ready to authorize: a sign-now request, or a prepared SendTx. */
+    private fun canAuthorize(): Boolean = currentSignRequest() != null || preparedSend != null
+
+    fun startAuthorize() { if (canAuthorize()) { authorizing = true; authError = false } }
     fun cancelAuthorize() { authorizing = false; authPassword = ""; authError = false }
     fun updateAuthPassword(value: String) { authPassword = value; authError = false }
 
-    /** Password re-auth → fresh source → sign+respond (fail-closed: wrong password never signs). */
+    /** Password re-auth → fresh source → sign/send+respond (fail-closed: wrong password never signs). */
     fun authorizeAndSign() {
-        if (busy || currentSignRequest() == null) return
+        if (busy || !canAuthorize()) return
         val pw = authPassword.toCharArray()
         busy = true
         authError = false
@@ -118,7 +144,7 @@ class WalletConnectViewModel(
             pw.fill(' ')
             if (src != null) {
                 authPassword = ""
-                signAndRespond(src)
+                submitSource(src)
             } else {
                 authError = true
                 busy = false
@@ -126,12 +152,37 @@ class WalletConnectViewModel(
         }
     }
 
-    /** Biometric re-auth (KAN-119): a fresh source from the prompt → sign+respond. */
+    /** Biometric re-auth (KAN-119): a fresh source from the prompt → sign/send+respond. */
     fun submitBiometricSource(source: SeedSource) {
-        if (busy || currentSignRequest() == null) return
+        if (busy || !canAuthorize()) return
         busy = true
         authPassword = ""
-        viewModelScope.launch { signAndRespond(source) }
+        viewModelScope.launch { submitSource(source) }
+    }
+
+    /** Dispatch the re-authed source: broadcast a prepared SendTx (Et.3b) or sign-now (Et.3a). */
+    private suspend fun submitSource(source: SeedSource) {
+        if (preparedSend != null) signAndBroadcastSend(source) else signAndRespond(source)
+    }
+
+    /**
+     * Et.3b — sign the prepared SendTx over [source] (closed/zeroized by signAndBroadcast, M1), broadcast
+     * it, and respond to the dApp with the tx hash. Signs exactly the disclosed [preparedSend] (no TOCTOU).
+     */
+    private suspend fun signAndBroadcastSend(source: SeedSource) {
+        val state = uiState as? WcUiState.Request
+        val prepared = preparedSend
+        if (state == null || prepared == null) { (source as? AutoCloseable)?.close(); busy = false; return }
+        runCatching {
+            val result = sendOrchestrator.signAndBroadcast(prepared, source)
+            controller.respondRequest(state.request.requestId, state.request.topic, result.txHash)
+        }.onFailure {
+            runCatching { controller.rejectRequest(state.request.requestId, state.request.topic, "Transaction failed") }
+            error = it.message ?: "Transaction failed"
+        }
+        authorizing = false
+        busy = false
+        if (error == null) reset()
     }
 
     private fun currentSignRequest(): WcSigningRequest? =
@@ -149,6 +200,16 @@ class WalletConnectViewModel(
         val index = accounts.indexOfFirst { it.address == req.address }
         if (index < 0) {
             (source as? AutoCloseable)?.close(); error = "No matching account for this request"; authorizing = false; busy = false
+            return
+        }
+        // M3 (review): the signer must be an account this session actually approved — not merely a known
+        // wallet account (parallel to the #4 chain-binding). Fail-closed: an unknown/unapproved session
+        // (empty set) rejects. Read from the SDK session store via the transport (survives restart).
+        val approved = runCatching { controller.approvedAccounts(state.request.topic) }.getOrElse { emptySet() }
+        if (req.address !in approved) {
+            (source as? AutoCloseable)?.close()
+            runCatching { controller.rejectRequest(state.request.requestId, state.request.topic, "Account not approved for this session") }
+            error = "Signing account is not approved for this session"; authorizing = false; busy = false
             return
         }
         runCatching {
@@ -173,7 +234,10 @@ class WalletConnectViewModel(
 
     fun dismissError() { error = null }
 
-    private fun reset() { uiState = WcUiState.Idle; authorizing = false; authPassword = ""; authError = false }
+    private fun reset() {
+        uiState = WcUiState.Idle; authorizing = false; authPassword = ""; authError = false
+        preparedSend = null; preparing = false
+    }
 
     /** Runs a controller op fail-closed: gate on [busy], clear [error], surface failures (no crash). */
     private fun runOp(block: suspend () -> Unit) {
