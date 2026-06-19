@@ -3,123 +3,174 @@ package com.tneff.cyppie.feature.market
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.tneff.cyppie.designsystem.components.CryptasaBanner
+import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
+import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
-import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.components.SegmentedControl
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.market.SpotPrice
 import com.tneff.cyppie.feature.market.generated.resources.Res
+import com.tneff.cyppie.feature.market.generated.resources.mkt_empty
 import com.tneff.cyppie.feature.market.generated.resources.mkt_load_error
+import com.tneff.cyppie.feature.market.generated.resources.mkt_marketcap
+import com.tneff.cyppie.feature.market.generated.resources.mkt_open_portfolio
 import com.tneff.cyppie.feature.market.generated.resources.mkt_retry
+import com.tneff.cyppie.feature.market.generated.resources.mkt_section_market
+import com.tneff.cyppie.feature.market.generated.resources.mkt_supply
+import com.tneff.cyppie.feature.market.generated.resources.mkt_volume_24h
 import org.jetbrains.compose.resources.stringResource
 
-/** Range chip labels (scaffold — pre-i18n; mkt_* keys land when the copy is finalized). */
-private fun MarketRange.label(): String = when (this) {
-    MarketRange.DAY -> "1D"
-    MarketRange.WEEK -> "1W"
-    MarketRange.MONTH -> "1M"
-    MarketRange.YEAR -> "1Y"
+private val TWO_COLUMN_MIN_WIDTH = 600.dp
+
+private fun MarketRange.label(): String = when (this) { // 1D/1W/1M/1Y universal, not translated (SPEC §3)
+    MarketRange.DAY -> "1D"; MarketRange.WEEK -> "1W"; MarketRange.MONTH -> "1M"; MarketRange.YEAR -> "1Y"
 }
 
 /**
- * Market detail (PRD-04 scaffold): asset header + price chart ([MarketChart] web-seam) + range selector
- * over [MarketViewModel]. Adaptive width like the portfolio screen; DI/nav from the app shell (takes the
- * VM + an [onBack] callback → web-safe). States: loading / content / error-retry (FR-4). Copy/i18n
- * (mkt_*), price/Δ header, and the live `:market` wiring follow the `:market` merge (ADR-0025).
+ * MD-1 token/asset detail (SPEC_MD_detail) — header + price block (spot LTR + 24h change icon+text +
+ * freshness) + chart container (range tabs + the ADR-0020 Compose-Canvas candlestick) + market stats +
+ * optional "view in portfolio". States: Loading (skeleton) / Error (banner+retry) / Content (with empty +
+ * stale handled). **No `≈` marker** — market data is canonical (distinct from PF-5). Adaptive: Compact
+ * vertical, Medium+ 2-column (stats | chart). DI/nav from the app shell → web-safe.
  */
 @Composable
 fun MarketScreen(
     viewModel: MarketViewModel,
     assetTitle: String,
     onBack: () -> Unit = {},
+    onViewInPortfolio: (() -> Unit)? = null, // non-null only when the asset is held (SPEC §5 → PF-4)
     modifier: Modifier = Modifier,
 ) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
-        Column(modifier = Modifier.widthIn(max = 640.dp).fillMaxSize()) {
+        Column(modifier = Modifier.widthIn(max = 900.dp).fillMaxSize()) {
             CryptasaTopAppBar(title = assetTitle, onBack = onBack)
             Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = spacing.xl).testTag("mkt_screen"),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                    .padding(horizontal = spacing.xl).testTag("mkt_screen"),
                 verticalArrangement = Arrangement.spacedBy(spacing.lg),
             ) {
                 when (val state = viewModel.uiState) {
-                    is MarketUiState.Loading ->
-                        Box(Modifier.fillMaxWidth().padding(top = spacing.xl), contentAlignment = Alignment.Center) {
-                            ProgressRing(diameter = 32.dp)
-                        }
-                    is MarketUiState.Content -> {
-                        PriceHeader(state.spot)
-                        if (state.candles.isEmpty()) {
-                            // FR-4: priced/loaded but no candle data for this range → empty state (no crash).
-                            Box(Modifier.fillMaxWidth().padding(top = spacing.xl), contentAlignment = Alignment.Center) {
-                                Text(stringResource(Res.string.mkt_load_error), style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant)
-                            }
-                        } else {
-                            MarketChart(candles = state.candles, modifier = Modifier.padding(top = spacing.md).testTag("mkt_chart"))
-                        }
-                        RangeSelector(viewModel)
-                    }
+                    is MarketUiState.Loading -> LoadingSkeleton()
                     is MarketUiState.Error ->
-                        Column(Modifier.fillMaxWidth().padding(top = spacing.xl), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(stringResource(Res.string.mkt_load_error), style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant)
-                            CryptasaButton(text = stringResource(Res.string.mkt_retry), onClick = viewModel::retry, modifier = Modifier.padding(top = spacing.md).testTag("mkt_retry"))
-                        }
+                        CryptasaBanner(
+                            title = stringResource(Res.string.mkt_load_error),
+                            tone = CryptasaBannerTone.Danger,
+                            actionText = stringResource(Res.string.mkt_retry),
+                            onActionClick = viewModel::retry,
+                            modifier = Modifier.padding(top = spacing.md).testTag("mkt_load_error"),
+                        )
+                    is MarketUiState.Content -> ContentBody(state, viewModel, onViewInPortfolio)
                 }
             }
         }
     }
 }
 
-/** Price/Δ header (PRD-04): current spot + 24h change (success/danger). Numeric → LTR island (RTL-safe).
- *  Values are decimal Strings from `:market` (FR-6 — no float). Pre-i18n; mkt_ copy lands later. */
 @Composable
-private fun PriceHeader(spot: SpotPrice?) {
-    if (spot == null) return
-    val colors = CryptasaTheme.colors
-    Column(modifier = Modifier.fillMaxWidth().testTag("mkt_price_header")) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Text(
-                text = "${spot.priceDecimal} ${spot.vs.uppercase()}",
-                style = CryptasaTheme.typography.titleLarge,
-                color = colors.onSurface,
-            )
-            spot.change24hPct?.let { pct ->
-                val negative = pct.trim().startsWith("-")
-                val sign = if (!negative && !pct.trim().startsWith("+")) "+" else ""
-                Text(
-                    text = "$sign$pct%",
-                    style = CryptasaTheme.typography.body,
-                    color = if (negative) colors.danger else colors.success,
-                    modifier = Modifier.testTag("mkt_change_24h"),
-                )
+private fun ContentBody(state: MarketUiState.Content, viewModel: MarketViewModel, onViewInPortfolio: (() -> Unit)?) {
+    val spacing = CryptasaTheme.spacing
+    PriceBlock(state.spot, state.freshness)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val twoColumn = maxWidth >= TWO_COLUMN_MIN_WIDTH
+        if (twoColumn) {
+            Row(horizontalArrangement = Arrangement.spacedBy(spacing.xl)) {
+                Box(Modifier.weight(1f)) { ChartContainer(state, viewModel) }
+                Column(Modifier.weight(1f)) { MarketStats(state.metrics) }
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.lg)) {
+                ChartContainer(state, viewModel)
+                MarketStats(state.metrics)
             }
         }
+    }
+    if (onViewInPortfolio != null) {
+        CryptasaButton(
+            text = stringResource(Res.string.mkt_open_portfolio),
+            onClick = onViewInPortfolio,
+            style = CryptasaButtonStyle.Secondary,
+            modifier = Modifier.fillMaxWidth().padding(top = spacing.md).testTag("mkt_open_portfolio"),
+        )
     }
 }
 
 @Composable
-private fun RangeSelector(viewModel: MarketViewModel) {
-    SegmentedControl(
-        options = MarketRange.entries.toList(),
-        selected = viewModel.range,
-        onSelect = viewModel::selectRange,
-        label = { it.label() },
-        optionTestTag = { "mkt_range_${it.name.lowercase()}" },
-    )
+private fun PriceBlock(spot: SpotPrice?, freshness: Freshness?) {
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+    Column(Modifier.fillMaxWidth().padding(top = spacing.md), verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        LtrText(
+            text = if (spot != null) "${spot.priceDecimal} ${spot.vs.uppercase()}" else "—",
+            style = CryptasaTheme.typography.titleLarge,
+            color = colors.onSurface,
+            modifier = Modifier.testTag("mkt_price"),
+        )
+        ChangeBadge(spot?.change24hPct)
+        FreshnessLabel(freshness)
+    }
+}
+
+@Composable
+private fun ChartContainer(state: MarketUiState.Content, viewModel: MarketViewModel) {
+    val spacing = CryptasaTheme.spacing
+    val colors = CryptasaTheme.colors
+    Column(Modifier.fillMaxWidth().testTag("mkt_chart_container"), verticalArrangement = Arrangement.spacedBy(spacing.md)) {
+        if (state.candles.isEmpty()) {
+            // FR-4: loaded but no candle data → neutral empty hint (no chart, no crash).
+            Box(Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
+                Text(stringResource(Res.string.mkt_empty), style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant)
+            }
+        } else {
+            MarketChart(candles = state.candles, modifier = Modifier.testTag("mkt_chart"))
+        }
+        SegmentedControl(
+            options = MarketRange.entries.toList(),
+            selected = viewModel.range,
+            onSelect = viewModel::selectRange,
+            label = { it.label() },
+            optionTestTag = { "mkt_range_${it.name.lowercase()}" },
+        )
+    }
+}
+
+@Composable
+private fun MarketStats(metrics: MarketMetrics?) {
+    val colors = CryptasaTheme.colors
+    Column(Modifier.fillMaxWidth().testTag("mkt_section_market")) {
+        Text(stringResource(Res.string.mkt_section_market), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+        StatRow(stringResource(Res.string.mkt_marketcap), metrics?.marketCap, "mkt_marketcap")
+        StatRow(stringResource(Res.string.mkt_volume_24h), metrics?.volume24h, "mkt_volume_24h")
+        StatRow(stringResource(Res.string.mkt_supply), metrics?.circulatingSupply, "mkt_supply")
+    }
+}
+
+@Composable
+private fun LoadingSkeleton() {
+    val spacing = CryptasaTheme.spacing
+    Column(Modifier.fillMaxWidth().padding(top = spacing.lg).testTag("mkt_loading"), verticalArrangement = Arrangement.spacedBy(spacing.md)) {
+        SkeletonBox(Modifier.fillMaxWidth(0.5f).height(36.dp)) // price
+        SkeletonBox(Modifier.fillMaxWidth(0.3f).height(18.dp)) // change
+        SkeletonBox(Modifier.fillMaxWidth().height(220.dp)) // chart-first (NFR-1)
+        repeat(3) { SkeletonBox(Modifier.fillMaxWidth().height(20.dp)) } // stat rows
+    }
 }

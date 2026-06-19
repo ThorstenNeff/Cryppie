@@ -115,8 +115,25 @@ class MarketViewModelTest {
         val vm = MarketViewModel(eth, "usd", api, nowEpochSeconds = { 100_000L })
         advanceUntilIdle()
         val metrics = (vm.uiState as MarketUiState.Content).metrics!!
-        assertEquals("15", metrics.high24h) // source String preserved (FR-6), not a float
-        assertEquals("8", metrics.low24h)
-        assertEquals(150.0, metrics.volume24h) // render-aggregate sum
+        assertEquals("150", metrics.volume24h) // compact render-sum of candle volumes (100 + 50)
+        assertEquals(null, metrics.marketCap) // not in MarketDataApi (data gap) → "—"
+        assertEquals(null, metrics.circulatingSupply)
+    }
+
+    @Test
+    fun freshnessStaleWhenSpotOld() = runTest(dispatcher) {
+        // spot lastUpdated 10 min ago, now = 600s past → stale (> 300s threshold)
+        val api = object : MarketDataApi {
+            override suspend fun candles(asset: MarketAsset, interval: CandleInterval, range: TimeRange) =
+                listOf(Candle(1L, "1", "1", "1", "1"))
+            override suspend fun spotPrices(assets: List<MarketAsset>, vs: String) =
+                assets.associateWith { SpotPrice("100", vs, "1.0", lastUpdatedEpochSeconds = 0L) }
+            override suspend fun priceHistory(asset: MarketAsset, vs: String, interval: CandleInterval, range: TimeRange) =
+                emptyList<com.tneff.cyppie.market.PricePoint>()
+        }
+        val vm = MarketViewModel(eth, "usd", api, nowEpochSeconds = { 600L })
+        advanceUntilIdle()
+        val freshness = (vm.uiState as MarketUiState.Content).freshness
+        assertTrue(freshness is Freshness.Delayed && freshness.stale)
     }
 }

@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">无法加载行情数据。</string>
   <string name="mkt_retry">重试</string>
+  <string name="mkt_overview_title">行情</string>
+  <string name="mkt_live">实时</string>
+  <string name="mkt_last_updated">最后更新于 %1$s</string>
+  <string name="mkt_stale">价格延迟（最后更新于 %1$s）</string>
+  <string name="mkt_section_market">市场</string>
+  <string name="mkt_marketcap">市值</string>
+  <string name="mkt_volume_24h">24h 交易量</string>
+  <string name="mkt_supply">流通量</string>
+  <string name="mkt_change_24h">24h 涨跌</string>
+  <string name="mkt_open_portfolio">在投资组合中查看</string>
+  <string name="mkt_empty">暂无行情数据。</string>
+  <string name="mkt_watchlist_empty">你的自选列表中还没有资产。</string>
 </resources>

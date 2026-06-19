@@ -21,11 +21,32 @@ import kotlinx.coroutines.launch
  */
 sealed interface MarketUiState {
     data object Loading : MarketUiState
-    data class Content(val candles: List<CandleBar>, val spot: SpotPrice?, val metrics: MarketMetrics?) : MarketUiState
+    data class Content(
+        val candles: List<CandleBar>,
+        val spot: SpotPrice?,
+        val metrics: MarketMetrics?,
+        val freshness: Freshness?,
+    ) : MarketUiState
     data object Error : MarketUiState
 }
 
+/** Spot freshness (SPEC §2). null = no spot. [Delayed.stale] flips the `mkt_stale` warning vs `mkt_last_updated`. */
+sealed interface Freshness {
+    data object Live : Freshness
+    data class Delayed(val label: String, val stale: Boolean) : Freshness
+}
+
+/** Freshness from a last-updated stamp (shared by MD-1 + MD-3): no spot→null, none→Live, else Delayed
+ *  (stale past the threshold). [lastUpdatedEpochSeconds] is the (oldest, for a list) update stamp. */
+internal fun freshnessOf(lastUpdatedEpochSeconds: Long?, hasSpot: Boolean, now: Long): Freshness? {
+    if (!hasSpot) return null
+    val updated = lastUpdatedEpochSeconds ?: return Freshness.Live
+    val agoMin = ((now - updated) / 60).coerceAtLeast(0)
+    return Freshness.Delayed(label = "${agoMin}m", stale = now - updated > STALE_THRESHOLD_SECONDS)
+}
+
 private const val METRICS_WINDOW_SECONDS = 86_400L // 24h
+private const val STALE_THRESHOLD_SECONDS = 300L // spot older than 5 min → "delayed" (SPEC NFR-2 stale-served)
 
 /**
  * KAN-131/133/134 (PRD-04) — drives the Market detail screen (MD-1) over `:market`'s [MarketDataApi]
@@ -79,18 +100,18 @@ class MarketViewModel(
                             metricsFrom(data.candles(asset, CandleInterval.H1, TimeRange(now - METRICS_WINDOW_SECONDS, now)))
                         }.getOrNull()
                     }
-                    MarketUiState.Content(chart.await(), spotDeferred.await(), metrics.await())
+                    val spot = spotDeferred.await()
+                    MarketUiState.Content(chart.await(), spot, metrics.await(), freshnessOf(spot?.lastUpdatedEpochSeconds, spot != null, now))
                 }
             }.getOrElse { MarketUiState.Error }
         }
     }
 
-    /** 24h metrics from a candle window: high/low keep the source String (FR-6); volume is a render sum. */
+    /** 24h metrics from a candle window (SPEC §4). Volume = decimal-String render-sum of candle volumes;
+     *  market cap + circulating supply aren't in MarketDataApi (data gap) → null → "—". */
     private fun metricsFrom(candles: List<Candle>): MarketMetrics {
-        if (candles.isEmpty()) return MarketMetrics(null, null, null)
-        val high = candles.maxByOrNull { it.high.toDoubleOrNull() ?: Double.NEGATIVE_INFINITY }?.high
-        val low = candles.minByOrNull { it.low.toDoubleOrNull() ?: Double.POSITIVE_INFINITY }?.low
         val volumes = candles.mapNotNull { it.volume?.toDoubleOrNull() }
-        return MarketMetrics(high, low, if (volumes.isEmpty()) null else volumes.sum())
+        val volume24h = if (volumes.isEmpty()) null else formatCompact(volumes.sum())
+        return MarketMetrics(marketCap = null, volume24h = volume24h, circulatingSupply = null)
     }
 }

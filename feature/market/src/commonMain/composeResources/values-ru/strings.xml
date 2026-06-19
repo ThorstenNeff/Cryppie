@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Не удалось загрузить рыночные данные</string>
   <string name="mkt_retry">Повторить</string>
+  <string name="mkt_overview_title">Рынки</string>
+  <string name="mkt_live">Live</string>
+  <string name="mkt_last_updated">Обновлено %1$s</string>
+  <string name="mkt_stale">Цены задерживаются (обновлено %1$s)</string>
+  <string name="mkt_section_market">Рынок</string>
+  <string name="mkt_marketcap">Рыночная капитализация</string>
+  <string name="mkt_volume_24h">Объём за 24h</string>
+  <string name="mkt_supply">Циркулирующее предложение</string>
+  <string name="mkt_change_24h">Изменение за 24h</string>
+  <string name="mkt_open_portfolio">Открыть в портфеле</string>
+  <string name="mkt_empty">Рыночные данные недоступны.</string>
+  <string name="mkt_watchlist_empty">В вашем списке отслеживания пока нет активов.</string>
 </resources>

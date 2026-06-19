@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Không thể tải dữ liệu thị trường</string>
   <string name="mkt_retry">Thử lại</string>
+  <string name="mkt_overview_title">Thị trường</string>
+  <string name="mkt_live">Trực tiếp</string>
+  <string name="mkt_last_updated">Cập nhật lần cuối %1$s</string>
+  <string name="mkt_stale">Giá bị trễ (cập nhật lần cuối %1$s)</string>
+  <string name="mkt_section_market">Thị trường</string>
+  <string name="mkt_marketcap">Vốn hóa thị trường</string>
+  <string name="mkt_volume_24h">Khối lượng 24h</string>
+  <string name="mkt_supply">Nguồn cung lưu hành</string>
+  <string name="mkt_change_24h">Thay đổi 24h</string>
+  <string name="mkt_open_portfolio">Xem trong danh mục</string>
+  <string name="mkt_empty">Không có dữ liệu thị trường.</string>
+  <string name="mkt_watchlist_empty">Chưa có tài sản nào trong danh sách theo dõi.</string>
 </resources>

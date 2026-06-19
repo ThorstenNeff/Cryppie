@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Nie udało się załadować danych rynkowych</string>
   <string name="mkt_retry">Spróbuj ponownie</string>
+  <string name="mkt_overview_title">Rynki</string>
+  <string name="mkt_live">Na żywo</string>
+  <string name="mkt_last_updated">Ostatnia aktualizacja %1$s</string>
+  <string name="mkt_stale">Ceny opóźnione (ostatnia aktualizacja %1$s)</string>
+  <string name="mkt_section_market">Rynek</string>
+  <string name="mkt_marketcap">Kapitalizacja rynkowa</string>
+  <string name="mkt_volume_24h">Wolumen 24h</string>
+  <string name="mkt_supply">Podaż w obiegu</string>
+  <string name="mkt_change_24h">Zmiana 24h</string>
+  <string name="mkt_open_portfolio">Zobacz w portfolio</string>
+  <string name="mkt_empty">Brak dostępnych danych rynkowych.</string>
+  <string name="mkt_watchlist_empty">Nie masz jeszcze aktywów na liście obserwowanych.</string>
 </resources>

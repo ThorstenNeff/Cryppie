@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Piyasa verileri yüklenemedi</string>
   <string name="mkt_retry">Tekrar dene</string>
+  <string name="mkt_overview_title">Piyasalar</string>
+  <string name="mkt_live">Canlı</string>
+  <string name="mkt_last_updated">Son güncelleme %1$s</string>
+  <string name="mkt_stale">Fiyatlar gecikmeli (son güncelleme %1$s)</string>
+  <string name="mkt_section_market">Piyasa</string>
+  <string name="mkt_marketcap">Piyasa değeri</string>
+  <string name="mkt_volume_24h">24h işlem hacmi</string>
+  <string name="mkt_supply">Dolaşımdaki arz</string>
+  <string name="mkt_change_24h">24h değişim</string>
+  <string name="mkt_open_portfolio">Portföyde görüntüle</string>
+  <string name="mkt_empty">Kullanılabilir piyasa verisi yok.</string>
+  <string name="mkt_watchlist_empty">İzleme listenizde henüz varlık yok.</string>
 </resources>

@@ -3,4 +3,16 @@
 <resources>
   <string name="mkt_load_error">Det gick inte att läsa in marknadsdata</string>
   <string name="mkt_retry">Försök igen</string>
+  <string name="mkt_overview_title">Marknader</string>
+  <string name="mkt_live">Live</string>
+  <string name="mkt_last_updated">Senast uppdaterad %1$s</string>
+  <string name="mkt_stale">Priser fördröjda (senast uppdaterad %1$s)</string>
+  <string name="mkt_section_market">Marknad</string>
+  <string name="mkt_marketcap">Börsvärde</string>
+  <string name="mkt_volume_24h">24h volym</string>
+  <string name="mkt_supply">Cirkulerande utbud</string>
+  <string name="mkt_change_24h">24h förändring</string>
+  <string name="mkt_open_portfolio">Visa i portfölj</string>
+  <string name="mkt_empty">Inga marknadsdata tillgängliga.</string>
+  <string name="mkt_watchlist_empty">Inga tillgångar i din bevakningslista ännu.</string>
 </resources>
