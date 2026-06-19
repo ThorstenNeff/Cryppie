@@ -87,13 +87,17 @@ fun Application.installKeyProxy(
         // handful of price/candle endpoints the app uses — never an arbitrary CoinGecko path.
         route("/coingecko/v3/{tail...}") {
             handle {
-                proxy(config, client, rateLimiter) { key ->
+                proxy(config, client, rateLimiter, keyOf = { it.coinGeckoApiKey }) { key ->
                     tailPath().takeIf { isAllowedCoinGeckoTail(it) }?.let { CoinGeckoUpstream.url(key, it) }
                 }
             }
         }
     }
 }
+
+// Query keys that carry an upstream API secret — stripped from the relayed client query (case-insensitive)
+// so a client can never duplicate/override the server-injected key param. Alchemy is unaffected (key in path).
+private val RESERVED_UPSTREAM_QUERY_KEYS: Set<String> = setOf("x_cg_pro_api_key", "x_cg_demo_api_key")
 
 // KAN — CoinGecko least-privilege allow-list. Unlike Alchemy's fixed tails, CoinGecko paths carry
 // variable platform/contract/coin-id segments, so we match by *structure* (and bound the platform to the
@@ -166,6 +170,7 @@ private suspend fun RoutingContext.proxy(
     client: HttpClient,
     rateLimiter: FixedWindowRateLimiter,
     enforceRpcMethods: Boolean = false,
+    keyOf: (ProxyConfig) -> String? = { it.alchemyApiKey },
     buildUpstreamUrl: RoutingContext.(key: String) -> String?,
 ) {
     // ADR-0022 B: behind a reverse proxy the socket peer is the proxy, so rate-limit on the real client.
@@ -178,7 +183,9 @@ private suspend fun RoutingContext.proxy(
         call.respondText("Rate limit exceeded", status = HttpStatusCode.TooManyRequests)
         return
     }
-    val key = config.alchemyApiKey
+    // Per-route key: Alchemy routes use alchemyApiKey; the CoinGecko route uses its OWN coinGeckoApiKey
+    // (never the Alchemy key — no cross-vendor leak). Unset → 503 (route not reachable on another key).
+    val key = keyOf(config)
     if (key.isNullOrBlank()) {
         call.respondText("Upstream key not configured", status = HttpStatusCode.ServiceUnavailable)
         return
@@ -211,7 +218,14 @@ private suspend fun RoutingContext.proxy(
     val response: HttpResponse = try {
         client.request(upstreamUrl) {
             this.method = method
-            url { parameters.appendAll(call.request.queryParameters) }
+            // Faithfully relay the client's query — but NEVER a key-bearing param (e.g. an upstream URL
+            // already carries `?x_cg_pro_api_key=<server-key>`; a client-sent copy would duplicate/override
+            // it). Strip reserved keys case-insensitively so the client can't influence the injected key.
+            url {
+                call.request.queryParameters.forEach { name, values ->
+                    if (name.lowercase() !in RESERVED_UPSTREAM_QUERY_KEYS) parameters.appendAll(name, values)
+                }
+            }
             if (requestBody != null) {
                 setBody(requestBody)
                 contentType(ContentType.Application.Json)

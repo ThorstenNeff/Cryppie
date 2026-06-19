@@ -9,6 +9,13 @@ package com.tneff.cyppie
  */
 data class ProxyConfig(
     val alchemyApiKey: String?,
+    /**
+     * CoinGecko Pro key (PRD-04) — a **separate vendor secret**, read from `coinGeckoApiKey` / `COINGECKO_API_KEY`.
+     * MUST NOT reuse [alchemyApiKey]: the CoinGecko route injects this into `?x_cg_pro_api_key=…`, so sharing the
+     * slot would leak the Alchemy key to a third party. Unset → the `/coingecko` route answers `503` (never the
+     * Alchemy key, never reachable on the Alchemy key alone).
+     */
+    val coinGeckoApiKey: String? = null,
     /** Upstream networks the proxy is willing to reach — keeps it from being an open relay (abuse guard). */
     val allowedNetworks: Set<String> = DEFAULT_NETWORKS,
     /** Per-client request budget per minute (abuse guard). */
@@ -51,6 +58,7 @@ data class ProxyConfig(
             fun env(name: String): String? = System.getProperty(name) ?: System.getenv(name)
             return ProxyConfig(
                 alchemyApiKey = key,
+                coinGeckoApiKey = (System.getProperty("coinGeckoApiKey") ?: System.getenv("COINGECKO_API_KEY"))?.takeIf { it.isNotBlank() },
                 rateLimitPerMinute = env("PROXY_RATE_LIMIT")?.toIntOrNull() ?: DEFAULT_RATE_LIMIT,
                 trustedProxyHops = env("PROXY_TRUSTED_HOPS")?.toIntOrNull() ?: 0,
                 maxBodyBytes = env("PROXY_MAX_BODY_BYTES")?.toLongOrNull() ?: DEFAULT_MAX_BODY_BYTES,
@@ -91,8 +99,8 @@ object AlchemyUpstream {
  * Upstream-URL builder for CoinGecko (PRD-04 market data). Unlike Alchemy (key in path), CoinGecko takes
  * the Pro key as the `x_cg_pro_api_key` query param — injected here **server-side** so it never ships in
  * the client; the proxy then appends the client's own query (`vs_currency`/`from`/`to`/…) faithfully.
- * Pure function → unit-testable. NOTE: today this reuses [ProxyConfig.alchemyApiKey] as the generic
- * upstream key slot; split into a dedicated `coinGeckoApiKey` when the real Pro key is provisioned.
+ * Pure function → unit-testable. The [key] is the dedicated [ProxyConfig.coinGeckoApiKey] (never the
+ * Alchemy key — see the route's per-route key selection), so no cross-vendor secret leak.
  */
 object CoinGeckoUpstream {
     fun url(key: String, tail: String): String = "https://pro-api.coingecko.com/api/v3/$tail?x_cg_pro_api_key=$key"
