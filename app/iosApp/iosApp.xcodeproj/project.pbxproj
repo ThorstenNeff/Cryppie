@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		30EC6B882FE5A7B100B73B9E /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 30EC6B872FE5A7B100B73B9E /* ReownWalletKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		2463C9F047273548B5DB0048 /* Cyppie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cyppie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -41,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30EC6B882FE5A7B100B73B9E /* ReownWalletKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +90,7 @@
 			);
 			name = iosApp;
 			packageProductDependencies = (
+				30EC6B872FE5A7B100B73B9E /* ReownWalletKit */,
 			);
 			productName = iosApp;
 			productReference = 2463C9F047273548B5DB0048 /* Cyppie.app */;
@@ -114,6 +120,9 @@
 			);
 			mainGroup = 84E65947E7077ABBA3C81012;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				30EC6B862FE5A7B100B73B9E /* XCRemoteSwiftPackageReference "reown-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 50B1CE6CC655444760F1AE34 /* Products */;
 			projectDirPath = "";
@@ -372,6 +381,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		30EC6B862FE5A7B100B73B9E /* XCRemoteSwiftPackageReference "reown-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/reown-com/reown-swift";
+			requirement = {
+				kind = exactVersion;
+				version = 1.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		30EC6B872FE5A7B100B73B9E /* ReownWalletKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 30EC6B862FE5A7B100B73B9E /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = ReownWalletKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D9F76B0D40399226E83D9FC5 /* Project object */;
 }

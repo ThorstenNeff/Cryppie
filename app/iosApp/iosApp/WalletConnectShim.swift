@@ -36,7 +36,7 @@ final class WalletConnectShim: WalletConnectBridge {
                     dappUrl: p.url,
                     chains: proposal.requiredNamespaces.values.flatMap { $0.chains?.map { $0.absoluteString } ?? [] },
                     methods: Array(proposal.requiredNamespaces.values.flatMap { $0.methods }),
-                    verifyContext: context?.validation.rawValue
+                    verifyContext: Self.verifyString(context?.validation)
                 )
             }
             .store(in: &cancellables)
@@ -53,7 +53,7 @@ final class WalletConnectShim: WalletConnectBridge {
                     params: request.params.encodedJsonString(),
                     dappName: "",
                     dappUrl: "",
-                    verifyContext: context?.validation.rawValue
+                    verifyContext: Self.verifyString(context?.validation)
                 )
             }
             .store(in: &cancellables)
@@ -124,6 +124,18 @@ final class WalletConnectShim: WalletConnectBridge {
     // MARK: - Helpers
 
     private enum ShimError: Error { case badUri }
+
+    /// reown's `VerifyContext.ValidationStatus` (no rawValue) → a string the KMP `WcVerify.from` maps
+    /// (VALID→Verified, INVALID/SCAM→Invalid, else Unknown). Chain-id/verify normalization stays in Kotlin.
+    private static func verifyString(_ status: VerifyContext.ValidationStatus?) -> String? {
+        switch status {
+        case .valid: return "VALID"
+        case .invalid: return "INVALID"
+        case .scam: return "SCAM"
+        case .unknown: return "UNKNOWN"
+        case .none: return nil
+        }
+    }
 
     /// Bridge methods are synchronous (the Kotlin contract); reown's are async. Run on a Task and surface
     /// failures to Kotlin as WC errors (never crash the bridge).
