@@ -13,13 +13,20 @@ import com.tneff.cyppie.feature.portfolio.PortfolioOverview
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewScreen
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewViewModel
 import com.tneff.cyppie.portfolio.AlchemyPriceSource
+import com.tneff.cyppie.portfolio.ApproxReason
+import com.tneff.cyppie.portfolio.Metric
+import com.tneff.cyppie.portfolio.Money
+import com.tneff.cyppie.portfolio.Portfolio
 import com.tneff.cyppie.portfolio.PortfolioConfig
+import com.tneff.cyppie.portfolio.PortfolioPerformance
 import com.tneff.cyppie.portfolio.PortfolioService
+import com.tneff.cyppie.portfolio.RichPortfolio
 import com.tneff.cyppie.portfolio.TokenKey
 import com.tneff.cyppie.rpc.AlchemyDataClient
 import com.tneff.cyppie.rpc.AlchemyNetworks
 import com.tneff.cyppie.rpc.AlchemyNftClient
 import com.tneff.cyppie.rpc.AlchemyPriceClient
+import com.tneff.cyppie.rpc.AlchemyTransfersClient
 import com.tneff.cyppie.rpc.AlchemyProxyConfig
 import com.tneff.cyppie.rpc.EvmRpcClient
 import com.tneff.cyppie.rpc.NftReadClient
@@ -78,15 +85,23 @@ private val portfolioKnownGood: Set<TokenKey> by lazy {
 @OptIn(kotlin.time.ExperimentalTime::class)
 private fun nowEpochSeconds(): Long = kotlin.time.Clock.System.now().epochSeconds
 
+/** Daily price-history window for FIFO cost-basis (covers most holding ages; older buys approximate). */
+private const val PNL_HISTORY_WINDOW_SECONDS = 3L * 365 * 86_400
+private const val ONE_DAY_SECONDS = 86_400L
+
 /**
- * KAN-114 — the platform portfolio assembler (PRD-03): prices the [accounts]' holdings via the proxy
- * Alchemy Data + Prices clients + native balances (RPC), through [PortfolioService]. Unrealized P&L is
- * left null for now (needs FIFO cost-basis over full transfer history — RichPortfolio/KAN-102 follow-up).
- * Proxy/RPC down → the clients fail → the VM maps it to Error (FR-4 graceful, no crash).
+ * KAN-114/KAN-124 — the platform portfolio assembler (PRD-03): prices the [accounts]' holdings via the
+ * proxy Alchemy Data + Prices clients + native balances (RPC), through [PortfolioService], then layers
+ * on live unrealized P&L via [computePnl] (RichPortfolio/KAN-102 FIFO cost-basis). P&L is **best-effort**
+ * — any failure leaves pnl null and the priced overview still renders. Proxy/RPC down → the clients fail
+ * → the VM maps it to Error (FR-4 graceful, no crash).
  */
 private fun buildPortfolioLoader(accounts: () -> List<EvmAddress>): suspend () -> PortfolioOverview {
     val dataClient = AlchemyDataClient(alchemyProxy.dataBaseUrl())
     val priceSource = AlchemyPriceSource(AlchemyPriceClient(alchemyProxy.pricesBaseUrl())) { nowEpochSeconds() }
+    val transfersByChain = AlchemyNetworks.supportedChainIds.associateWith { chainId ->
+        AlchemyTransfersClient(alchemyProxy.rpcUrl(chainId), chainId)
+    }
     val service = PortfolioService(
         fetchErc20Holdings = { holders, chainIds -> dataClient.tokenHoldings(holders, chainIds) },
         fetchNativeBalance = { chainId, account -> defaultRpcByChain.getValue(chainId).getBalance(account) },
@@ -96,8 +111,47 @@ private fun buildPortfolioLoader(accounts: () -> List<EvmAddress>): suspend () -
     )
     return {
         val portfolio = service.load(accounts(), AlchemyNetworks.supportedChainIds, vs = "usd")
-        PortfolioOverview(portfolio, pnl = null)
+        // P&L is heavier (full transfer history per holding) + must never block the priced overview;
+        // a failure (proxy down, no history) just leaves pnl null and FR-9-≈ renders cleanly.
+        val pnl = runCatching { computePnl(portfolio, priceSource, transfersByChain) }.getOrNull()
+        PortfolioOverview(portfolio, pnl)
     }
+}
+
+/**
+ * KAN-124 — live unrealized P&L = current value − FIFO cost-basis (RichPortfolio/KAN-102). Per holding:
+ * pull the full transfer history (paged, both directions) + a daily price history, run FIFO cost-basis
+ * priced at each transfer's block time, sum the cost across holdings. A page-capped history propagates
+ * [ApproxReason.INCOMPLETE_TRANSFERS] so the metric is visibly approximate (FR-9). Null if there's no
+ * current value / no holdings. cents (MONEY_SCALE) throughout — same scale as the valued total.
+ */
+private suspend fun computePnl(
+    portfolio: Portfolio,
+    priceSource: AlchemyPriceSource,
+    transfersByChain: Map<Long, AlchemyTransfersClient>,
+): Metric<Money>? {
+    val currentValue = portfolio.totalValue?.value ?: return null
+    if (portfolio.holdings.isEmpty()) return null
+    val now = nowEpochSeconds()
+    var totalCostMinor = 0L
+    var anyTruncated = false
+    for (h in portfolio.holdings) {
+        val client = transfersByChain[h.token.chainId] ?: continue
+        val history = RichPortfolio.fullHistory(
+            h.account,
+            fetchTransfers = { addr, dir, key -> client.assetTransfers(addr, dir, pageKey = key) },
+        )
+        anyTruncated = anyTruncated || history.truncated
+        val priceHistory = priceSource.priceHistory(
+            h.token, currentValue.currency, now - PNL_HISTORY_WINDOW_SECONDS, now, ONE_DAY_SECONDS,
+        )
+        val cb = RichPortfolio.tokenCostBasis(h.token, h.account, history.transfers, priceHistory, history.truncated)
+        // Saturate rather than wrap on an absurd sum (same family as PortfolioPerformance's saturatingSub).
+        totalCostMinor = if (totalCostMinor > Long.MAX_VALUE - cb.costBasisCents) Long.MAX_VALUE else totalCostMinor + cb.costBasisCents
+    }
+    val costBasis = Money(totalCostMinor, currentValue.scale, currentValue.currency)
+    val extra = if (anyTruncated) listOf(ApproxReason.INCOMPLETE_TRANSFERS) else emptyList()
+    return PortfolioPerformance.unrealizedPnl(currentValue, costBasis, extra)
 }
 
 /**
