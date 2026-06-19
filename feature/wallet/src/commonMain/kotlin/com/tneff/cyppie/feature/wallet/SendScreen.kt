@@ -42,6 +42,7 @@ import com.tneff.cyppie.designsystem.components.CryptasaTextField
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
 import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.NumberFormatProfile
+import com.tneff.cyppie.designsystem.BidiSanitizer
 import com.tneff.cyppie.designsystem.components.SegmentedControl
 import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
@@ -302,8 +303,10 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
                     .testTag(WalletTestTags.SEND_DISCLOSURE),
                 verticalArrangement = Arrangement.spacedBy(spacing.sm),
             ) {
-                DisclosureRow(stringResource(Res.string.send_disclosure_asset), asset.symbol, valueTestTag = WalletTestTags.SEND_DISCLOSURE_ASSET)
-                DisclosureRow(stringResource(Res.string.send_disclosure_to), viewModel.disclosedRecipient(prepared).value, ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TO)
+                // KAN-122: bidi-sanitize attacker-controlled disclosure strings — a hostile ERC-20
+                // symbol (or, defensively, the recipient) must not spoof via RTL-override/zero-width.
+                DisclosureRow(stringResource(Res.string.send_disclosure_asset), BidiSanitizer.sanitize(asset.symbol), valueTestTag = WalletTestTags.SEND_DISCLOSURE_ASSET)
+                DisclosureRow(stringResource(Res.string.send_disclosure_to), BidiSanitizer.sanitize(viewModel.disclosedRecipient(prepared).value), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TO)
                 DisclosureRow(stringResource(Res.string.send_disclosure_network), d.chain.displayName, valueTestTag = WalletTestTags.SEND_DISCLOSURE_NETWORK)
                 DisclosureRow(stringResource(Res.string.send_disclosure_nonce), d.nonce.toLong().toString(), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_NONCE)
                 DisclosureRow(stringResource(Res.string.send_disclosure_gas), d.gasLimit.toLong().toString(), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_GAS)
