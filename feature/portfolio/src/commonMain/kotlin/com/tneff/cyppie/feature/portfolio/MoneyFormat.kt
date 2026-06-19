@@ -21,8 +21,11 @@ internal data class NumberFormatProfile(
         /** en · ar · zh — group ",", decimal ".", symbol before (e.g. `$1,234.56`). */
         val US = NumberFormatProfile(groupSeparator = ",", decimalSeparator = ".", symbolBeforeAmount = true, symbolSpacing = "")
 
-        /** da · de · es · pt · tr · vi — group ".", decimal ",", symbol before (e.g. `€1.000.000,00`). */
-        val EU_DOT = NumberFormatProfile(groupSeparator = ".", decimalSeparator = ",", symbolBeforeAmount = true, symbolSpacing = "")
+        /**
+         * da · de · es · pt · vi — group ".", decimal ",", symbol **after** with a no-break space
+         * (e.g. `1.000.000,00 €`). tr is strictly symbol-prefix but is approximated here (MVP, 1/6).
+         */
+        val EU_DOT = NumberFormatProfile(groupSeparator = ".", decimalSeparator = ",", symbolBeforeAmount = false, symbolSpacing = NBSP)
 
         /** fr · no · pl · ru · sv — group no-break space, decimal ",", symbol after (e.g. `1 000 000,00 €`). */
         val EU_SPACE = NumberFormatProfile(groupSeparator = NBSP, decimalSeparator = ",", symbolBeforeAmount = false, symbolSpacing = NBSP)
