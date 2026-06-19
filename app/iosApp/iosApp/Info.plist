@@ -4,5 +4,7 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>WC_PROJECT_ID</key>
+	<string>$(WC_PROJECT_ID)</string>
 </dict>
 </plist>

@@ -26,6 +26,8 @@ dependencies {
     implementation(libs.androidx.fragment)
     // AndroidStoragePaths.init(filesDir) at startup so :storage resolves the default seed file (KAN-89/95).
     implementation(projects.storage)
+    // WalletConnectInitializer (reown CoreClient/WalletKit) — initialized in CyppieApplication (KAN-131 wiring).
+    implementation(projects.walletconnect)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
@@ -43,6 +45,13 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        // WalletConnect/Reown projectId — injected from `wcProjectId` in ~/.gradle/gradle.properties
+        // (out-of-repo; never committed). Unset → "" → reown relay can't pair, but the app still runs.
+        buildConfigField("String", "WC_PROJECT_ID", "\"${(project.findProperty("wcProjectId") as String?).orEmpty()}\"")
+    }
+    buildFeatures {
+        buildConfig = true
     }
     packaging {
         resources {

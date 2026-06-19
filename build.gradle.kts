@@ -168,3 +168,18 @@ run {
         tasks.matching { it.name == "check" }.configureEach { dependsOn(rootProject.tasks.named("checkI18n")) }
     }
 }
+
+// KAN-131 — write the gitignored iOS xcconfig with the WalletConnect projectId from `wcProjectId`
+// (single source = ~/.gradle/gradle.properties). Run before an Xcode/fastlane build; the value is never
+// committed (Config.local.xcconfig is gitignored). Empty `wcProjectId` writes an empty value (app still runs).
+tasks.register("generateWcIosConfig") {
+    description = "Writes app/iosApp/Configuration/Config.local.xcconfig with WC_PROJECT_ID from `wcProjectId`."
+    group = "ios"
+    val projectId = (findProperty("wcProjectId") as String?).orEmpty()
+    val outFile = layout.projectDirectory.file("app/iosApp/Configuration/Config.local.xcconfig").asFile
+    outputs.file(outFile)
+    doLast {
+        outFile.writeText("WC_PROJECT_ID = $projectId\n")
+        logger.lifecycle("generateWcIosConfig: wrote ${outFile.name} (WC_PROJECT_ID ${if (projectId.isEmpty()) "EMPTY" else "set"})")
+    }
+}

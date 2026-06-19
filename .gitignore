@@ -31,3 +31,5 @@ app/androidApp/release/
 app/iosApp/Cyppie.app.dSYM.zip
 app/iosApp/Cyppie.ipa
 app/iosApp/fastlane/report.xml
+# WalletConnect projectId (KAN-131) — generated from wcProjectId, never committed
+app/iosApp/Configuration/Config.local.xcconfig
