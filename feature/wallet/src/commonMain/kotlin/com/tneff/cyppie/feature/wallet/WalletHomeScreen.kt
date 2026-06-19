@@ -16,11 +16,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.unit.LayoutDirection
 import com.tneff.cyppie.designsystem.NumberFormatProfile
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,7 +88,15 @@ fun WalletHomeScreen(
     val numberProfile = remember(languageTag) { NumberFormatProfile.forLanguageTag(languageTag) }
 
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
-        Column(modifier = Modifier.widthIn(max = 480.dp).fillMaxSize().padding(horizontal = spacing.xl)) {
+        // H5 (KAN-113): clear the status bar — Home has its own header (not CryptasaTopAppBar, which
+        // already insets), so apply the same statusBars inset here.
+        Column(
+            modifier = Modifier
+                .widthIn(max = 480.dp)
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = spacing.xl),
+        ) {
             // Header: title + refresh.
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = spacing.md),
@@ -266,7 +279,16 @@ private fun BalanceRow(symbol: String, amount: String, modifier: Modifier = Modi
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = symbol, style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant)
-        Text(text = amount, style = CryptasaTheme.typography.body, color = colors.onSurface)
+        // H4 (KAN-113): amounts are an LTR island so digits/decimals don't reorder in RTL (ar).
+        LtrText(text = amount, style = CryptasaTheme.typography.body, color = colors.onSurface)
+    }
+}
+
+/** A Text forced LTR (KAN-113 H4) — for amounts / inline addresses that must not reorder in RTL. */
+@Composable
+private fun LtrText(text: String, style: androidx.compose.ui.text.TextStyle, color: androidx.compose.ui.graphics.Color) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Text(text = text, style = style, color = color)
     }
 }
 
@@ -293,8 +315,20 @@ private fun AccountChip(
             .padding(horizontal = spacing.md, vertical = spacing.sm),
         verticalArrangement = Arrangement.spacedBy(spacing.xxs),
     ) {
-        Text(text = label, style = CryptasaTheme.typography.labelSmall, color = colors.onSurface)
-        Text(text = address, style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
+        // H3 (KAN-113): the selected account is marked with a check_circle (not border-only).
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+            Text(text = label, style = CryptasaTheme.typography.labelSmall, color = colors.onSurface)
+            if (selected) {
+                Icon(
+                    imageVector = CryptasaIcons.CheckCircle,
+                    contentDescription = null,
+                    tint = colors.primary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+        // H4 (KAN-113): the address is an LTR island (defensive Bidi-safety in ar).
+        LtrText(text = address, style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
     }
 }
 

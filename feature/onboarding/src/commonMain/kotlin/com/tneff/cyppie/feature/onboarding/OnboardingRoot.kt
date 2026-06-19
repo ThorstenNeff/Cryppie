@@ -3,6 +3,7 @@ package com.tneff.cyppie.feature.onboarding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,10 +38,20 @@ import org.koin.compose.viewmodel.koinViewModel
 fun OnboardingRoot(
     viewModel: OnboardingViewModel = koinViewModel(),
     onComplete: () -> Unit = {},
+    /** Start directly in the import flow (KAN-113 Befund-2) — e.g. Unlock's "Forgot password?" recovery. */
+    startInImport: Boolean = false,
 ) {
     CryptasaTheme {
         val backStack: SnapshotStateList<OnboardingNavKey> =
-            remember { mutableStateListOf(OnboardingNavKey.Welcome) }
+            remember {
+                mutableStateListOf<OnboardingNavKey>(OnboardingNavKey.Welcome).also {
+                    // Recover → import: open at the (mandatory) password step with Welcome under it for back.
+                    if (startInImport) it.add(OnboardingNavKey.SetPassword)
+                }
+            }
+        if (startInImport) {
+            LaunchedEffect(Unit) { viewModel.choosePath(OnboardingPath.Import) }
+        }
 
         fun goTo(key: OnboardingNavKey) {
             if (backStack.lastOrNull() != key) backStack.add(key)

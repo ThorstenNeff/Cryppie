@@ -221,6 +221,10 @@ fun UnlockScreen(
             },
             dismissText = stringResource(Res.string.common_cancel),
             onDismiss = { showRecover = false },
+            // KAN-113 Befund-3: tag the recover dialog. It renders in its own Dialog window (outside
+            // enableTestTagsAsResourceId) so Maestro resource-id can't see it, but Compose's
+            // onNodeWithTag traverses Dialog content — queryable in compose-ui tests.
+            modifier = Modifier.testTag("unlock_recover_confirm_dialog"),
         )
     }
 }

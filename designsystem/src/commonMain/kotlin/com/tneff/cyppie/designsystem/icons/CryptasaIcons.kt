@@ -195,6 +195,26 @@ object CryptasaIcons {
         }
     }
 
+    /** Selected-state affordance (Wallet-Home account switcher, KAN-113 H3). */
+    val CheckCircle: ImageVector by lazy {
+        materialVector("Cryptasa.CheckCircle") {
+            moveTo(12.0f, 2.0f)
+            curveTo(6.48f, 2.0f, 2.0f, 6.48f, 2.0f, 12.0f)
+            reflectiveCurveToRelative(4.48f, 10.0f, 10.0f, 10.0f)
+            reflectiveCurveToRelative(10.0f, -4.48f, 10.0f, -10.0f)
+            reflectiveCurveTo(17.52f, 2.0f, 12.0f, 2.0f)
+            close()
+            moveToRelative(-2.0f, 15.0f)
+            lineToRelative(-5.0f, -5.0f)
+            lineToRelative(1.41f, -1.41f)
+            lineTo(10.0f, 14.17f)
+            lineToRelative(7.59f, -7.59f)
+            lineTo(19.0f, 8.0f)
+            lineToRelative(-9.0f, 9.0f)
+            close()
+        }
+    }
+
     /** Import / download affordance (ONB-2 import-wallet card). */
     val Download: ImageVector by lazy {
         materialVector("Cryptasa.Download") {

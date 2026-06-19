@@ -46,6 +46,8 @@ private enum class AppDestination { Resolving, Onboarding, Unlock, Home }
 fun AppRoot() {
     CryptasaTheme {
         var destination by remember { mutableStateOf(AppDestination.Resolving) }
+        // True when entering onboarding via Unlock's "Forgot password?" → start in the import flow (KAN-113).
+        var recoverImport by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             destination = if (walletExists()) AppDestination.Unlock else AppDestination.Onboarding
@@ -82,12 +84,15 @@ fun AppRoot() {
         Box(modifier = Modifier.fillMaxSize().enableTestTagsAsResourceId()) {
             when (destination) {
             AppDestination.Resolving -> Centered { ProgressRing(diameter = 48.dp) }
-            AppDestination.Onboarding -> OnboardingRoot(onComplete = { destination = AppDestination.Home })
+            AppDestination.Onboarding -> OnboardingRoot(
+                onComplete = { recoverImport = false; destination = AppDestination.Home },
+                startInImport = recoverImport,
+            )
             AppDestination.Unlock -> UnlockScreen(
                 onUnlocked = { destination = AppDestination.Home },
-                // "Forgot password?" → non-custodial recovery via the import flow (SPEC_UNLOCK):
-                // route back through onboarding (import path), which replaces the on-device wallet.
-                onRecover = { destination = AppDestination.Onboarding },
+                // "Forgot password?" → non-custodial recovery via the import flow (SPEC_UNLOCK): route
+                // straight into the onboarding import step (KAN-113 Befund-2), which replaces the wallet.
+                onRecover = { recoverImport = true; destination = AppDestination.Onboarding },
             )
             AppDestination.Home -> WalletShellRoot(
                 // Lost/expired seed session → clear + back to unlock.
