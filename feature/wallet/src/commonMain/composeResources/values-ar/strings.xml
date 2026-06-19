@@ -101,4 +101,8 @@
   <string name="nft_empty">لا توجد مقتنيات رقمية بعد.</string>
   <string name="nft_error">تعذّر تحميل المقتنيات الرقمية.</string>
   <string name="nft_retry">إعادة المحاولة</string>
+  <string name="send_auth_title">تفويض المعاملة</string>
+  <string name="send_auth_subtitle">أعد إدخال كلمة المرور للتوقيع.</string>
+  <string name="send_auth_password">كلمة المرور</string>
+  <string name="send_auth_error">كلمة المرور غير صحيحة.</string>
 </resources>

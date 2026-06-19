@@ -101,4 +101,8 @@
   <string name="nft_empty">Ingen NFT'er endnu.</string>
   <string name="nft_error">NFT'er kunne ikke indlæses.</string>
   <string name="nft_retry">Prøv igen</string>
+  <string name="send_auth_title">Godkend transaktion</string>
+  <string name="send_auth_subtitle">Indtast din adgangskode igen for at signere.</string>
+  <string name="send_auth_password">Adgangskode</string>
+  <string name="send_auth_error">Forkert adgangskode.</string>
 </resources>

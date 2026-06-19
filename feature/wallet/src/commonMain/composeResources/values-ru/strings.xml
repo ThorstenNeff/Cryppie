@@ -101,4 +101,8 @@
   <string name="nft_empty">Пока нет NFT.</string>
   <string name="nft_error">Не удалось загрузить NFT.</string>
   <string name="nft_retry">Повторить</string>
+  <string name="send_auth_title">Авторизуйте транзакцию</string>
+  <string name="send_auth_subtitle">Введите пароль ещё раз, чтобы подписать.</string>
+  <string name="send_auth_password">Пароль</string>
+  <string name="send_auth_error">Неверный пароль.</string>
 </resources>

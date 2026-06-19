@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
@@ -41,11 +42,14 @@ import com.tneff.cyppie.designsystem.components.ProgressRing
 import com.tneff.cyppie.designsystem.components.SegmentedControl
 import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
-import com.tneff.cyppie.evm.Quantity
 import com.tneff.cyppie.send.PreparedSend
 import com.tneff.cyppie.feature.wallet.generated.resources.Res
 import com.tneff.cyppie.feature.wallet.generated.resources.common_cancel
 import com.tneff.cyppie.feature.wallet.generated.resources.send_amount_label
+import com.tneff.cyppie.feature.wallet.generated.resources.send_auth_error
+import com.tneff.cyppie.feature.wallet.generated.resources.send_auth_password
+import com.tneff.cyppie.feature.wallet.generated.resources.send_auth_subtitle
+import com.tneff.cyppie.feature.wallet.generated.resources.send_auth_title
 import com.tneff.cyppie.feature.wallet.generated.resources.send_asset_select_title
 import com.tneff.cyppie.feature.wallet.generated.resources.send_available
 import com.tneff.cyppie.feature.wallet.generated.resources.send_confirm_note
@@ -96,6 +100,7 @@ fun SendFlow(viewModel: SendViewModel, onExit: () -> Unit, modifier: Modifier = 
         SendStep.AssetSelect -> SendAssetSelect(viewModel, onBack = onExit, modifier)
         SendStep.Form -> SendForm(viewModel, onBack = viewModel::back, modifier)
         SendStep.Confirm -> SendConfirm(viewModel, onBack = viewModel::back, modifier)
+        SendStep.Authorize -> SendAuthorize(viewModel, onBack = viewModel::back, modifier)
         SendStep.Status -> SendStatusScreen(viewModel, onDone = onExit, modifier)
     }
 }
@@ -273,10 +278,10 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(spacing.lg),
         ) {
-            // Amount (big, LTR).
+            // Amount (big, LTR) — from the prepared tx, not the form state (single source of truth, L1).
             LtrIsland {
                 Text(
-                    "${formatTokenAmount(viewModel.amountWei ?: Quantity.ZERO, asset.decimals)} ${asset.symbol}",
+                    "${formatTokenAmount(viewModel.disclosedAmount(prepared), asset.decimals)} ${asset.symbol}",
                     style = CryptasaTheme.typography.titleLarge,
                     color = colors.onSurface,
                 )
@@ -310,8 +315,7 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
 
             CryptasaButton(
                 text = stringResource(Res.string.send_sign),
-                onClick = viewModel::confirmAndSign,
-                enabled = !viewModel.signing,
+                onClick = viewModel::requestAuth,
                 modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.SEND_SIGN),
             )
             CryptasaButton(
@@ -320,6 +324,47 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+/** Re-auth gate (ADR-0009) between disclosure and signing — fail-closed; signs only on a correct password. */
+@Composable
+private fun SendAuthorize(viewModel: SendViewModel, onBack: () -> Unit, modifier: Modifier) {
+    SecureScreenEffect()
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+    Scaffolded(title = stringResource(Res.string.send_auth_title), onBack = onBack, modifier = modifier) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(spacing.lg),
+        ) {
+            Text(
+                stringResource(Res.string.send_auth_subtitle),
+                style = CryptasaTheme.typography.body,
+                color = colors.onSurfaceVariant,
+            )
+            CryptasaTextField(
+                value = viewModel.authPassword,
+                onValueChange = viewModel::updateAuthPassword,
+                label = stringResource(Res.string.send_auth_password),
+                keyboardType = KeyboardType.Password,
+                autoCorrect = false,
+                capitalization = KeyboardCapitalization.None,
+                visualTransformation = PasswordVisualTransformation(),
+                errorText = if (viewModel.authError) stringResource(Res.string.send_auth_error) else null,
+                errorTestTag = WalletTestTags.SEND_AUTH_ERROR,
+                modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.SEND_AUTH_PASSWORD),
+            )
+            CryptasaButton(
+                text = stringResource(Res.string.send_sign),
+                onClick = viewModel::authorizeAndSign,
+                enabled = viewModel.authPassword.isNotEmpty() && !viewModel.authorizing,
+                modifier = Modifier.fillMaxWidth().testTag(WalletTestTags.SEND_AUTH_SUBMIT),
+            )
+            if (viewModel.authorizing) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { ProgressRing(diameter = 28.dp) }
+            }
         }
     }
 }

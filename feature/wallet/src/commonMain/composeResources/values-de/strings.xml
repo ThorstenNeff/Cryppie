@@ -101,4 +101,8 @@
   <string name="nft_empty">Noch keine Sammlerstücke.</string>
   <string name="nft_error">Sammlerstücke konnten nicht geladen werden.</string>
   <string name="nft_retry">Erneut versuchen</string>
+  <string name="send_auth_title">Transaktion autorisieren</string>
+  <string name="send_auth_subtitle">Passwort erneut eingeben, um zu signieren.</string>
+  <string name="send_auth_password">Passwort</string>
+  <string name="send_auth_error">Falsches Passwort.</string>
 </resources>

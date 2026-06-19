@@ -101,4 +101,8 @@
   <string name="nft_empty">Inga samlarobjekt ännu.</string>
   <string name="nft_error">Det gick inte att läsa in samlarobjekt.</string>
   <string name="nft_retry">Försök igen</string>
+  <string name="send_auth_title">Auktorisera transaktion</string>
+  <string name="send_auth_subtitle">Ange ditt lösenord igen för att signera.</string>
+  <string name="send_auth_password">Applösenord</string>
+  <string name="send_auth_error">Felaktigt lösenord.</string>
 </resources>

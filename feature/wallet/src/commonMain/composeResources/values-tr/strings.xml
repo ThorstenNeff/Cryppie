@@ -101,4 +101,8 @@
   <string name="nft_empty">Henüz koleksiyon öğesi yok.</string>
   <string name="nft_error">Koleksiyon öğeleri yüklenemedi.</string>
   <string name="nft_retry">Tekrar dene</string>
+  <string name="send_auth_title">İşlemi yetkilendir</string>
+  <string name="send_auth_subtitle">İmzalamak için parolanı tekrar gir.</string>
+  <string name="send_auth_password">Parola</string>
+  <string name="send_auth_error">Yanlış parola.</string>
 </resources>

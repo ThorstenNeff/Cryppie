@@ -32,7 +32,7 @@ data class SendAsset(val chain: EvmChain, val symbol: String, val decimals: Int,
 /** EIP-1559 fee speed (KAN-110 §Fee). Derived from one `getFeeData` so a single fetch drives all three. */
 enum class SendFeeTier { SLOW, NORMAL, FAST }
 
-enum class SendStep { AssetSelect, Form, Confirm, Status }
+enum class SendStep { AssetSelect, Form, Confirm, Authorize, Status }
 
 /** Recoverable form-level error (stays on the Form; spec error states). */
 sealed interface SendFormError {
@@ -64,7 +64,8 @@ class SendViewModel(
     private val orchestrator: SendOrchestrator,
     private val feeData: suspend (EvmChain) -> FeeData,
     private val awaitReceipt: suspend (EvmChain, String) -> ReceiptStatus,
-    private val seed: () -> SeedSource?,
+    /** Re-auth: decrypt a FRESH per-sign [SeedSource] from the password, or null on a wrong password. */
+    private val reauth: suspend (CharArray) -> SeedSource?,
     private val accounts: List<EvmAccount>,
     private val accountIndex: Int,
 ) : ViewModel() {
@@ -91,6 +92,13 @@ class SendViewModel(
     var prepared: PreparedSend? by mutableStateOf(null); private set
     var signing: Boolean by mutableStateOf(false); private set
     var status: SendStatus? by mutableStateOf(null); private set
+
+    // Re-auth (KAN-110, ADR-0009): a password prompt between disclosure and sign. The correct password
+    // decrypts a FRESH per-sign source that signs and is zeroized immediately after (M1) — the shared
+    // session never signs. Fail-closed: no sign path runs without passing this prompt.
+    var authPassword: String by mutableStateOf(""); private set
+    var authError: Boolean by mutableStateOf(false); private set
+    var authorizing: Boolean by mutableStateOf(false); private set
 
     val recipientValid: Boolean get() = EvmAddress.isValid(recipient.trim())
     val amountWei: Quantity? get() = asset?.let { parseTokenAmount(amount, it.decimals) }
@@ -146,9 +154,48 @@ class SendViewModel(
         when (step) {
             SendStep.Form -> { step = SendStep.AssetSelect; asset = null }
             SendStep.Confirm -> { step = SendStep.Form; prepared = null }
+            SendStep.Authorize -> { step = SendStep.Confirm; authPassword = ""; authError = false }
             else -> {}
         }
     }
+
+    /** Confirm → open the re-auth gate (does not sign yet). */
+    fun requestAuth() {
+        if (prepared == null) return
+        authPassword = ""
+        authError = false
+        step = SendStep.Authorize
+    }
+
+    fun updateAuthPassword(value: String) {
+        authPassword = value
+        if (authError) authError = false
+    }
+
+    /**
+     * Re-auth then sign (fail-closed, ADR-0009): decrypt a FRESH per-sign source from the password; only
+     * on success does [signWith] run `signAndBroadcast` (signs exactly `prepared` — TOCTOU preserved —
+     * then zeroizes that source, M1). A wrong password stays on the Authorize step and never signs.
+     */
+    fun authorizeAndSign() {
+        if (prepared == null || authorizing) return
+        val pw = authPassword.toCharArray()
+        authorizing = true
+        authError = false
+        viewModelScope.launch {
+            val src = runCatching { reauth(pw) }.getOrNull()
+            pw.fill(' ')
+            authorizing = false
+            if (src != null) signWith(src) else authError = true
+        }
+    }
+
+    /** The disclosed amount in the asset's units (from `prepared`, not the form — L1). */
+    fun disclosedAmount(p: PreparedSend): Quantity =
+        when (val c = p.disclosure.call) {
+            is DecodedCall.Erc20Transfer -> c.amount
+            else -> p.disclosure.value
+        }
 
     /** Run prepare with the chosen tier's fee (fill-not-override) → Confirm, or map the error to the form. */
     fun continueToConfirm() {
@@ -181,21 +228,18 @@ class SendViewModel(
         }
     }
 
-    /** Sign exactly the disclosed tx and broadcast, then track the receipt. */
-    fun confirmAndSign() {
+    /**
+     * Sign exactly the disclosed tx with the freshly-unlocked [src] and broadcast, then track the
+     * receipt. [src] is the per-sign source from the re-auth gate; `signAndBroadcast` closes/zeroizes it
+     * right after signing (M1 — minimal signing-key window). The shared session is never used to sign.
+     */
+    private fun signWith(src: SeedSource) {
         val p = prepared ?: return
-        val src = seed()
-        if (src == null) { status = SendStatus.Failed(null, rejected = false); step = SendStep.Status; return }
-        // Non-closeable wrapper: signAndBroadcast close()s its arg (one-shot M1 zeroize), but our seed is
-        // the ambient unlocked session — it must live until auto-lock, not die after one send.
-        val nonClosing = object : SeedSource {
-            override fun <R> withSeed(block: (ByteArray) -> R): R = src.withSeed(block)
-        }
         signing = true
         status = null
         step = SendStep.Status
         viewModelScope.launch {
-            runCatching { orchestrator.signAndBroadcast(p, nonClosing) }
+            runCatching { orchestrator.signAndBroadcast(p, src) }
                 .onSuccess { result ->
                     val hash = result.txHash
                     status = SendStatus.Pending(hash)

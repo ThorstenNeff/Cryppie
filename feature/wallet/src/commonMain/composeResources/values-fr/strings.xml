@@ -101,4 +101,8 @@
   <string name="nft_empty">Pas encore d'objets de collection.</string>
   <string name="nft_error">Impossible de charger les objets de collection.</string>
   <string name="nft_retry">Réessayer</string>
+  <string name="send_auth_title">Autoriser la transaction</string>
+  <string name="send_auth_subtitle">Saisissez à nouveau votre mot de passe pour signer.</string>
+  <string name="send_auth_password">Mot de passe</string>
+  <string name="send_auth_error">Mot de passe incorrect.</string>
 </resources>

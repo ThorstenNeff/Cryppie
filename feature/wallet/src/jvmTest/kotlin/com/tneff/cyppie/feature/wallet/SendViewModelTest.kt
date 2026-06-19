@@ -60,7 +60,19 @@ class SendViewModelTest {
             throw NotImplementedError()
     }
 
-    private fun vm(rpc: FakeRpc, receipt: ReceiptStatus = ReceiptStatus.SUCCESS): SendViewModel {
+    /** SeedSource that records zeroization, to assert the per-sign M1 window (close after signing). */
+    private class CloseableSeed(seed: ByteArray) : SeedSource, AutoCloseable {
+        private val delegate = SeedSource.ofSeed(seed)
+        var closed = false; private set
+        override fun <R> withSeed(block: (ByteArray) -> R): R = delegate.withSeed(block)
+        override fun close() { closed = true }
+    }
+
+    private fun vm(
+        rpc: FakeRpc,
+        receipt: ReceiptStatus = ReceiptStatus.SUCCESS,
+        reauth: suspend (CharArray) -> SeedSource? = { SeedSource.ofSeed(seed) },
+    ): SendViewModel {
         val byChain = mapOf(EvmChain.ETHEREUM.chainId to rpc as EvmRpcClient)
         val repo = WalletRepository(AccountManager(EvmKeyManager(SeedSource.ofSeed(seed))), byChain)
         return SendViewModel(
@@ -68,13 +80,20 @@ class SendViewModelTest {
             orchestrator = SendOrchestrator(byChain),
             feeData = { rpc.getFeeData() },
             awaitReceipt = { _, _ -> receipt },
-            seed = { SeedSource.ofSeed(seed) },
+            reauth = reauth,
             accounts = listOf(account0),
             accountIndex = 0,
         )
     }
 
     private fun SendViewModel.nativeEth() = assets.first { it.chain == EvmChain.ETHEREUM && it.token == null }
+
+    /** Drive Confirm → re-auth gate → sign (the only sign path). */
+    private fun SendViewModel.authAndSign(password: String = "pw") {
+        requestAuth()
+        updateAuthPassword(password)
+        authorizeAndSign()
+    }
 
     @Test
     fun nativeHappyPathDisclosesAndBroadcasts() = runTest {
@@ -94,9 +113,42 @@ class SendViewModelTest {
         assertEquals(Quantity.of(21_000), d.gasLimit)
         assertIs<DecodedCall.NativeTransfer>(d.call)
 
-        m.confirmAndSign()
+        m.requestAuth()
+        assertEquals(SendStep.Authorize, m.step) // fail-closed: a gate sits between disclosure and sign
+        m.updateAuthPassword("pw")
+        m.authorizeAndSign()
         assertEquals(SendStatus.Confirmed("0xtxhash"), m.status)
         assertTrue(rpc.lastRawTx != null && rpc.lastRawTx!!.startsWith("0x")) // signed + broadcast
+    }
+
+    @Test
+    fun freshSourceIsZeroizedAfterSend() = runTest {
+        // M1: the per-sign source is closed/zeroized right after signing; nothing else holds it.
+        val fresh = CloseableSeed(seed)
+        val m = vm(FakeRpc(), reauth = { fresh })
+        m.selectAsset(m.nativeEth())
+        m.updateRecipient(recipient)
+        m.updateAmount("0.001")
+        m.continueToConfirm()
+        m.authAndSign()
+        assertIs<SendStatus.Confirmed>(m.status)
+        assertTrue(fresh.closed) // signAndBroadcast zeroized the fresh source
+    }
+
+    @Test
+    fun wrongPasswordNeverSigns() = runTest {
+        // Fail-closed: a wrong password (reauth → null) stays on Authorize and never broadcasts.
+        val rpc = FakeRpc()
+        val m = vm(rpc, reauth = { null })
+        m.selectAsset(m.nativeEth())
+        m.updateRecipient(recipient)
+        m.updateAmount("0.001")
+        m.continueToConfirm()
+        m.authAndSign("wrong")
+        assertTrue(m.authError)
+        assertEquals(SendStep.Authorize, m.step)
+        assertEquals(null, m.status)
+        assertEquals(null, rpc.lastRawTx) // never signed/broadcast
     }
 
     @Test
@@ -160,7 +212,7 @@ class SendViewModelTest {
             orchestrator = SendOrchestrator(byChain),
             feeData = { rpc.getFeeData() },
             awaitReceipt = { _, _ -> ReceiptStatus.SUCCESS },
-            seed = { SeedSource.ofSeed(seed) },
+            reauth = { SeedSource.ofSeed(seed) },
             accounts = listOf(account0),
             accountIndex = 0,
         )
@@ -169,7 +221,7 @@ class SendViewModelTest {
         m.updateAmount("0.001")
         m.continueToConfirm()
         assertEquals(SendStep.Confirm, m.step)
-        m.confirmAndSign()
+        m.authAndSign()
         val failed = assertIs<SendStatus.Failed>(m.status)
         assertTrue(failed.rejected)
     }

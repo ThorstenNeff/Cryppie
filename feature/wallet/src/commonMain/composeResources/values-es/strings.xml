@@ -101,4 +101,8 @@
   <string name="nft_empty">Aún no hay coleccionables.</string>
   <string name="nft_error">No se pudieron cargar los coleccionables.</string>
   <string name="nft_retry">Reintentar</string>
+  <string name="send_auth_title">Autorizar transacción</string>
+  <string name="send_auth_subtitle">Vuelve a introducir tu contraseña para firmar.</string>
+  <string name="send_auth_password">Contraseña</string>
+  <string name="send_auth_error">Contraseña incorrecta.</string>
 </resources>

@@ -101,4 +101,8 @@
   <string name="nft_empty">Chưa có NFT.</string>
   <string name="nft_error">Không thể tải NFT.</string>
   <string name="nft_retry">Thử lại</string>
+  <string name="send_auth_title">Cấp quyền giao dịch</string>
+  <string name="send_auth_subtitle">Nhập lại mật khẩu của bạn để ký.</string>
+  <string name="send_auth_password">Mật khẩu</string>
+  <string name="send_auth_error">Mật khẩu không đúng.</string>
 </resources>

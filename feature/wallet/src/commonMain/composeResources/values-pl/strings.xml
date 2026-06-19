@@ -101,4 +101,8 @@
   <string name="nft_empty">Brak NFT.</string>
   <string name="nft_error">Nie udało się załadować NFT.</string>
   <string name="nft_retry">Spróbuj ponownie</string>
+  <string name="send_auth_title">Autoryzuj transakcję</string>
+  <string name="send_auth_subtitle">Wprowadź ponownie hasło, aby podpisać.</string>
+  <string name="send_auth_password">Hasło</string>
+  <string name="send_auth_error">Nieprawidłowe hasło.</string>
 </resources>

@@ -101,4 +101,8 @@
   <string name="nft_empty">Ingen samleobjekter ennå.</string>
   <string name="nft_error">Kunne ikke laste samleobjekter.</string>
   <string name="nft_retry">Prøv igjen</string>
+  <string name="send_auth_title">Autoriser transaksjon</string>
+  <string name="send_auth_subtitle">Skriv inn passordet på nytt for å signere.</string>
+  <string name="send_auth_password">Passord</string>
+  <string name="send_auth_error">Feil passord.</string>
 </resources>

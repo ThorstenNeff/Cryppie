@@ -101,4 +101,8 @@
   <string name="nft_empty">No collectibles yet.</string>
   <string name="nft_error">Couldn't load collectibles.</string>
   <string name="nft_retry">Retry</string>
+  <string name="send_auth_title">Authorize transaction</string>
+  <string name="send_auth_subtitle">Re-enter your password to sign.</string>
+  <string name="send_auth_password">Password</string>
+  <string name="send_auth_error">Wrong password.</string>
 </resources>

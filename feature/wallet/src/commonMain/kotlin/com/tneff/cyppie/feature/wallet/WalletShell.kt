@@ -11,7 +11,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tneff.cyppie.rpc.EvmRpcClient
 import com.tneff.cyppie.rpc.RpcEndpoint
 import com.tneff.cyppie.send.SendOrchestrator
+import com.tneff.cyppie.storage.CiphertextStore
 import com.tneff.cyppie.storage.SeedSession
+import com.tneff.cyppie.storage.SeedVault
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.tneff.cyppie.wallet.EvmKeyManager
 import com.tneff.cyppie.wallet.SeedSource
 import com.tneff.cyppie.walletcore.AccountManager
@@ -100,7 +104,13 @@ fun WalletShell(onLock: () -> Unit) {
                     orchestrator = SendOrchestrator(defaultRpcByChain),
                     feeData = { chain -> defaultRpcByChain.getValue(chain.chainId).getFeeData() },
                     awaitReceipt = { chain, hash -> defaultRpcByChain.getValue(chain.chainId).awaitReceipt(hash).status },
-                    seed = { SeedSession.current },
+                    // Re-auth (ADR-0009): a correct password decrypts a FRESH per-sign source off-Main;
+                    // signAndBroadcast signs with it and zeroizes it right after (M1). null = wrong password.
+                    reauth = { pw ->
+                        withContext(Dispatchers.Default) {
+                            runCatching { SeedVault(CiphertextStore.defaultFile()).unlock(pw) }.getOrNull()
+                        }
+                    },
                     accounts = viewModel.accounts,
                     accountIndex = account,
                 )
