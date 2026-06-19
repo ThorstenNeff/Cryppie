@@ -22,4 +22,7 @@ sealed class WalletKeyException(message: String) : Exception(message) {
 
     /** A 32-byte hash to sign / signing input had the wrong shape. */
     class InvalidSigningInput(message: String) : WalletKeyException(message)
+
+    /** The signing account does not derive to the disclosed/expected signer address (no blind signing). */
+    class SignerMismatch(message: String) : WalletKeyException(message)
 }
