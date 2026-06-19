@@ -77,6 +77,14 @@ class DcaEnableBuilderTest {
     }
 
     @Test
+    fun decodeNonce_acceptsRealZero_butRejectsEmptyOrShort() {
+        assertEquals(0L, DcaEnableBuilder.decodeNonce(ByteArray(32)))          // real first-session nonce 0
+        assertEquals(5L, DcaEnableBuilder.decodeNonce(ByteArray(32).also { it[31] = 5 }))
+        kotlin.test.assertFailsWith<IllegalStateException> { DcaEnableBuilder.decodeNonce(ByteArray(0)) }   // empty 0x → fail-closed
+        kotlin.test.assertFailsWith<IllegalStateException> { DcaEnableBuilder.decodeNonce(ByteArray(31)) }  // short → fail-closed
+    }
+
+    @Test
     fun built_carriesPermissionIdAndOwnerBoundPermissions() {
         val b = built(1L)
         assertEquals("0x82bc397553fc6577974c762cd42958d860cd838a55f55f245ee5f6debab698b0", b.permissionId)

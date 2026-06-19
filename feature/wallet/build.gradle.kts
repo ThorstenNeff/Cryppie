@@ -54,6 +54,8 @@ kotlin {
             api(projects.walletcore)
             // SeedSession — the unlocked seed source the wallet shell builds the repository from (KAN-103).
             implementation(projects.storage)
+            // CSPRNG for the DCA session salt (KAN-144, like :storage SeedVault).
+            implementation(libs.cryptography.random)
             // Send orchestrator (KAN-91/ADR-0019) — the Send UI (KAN-110) renders prepare→disclose→sign.
             implementation(projects.send)
             // WalletConnect layer (KAN-62) — the WC-UI (KAN-126) consumes the controller + WcSendAdapter.

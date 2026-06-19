@@ -19,8 +19,7 @@ import com.tneff.cyppie.aa.AaSigner
 import com.tneff.cyppie.aa.DcaEnableBuilder
 import com.tneff.cyppie.aa.KtorDcaApi
 import com.tneff.cyppie.evm.Hex
-import com.tneff.cyppie.evm.Quantity
-import kotlin.random.Random
+import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
 import com.tneff.cyppie.auth.Eip191SiweSigner
 import com.tneff.cyppie.auth.InMemoryTokenVault
@@ -181,7 +180,7 @@ private val dcaGrantParams: DcaGrantParams by lazy {
 
 /** RFC3339 UTC (…Z) — AuthSession pins SIWE `issuedAt` to UTC (P1-9); the stdlib Instant renders as `…Z`. */
 @OptIn(kotlin.time.ExperimentalTime::class)
-private fun nowIso8601Utc(): String = kotlin.time.Clock.System.now().toString()
+private fun iso8601Utc(epochSeconds: Long): String = kotlin.time.Instant.fromEpochSeconds(epochSeconds).toString()
 
 /** Daily price-history window for FIFO cost-basis (covers most holding ages; older buys approximate). */
 private const val PNL_HISTORY_WINDOW_SECONDS = 3L * 365 * 86_400
@@ -303,7 +302,7 @@ fun WalletShell(onLock: () -> Unit) {
             vault = InMemoryTokenVault(),
             owner = dcaOwner,
             nowEpochSeconds = ::nowEpochSeconds,
-            nowIso8601 = ::nowIso8601Utc,
+            iso8601 = ::iso8601Utc,
         )
     }
     // The User-Service client: bearer = the session JWT (fail-closed — KtorDcaApi.bearer() throws on blank).
@@ -458,10 +457,10 @@ fun WalletShell(onLock: () -> Unit) {
                     readNonce = { permissionId, account, chainId ->
                         val rpc = defaultRpcByChain.getValue(chainId)
                         val out = rpc.call(EvmAddress.parse(DcaEnableBuilder.SMART_SESSION_ADDRESS), DcaEnableBuilder.nonceCalldata(permissionId, account))
-                        Quantity.ofBytes(out).toLong()
+                        DcaEnableBuilder.decodeNonce(out) // N1: 32-byte uint256 or fail-closed (no silent 0)
                     },
-                    // App-chosen unique 32-byte session salt (→ a unique permissionId per session).
-                    genSalt = { "0x" + Hex.encode(Random.nextBytes(32)) },
+                    // App-chosen unique 32-byte session salt (CSPRNG → a unique permissionId per session).
+                    genSalt = { "0x" + Hex.encode(CryptographyRandom.nextBytes(32)) },
                     reauth = dcaReauth,
                 )
             }

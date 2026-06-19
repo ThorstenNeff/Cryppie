@@ -34,6 +34,7 @@ class InMemoryTokenVault : TokenVault {
 
 private const val NONCE_MIN_LENGTH = 8
 private const val EXPIRY_SKEW_SECONDS = 30L
+private const val SIWE_EXPIRY_SECONDS = 300L // SIWE message validity window (N2 replay mitigation)
 
 /**
  * App-side SIWE auth session (KAN-141). [signIn] runs the on-device exchange: nonce (validated, P1-9) →
@@ -48,7 +49,7 @@ class AuthSession(
     private val vault: TokenVault,
     private val owner: EvmAddress,
     private val nowEpochSeconds: () -> Long,
-    private val nowIso8601: () -> String,
+    private val iso8601: (epochSeconds: Long) -> String, // UTC RFC3339 (…Z) for a given epoch
     private val chainId: Long = SiweMessage.DEFAULT_CHAIN_ID,
 ) : SessionTokenProvider {
 
@@ -67,9 +68,12 @@ class AuthSession(
     suspend fun signIn(seedSource: SeedSource) {
         val nonce = keycloak.nonce().nonce
         require(isValidNonce(nonce)) { "Keycloak SIWE nonce malformed" } // P1-9
-        val issuedAt = nowIso8601()
+        val nowSec = nowEpochSeconds()
+        val issuedAt = iso8601(nowSec)
         require(issuedAt.endsWith("Z")) { "issuedAt must be UTC RFC3339 (…Z)" } // P1-9
-        val message = SiweMessage.forSignIn(owner, nonce = nonce, issuedAt = issuedAt, chainId = chainId)
+        // N2: bound the signature's validity window (replay mitigation beyond the single-use nonce, LOW-4/P1-9).
+        val expirationTime = iso8601(nowSec + SIWE_EXPIRY_SECONDS)
+        val message = SiweMessage.forSignIn(owner, nonce = nonce, issuedAt = issuedAt, chainId = chainId, expirationTime = expirationTime)
         val signature = siweSigner.sign(message, owner, seedSource) // zeroizes the source
         persist(keycloak.token(siweMessage = message.canonical(), siweSignature = signature))
     }

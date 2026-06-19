@@ -41,8 +41,9 @@ data class BuiltEnable(
  */
 object DcaEnableBuilder {
 
+    // All three pins are single-sourced from the verifier (KAN-144/147) — one place to update, drift-safe.
     /** Emitted OwnableValidator (GLOBAL_CONSTANTS) — the session-validator module. */
-    const val OWNABLE_VALIDATOR: String = "0x000000000013fdB5234E4E3162a810F54d9f7E98"
+    val OWNABLE_VALIDATOR: String get() = SmartSessionGrantVerifier.SESSION_VALIDATOR
     val SPENDING_LIMIT_POLICY: String get() = SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY
     val TIMEFRAME_POLICY: String get() = SmartSessionGrantVerifier.TIMEFRAME_POLICY
 
@@ -139,6 +140,20 @@ object DcaEnableBuilder {
     /** Calldata for the read-only `getNonce(permissionId, account)` eth_call (selector ++ 2 static words). */
     fun nonceCalldata(permissionId: String, account: String): ByteArray =
         bytes(GET_NONCE_SELECTOR) + salt32(permissionId) + addr32(account)
+
+    /**
+     * Decode a `getNonce` eth_call return — **fail-closed** (N1). A valid uint256 is exactly 32 bytes; an
+     * empty `0x` / short return means the call never reached a real `getNonce` (wrong selector, no code at
+     * [SMART_SESSION_ADDRESS], or an empty node) and MUST reject — never silently fall to nonce 0 (a real
+     * first-session nonce 0 returns 32 zero-bytes, which is accepted). A wrong nonce only DoS-es the grant
+     * (on-chain reject), but a silent 0 would hide a misconfig.
+     */
+    fun decodeNonce(returnData: ByteArray): Long {
+        if (returnData.size != 32) {
+            throw IllegalStateException("getNonce returned ${returnData.size} bytes (expected 32) — SmartSession module unreachable / wrong selector")
+        }
+        return Quantity.ofBytes(returnData).toLong()
+    }
 
     // ── ABI word helpers ──
     // ABI addresses are raw 20-byte words (no EIP-55 checksum gate — abi.encode is case-insensitive bytes).

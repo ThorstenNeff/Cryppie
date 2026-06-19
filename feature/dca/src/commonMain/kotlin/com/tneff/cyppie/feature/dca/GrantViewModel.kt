@@ -35,11 +35,13 @@ data class DcaGrantParams(
 )
 
 /**
- * KAN-138 (PRD-05 Ph1) — the Smart-Session **grant** VM. Builds a §2 [SessionConfig] from the user's
- * inputs (per-buy [capAmount], [frequency], [durationDays]) over the fixed [params], then grants it:
- * re-auth → backend builds the session-enable owner-userOp ([DcaApi.buildSessionEnable]) → on-device sign
- * of its digest ([AaSigner]) → [DcaApi.grantSession]. The disclosed config is exactly what gets signed
- * (no-blind). The seed source is zeroized by [AaSigner].
+ * KAN-138/KAN-144 (PRD-05 Ph1) — the Smart-Session **grant** VM. Builds a §2 [SessionConfig] from the
+ * user's inputs (per-buy [capAmount], [frequency], [durationDays]) over the fixed [params]. Two phases:
+ * [review] builds the enable digest **entirely on-device** ([DcaEnableBuilder]; the only runtime input is
+ * the RPC-read nonce — no backend enable endpoint) and runs [verifyGrant] as a defensive self-check, then
+ * [grant] does re-auth → on-device sign of that verified digest ([AaSigner]) → [DcaApi.grantSession]. The
+ * disclosure renders **only** the verified-from-the-signed-bytes [VerifiedGrant] (no-blind). The seed
+ * source is zeroized by [AaSigner].
  */
 class GrantViewModel(
     private val api: DcaApi,
