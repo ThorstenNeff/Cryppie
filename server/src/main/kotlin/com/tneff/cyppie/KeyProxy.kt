@@ -42,18 +42,29 @@ fun Application.installKeyProxy(
         }
 
         // Alchemy Data API (multi-chain balances/metadata) — network is in the request body.
+        // KAN-115: only the exact sub-path the client uses is forwarded (least-privilege tail allow-list).
         route("/alchemy/data/v1/{tail...}") {
-            handle { proxy(config, client, rateLimiter) { key -> AlchemyUpstream.data(key, tailPath()) } }
+            handle {
+                proxy(config, client, rateLimiter) { key ->
+                    tailPath().takeIf { it in ALLOWED_DATA_TAILS }?.let { AlchemyUpstream.data(key, it) }
+                }
+            }
         }
         // Alchemy Prices API (current + historical) — network is in the request body.
         route("/alchemy/prices/v1/{tail...}") {
-            handle { proxy(config, client, rateLimiter) { key -> AlchemyUpstream.prices(key, tailPath()) } }
+            handle {
+                proxy(config, client, rateLimiter) { key ->
+                    tailPath().takeIf { it in ALLOWED_PRICES_TAILS }?.let { AlchemyUpstream.prices(key, it) }
+                }
+            }
         }
-        // Alchemy NFT API v3 — network is path-scoped (validated against the allow-list).
+        // Alchemy NFT API v3 — network is path-scoped (allow-list) and the tail is allow-listed (KAN-115).
         route("/alchemy/nft/v3/{network}/{tail...}") {
             handle {
                 proxy(config, client, rateLimiter) { key ->
-                    allowedNetwork(config)?.let { AlchemyUpstream.nft(it, key, tailPath()) }
+                    val net = allowedNetwork(config)
+                    val tail = tailPath().takeIf { it in ALLOWED_NFT_TAILS }
+                    if (net != null && tail != null) AlchemyUpstream.nft(net, key, tail) else null
                 }
             }
         }
@@ -67,6 +78,13 @@ fun Application.installKeyProxy(
         }
     }
 }
+
+// KAN-115 (least-privilege): the exact upstream sub-paths the wallet's Alchemy clients call. Any other
+// tail is rejected (404) so the server-side key can only ever reach these endpoints — not an arbitrary
+// path the key happens to be entitled to. Extend deliberately as new client calls are added.
+private val ALLOWED_DATA_TAILS: Set<String> = setOf("assets/tokens/by-address")
+private val ALLOWED_PRICES_TAILS: Set<String> = setOf("tokens/by-address", "tokens/historical")
+private val ALLOWED_NFT_TAILS: Set<String> = setOf("getNFTsForOwner")
 
 /** Tail path segments captured by `{tail...}`, rejoined (empty when none). */
 private fun RoutingContext.tailPath(): String =

@@ -7,6 +7,15 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-115 — Key-proxy hardening: tail allow-list (`:server`, security, KAN-112 follow-up).** The
+  Data/Prices/NFT proxy routes previously forwarded `{tail...}` unvalidated, so a client could drive the
+  server-side key against **any** Alchemy path the key is entitled to (least-privilege gap; host/scheme
+  were already fixed, so never a foreign-host relay). Now each route forwards **only the exact sub-paths
+  the wallet's clients call** (`assets/tokens/by-address`, `tokens/by-address`, `tokens/historical`,
+  `getNFTsForOwner`); any other tail → `404` and the key is never used. Added `server/HARDENING.md` — the
+  pre-public-exposure gate (client auth, TLS, upstream quota caps, distributed rate-limit, RPC method
+  allow-list, observability, key rotation). 10 `:server` tests (incl. disallowed data/NFT tail rejected
+  without reaching upstream; `tokens/historical` allowed). Local scope unchanged; gates non-local exposure.
 - **KAN-107 — Portfolio Overview UI (PF-1, PRD-03).** New **web-capable** `:feature:portfolio` module
   (android/ios/jvm/**js/wasmJs**, like `:designsystem`) — depends only on the web-capable `:portfolio`
   (logic) + `:designsystem`, never on the non-web `:walletcore`, so the portfolio renders on Web too.

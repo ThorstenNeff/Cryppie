@@ -134,4 +134,40 @@ class KeyProxyTest {
         assertTrue("\"keyConfigured\":true" in body)
         assertTrue("SECRET" !in body) // never echo the key
     }
+
+    // ---- KAN-115: tail allow-list (least-privilege) ----
+
+    @Test
+    fun disallowedDataTailIsRejectedAndNeverReachesUpstream() = testApplication {
+        val captured = Captured()
+        application { module(ProxyConfig(alchemyApiKey = "K"), mockClient(captured)) }
+        // A path the key is entitled to but the wallet never calls — must not be proxiable.
+        val response = client.post("/alchemy/data/v1/assets/nfts/by-address") {
+            contentType(ContentType.Application.Json)
+            setBody("{}")
+        }
+        assertEquals(HttpStatusCode.NotFound, response.status)
+        assertEquals("", captured.url) // key never used against an un-allow-listed path
+    }
+
+    @Test
+    fun pricesHistoricalTailIsAllowed() = testApplication {
+        val captured = Captured()
+        application { module(ProxyConfig(alchemyApiKey = "K"), mockClient(captured)) }
+        val response = client.post("/alchemy/prices/v1/tokens/historical") {
+            contentType(ContentType.Application.Json)
+            setBody("{}")
+        }
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("https://api.g.alchemy.com/prices/v1/K/tokens/historical", captured.url)
+    }
+
+    @Test
+    fun disallowedNftTailIsRejected() = testApplication {
+        val captured = Captured()
+        application { module(ProxyConfig(alchemyApiKey = "K"), mockClient(captured)) }
+        val response = client.get("/alchemy/nft/v3/eth-mainnet/getContractsForOwner?owner=0x1")
+        assertEquals(HttpStatusCode.NotFound, response.status)
+        assertEquals("", captured.url)
+    }
 }
