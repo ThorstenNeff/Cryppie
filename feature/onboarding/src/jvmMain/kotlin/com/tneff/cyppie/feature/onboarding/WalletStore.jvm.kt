@@ -3,6 +3,7 @@ package com.tneff.cyppie.feature.onboarding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.tneff.cyppie.storage.CiphertextStore
+import com.tneff.cyppie.storage.SeedSession
 import com.tneff.cyppie.storage.SeedVault
 import com.tneff.cyppie.storage.StorageException
 import com.tneff.cyppie.wallet.Mnemonic
@@ -16,7 +17,10 @@ actual class WalletStore {
         var seed: ByteArray? = null
         return try {
             seed = Mnemonic.of(words).toSeed()
-            SeedVault(CiphertextStore.defaultFile()).store(seed, pw)
+            // KAN-111: persist AND open the in-memory session now (the seed was just created/imported),
+            // so the app-shell lands on Home unlocked instead of bouncing the just-set password to
+            // Unlock. The session owns its own copy (zeroized on lock); the local `seed` is zeroized below.
+            SeedSession.set(SeedVault(CiphertextStore.defaultFile()).storeAndOpen(seed, pw))
             WalletSetupOutcome.Success
         } catch (e: StorageException.KeyStoreUnavailable) {
             WalletSetupOutcome.KeystoreError

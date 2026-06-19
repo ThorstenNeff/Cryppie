@@ -22,6 +22,27 @@ class SeedVaultTest {
     }
 
     @Test
+    fun storeAndOpenPersistsAndYieldsSameSeed() = runTest {
+        // KAN-111: onboarding opens the session at creation. The returned source must hold exactly the
+        // stored seed, and a later unlock with the password must recover the same bytes (persisted).
+        val vault = SeedVault(CiphertextStore.inMemory())
+        val opened = vault.storeAndOpen(seed.copyOf(), password.toCharArray())
+        assertTrue(vault.isInitialized())
+        assertContentEquals(seed, opened.withSeed { it.copyOf() })
+        assertContentEquals(seed, vault.unlock(password.toCharArray()).withSeed { it.copyOf() })
+    }
+
+    @Test
+    fun storeAndOpenSourceIsIndependentOfCallerSeed() = runTest {
+        // The opened source owns a private copy: zeroizing the caller's buffer must not affect it.
+        val vault = SeedVault(CiphertextStore.inMemory())
+        val callerSeed = seed.copyOf()
+        val opened = vault.storeAndOpen(callerSeed, password.toCharArray())
+        callerSeed.fill(0)
+        assertContentEquals(seed, opened.withSeed { it.copyOf() })
+    }
+
+    @Test
     fun wrongPasswordFails() = runTest {
         val vault = SeedVault(CiphertextStore.inMemory())
         vault.store(seed.copyOf(), password.toCharArray())

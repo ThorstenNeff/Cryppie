@@ -55,6 +55,18 @@ class SeedVault(
     }
 
     /**
+     * Stores [seed] under [password] (as [store]) **and** returns an open [SecureSeedSource] for it —
+     * so onboarding can open the in-memory session the instant the wallet is created/imported, without
+     * a second PBKDF2 unlock (KAN-111: otherwise the app-shell sees no session and bounces the just-set
+     * password to Unlock). The returned source owns a private copy of the seed (zeroized on
+     * [SecureSeedSource.close]); the caller still owns + zeroizes [seed] and [password].
+     */
+    suspend fun storeAndOpen(seed: ByteArray, password: CharArray): SecureSeedSource {
+        store(seed, password)
+        return SecureSeedSource(seed.copyOf())
+    }
+
+    /**
      * Decrypts the stored seed with [password] and returns a zeroize-able [SecureSeedSource] for the
      * unlocked session. Throws [StorageException.InvalidPassword] on a wrong password or tampered
      * ciphertext, [StorageException.NotInitialized] if nothing is stored,
