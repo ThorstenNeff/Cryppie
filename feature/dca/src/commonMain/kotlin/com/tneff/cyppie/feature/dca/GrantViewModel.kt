@@ -80,18 +80,26 @@ class GrantViewModel(
         error = null
         submitting = true
         viewModelScope.launch {
-            val source = reauth(password)
-            if (source == null) {
-                error = DcaError.WRONG_PASSWORD; submitting = false; return@launch
-            }
-            val result = runCatching {
+            // HIGH-1 fix: build the enable op (network) FIRST — it needs only the JWT, not the seed. Only
+            // THEN re-auth + sign + zeroize, with NOTHING (no network) in between (the SendOrchestrator-M1
+            // minimal seed window): a build/grant failure can never leave a decrypted seed un-zeroized.
+            val outcome = runCatching {
                 val config = buildConfig()
-                val enable = api.buildSessionEnable(config)
-                val signature = signer.signDigest(enable.digestToSign, owner, source) // zeroizes source
-                api.grantSession(config, signature)
-            }
+                val enable = api.buildSessionEnable(config) // no seed in scope yet
+                val source = reauth(password) ?: return@runCatching DcaError.WRONG_PASSWORD
+                val signature = try {
+                    signer.signDigest(enable.digestToSign, owner, source) // signs + zeroizes
+                } finally {
+                    (source as? AutoCloseable)?.close() // defensive: zeroize even if signing throws
+                }
+                api.grantSession(config, signature) // network AFTER the seed window is closed
+                null // success
+            }.getOrElse { DcaError.AUTHORIZE_FAILED }
             submitting = false
-            if (result.isSuccess) granted = true else error = DcaError.AUTHORIZE_FAILED
+            when (outcome) {
+                null -> granted = true
+                else -> error = outcome
+            }
         }
     }
 }
