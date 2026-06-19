@@ -7,6 +7,26 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-62 — WalletConnect transport (`:walletconnect`, ADR-0015) + WC-Send adapter + verification-metadata regen.**
+  L4 WC transport: new non-web `:walletconnect` module (android · iosArm64 · iosSimulatorArm64 · jvm) —
+  `WalletConnectController` (`expect`/`actual`, `Flow<WcEvent>`; Android = Reown WalletKit, iOS = reown-swift
+  shim, Desktop/Web = no-op), `WalletConnectSigner` over `:wallet` (`personal_sign` EIP-191, `eth_sendTransaction`,
+  `eth_signTypedData_v4` EIP-712 digest validated vs the canonical Mail vector, fail-closed). **WC-Send adapter:**
+  `WcSendAdapter.toSendInput()` bridges a decoded `eth_sendTransaction` into the one KAN-91 `SendOrchestrator`
+  with by-construction guardrails (fail-closed): **#2 fill-not-override**, **#3 session-account binding** (`from`
+  must be a session-approved account, M1 review fix), **#4 chain binding** (CAIP-2→approved `EvmChain`),
+  recipient-required. 🔒 Key-path invariant: the WC SDK never sees the seed/key. 23 `:walletconnect` tests.
+  **ADR-0018(A) verification-metadata regenerated** (`pgp,sha256`): Reown/JitPack/Scarlet sha256-pinned +
+  **reown-PGP** (`verify-signatures=true`; keys are pinned → no keyserver fetch at build time, only at a future
+  **regen** — regen caveat). Also folded in the KAN-106 documented-gaps: **7 iosArm64 framework `kotlin_resources.zip`**
+  (coil/koin/qrose/components-resources — only resolved by xcodebuild embed, sha256-pinned from the resolved
+  artifacts) and the **`testAndroidHostTest` Robolectric runtime** classpath. Gate-set verified green fresh
+  (`--refresh-dependencies`): app `assembleDebug` · web js/wasm · `server:build` · `jvmTest` · `testDebugUnitTest`
+  · `testAndroidHostTest` · `checkI18n` · iOS compiles. **KAN-117-style host-test hygiene** for `:walletconnect`
+  (exclude secp256k1-JNI-bound signer/recover tests from `testAndroidHostTest` — UnsatisfiedLinkError on the host
+  JVM; crypto gate stays `jvmTest`). NB: a full android `assemble` of `:walletconnect` needs **AGP 9.1.0 /
+  compileSdk 37** (reown 1.6.14) → **KAN-123**, prereq before the WC app-embed (KAN-114), not for this merge
+  (no `:app` depends on `:walletconnect` yet).
 - **KAN-116 — Locale-aware number/currency formatting (`:feature:portfolio`, KAN-107-L2).** Money/percent
   rendering was US-hardcoded (`,` group, `.` decimal) — wrong for the 14 shipped locales. Added a
   **float-free** (FR-6) `NumberFormatProfile` (grouping sep · decimal sep · symbol placement) resolved
