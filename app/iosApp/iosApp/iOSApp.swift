@@ -31,8 +31,8 @@ enum WalletConnectStartup {
         let metadata = AppMetadata(
             name: "Cyppie",
             description: "Cyppie — non-custodial wallet",
-            url: "https://cyppie.app",
-            icons: ["https://cyppie.app/icon.png"],
+            url: "https://cyppie.com",
+            icons: ["https://cyppie.com/icon.png"],
             redirect: try! AppMetadata.Redirect(native: "cyppie://", universal: nil)
         )
         WalletKit.configure(metadata: metadata, crypto: CyppieCryptoProvider())

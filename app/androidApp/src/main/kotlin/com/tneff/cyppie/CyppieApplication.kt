@@ -21,8 +21,8 @@ class CyppieApplication : Application() {
             projectId = BuildConfig.WC_PROJECT_ID,
             appName = "Cyppie",
             appDescription = "Cyppie — non-custodial wallet",
-            appUrl = "https://cyppie.app",
-            appIcons = listOf("https://cyppie.app/icon.png"),
+            appUrl = "https://cyppie.com",
+            appIcons = listOf("https://cyppie.com/icon.png"),
             redirect = "cyppie://",
         )
     }
