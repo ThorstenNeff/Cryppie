@@ -186,7 +186,12 @@ class SendViewModel(
             val src = runCatching { reauth(pw) }.getOrNull()
             pw.fill(' ')
             authorizing = false
-            if (src != null) signWith(src) else authError = true
+            if (src != null) {
+                authPassword = "" // drop the password reference once it's served its purpose (review a)
+                signWith(src)
+            } else {
+                authError = true
+            }
         }
     }
 
