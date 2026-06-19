@@ -1,5 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.FiatPricePoint
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -12,7 +15,7 @@ import kotlin.test.assertNull
 class RichPortfolioPriceAtGuardsTest {
 
     private fun usd(cents: Long) = Money(cents, 2, "USD")
-    private fun pp(epoch: Long, cents: Long) = PricePoint(epoch, usd(cents))
+    private fun pp(epoch: Long, cents: Long) = FiatPricePoint(epoch, usd(cents))
 
     @Test
     fun emptyHistoryIsNull() {

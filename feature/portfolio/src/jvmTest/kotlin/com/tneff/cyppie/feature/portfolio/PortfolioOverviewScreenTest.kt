@@ -14,7 +14,7 @@ import com.tneff.cyppie.portfolio.AllocationSlice
 import com.tneff.cyppie.portfolio.ApproxReason
 import com.tneff.cyppie.portfolio.Holding
 import com.tneff.cyppie.portfolio.Metric
-import com.tneff.cyppie.portfolio.Money
+import com.tneff.cyppie.market.Money
 import com.tneff.cyppie.portfolio.Portfolio
 import com.tneff.cyppie.portfolio.PortfolioToken
 import kotlin.test.Test

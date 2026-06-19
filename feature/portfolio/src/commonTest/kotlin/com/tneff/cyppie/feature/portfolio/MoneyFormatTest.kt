@@ -1,7 +1,7 @@
 package com.tneff.cyppie.feature.portfolio
 
 import com.tneff.cyppie.designsystem.NumberFormatProfile
-import com.tneff.cyppie.portfolio.Money
+import com.tneff.cyppie.market.Money
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

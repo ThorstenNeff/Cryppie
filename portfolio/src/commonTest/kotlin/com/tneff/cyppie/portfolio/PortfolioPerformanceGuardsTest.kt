@@ -1,5 +1,7 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

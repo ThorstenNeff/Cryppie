@@ -1,5 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.FiatPricePoint
+
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.Quantity
 import com.tneff.cyppie.rpc.AssetTransfer
@@ -60,7 +63,7 @@ class RichPortfolioTest {
 
         // Even with no over-disposal, a truncated history must read as approximate (no silent cut).
         val cb = RichPortfolio.tokenCostBasis(
-            weth, account, history.transfers, listOf(PricePoint(50, usd(100))), truncated = history.truncated,
+            weth, account, history.transfers, listOf(FiatPricePoint(50, usd(100))), truncated = history.truncated,
         )
         assertTrue(ApproxReason.INCOMPLETE_TRANSFERS in cb.reasons)
     }
@@ -71,7 +74,7 @@ class RichPortfolioTest {
             transfer(100, other, account, eth(2)), // acquire 2 @ t=100
             transfer(300, account, other, eth(2)), // dispose 2 @ t=300
         )
-        val history = listOf(PricePoint(50, usd(100)), PricePoint(300, usd(300)))
+        val history = listOf(FiatPricePoint(50, usd(100)), FiatPricePoint(300, usd(300)))
         val cb = RichPortfolio.tokenCostBasis(weth, account, transfers, history)
         assertEquals(40_000L, cb.realizedPnlCents) // (300−100) × 2 = $400
         assertEquals(Quantity.ZERO, cb.currentAmount)
@@ -79,7 +82,7 @@ class RichPortfolioTest {
 
     @Test
     fun priceAtReturnsNearestPriorSample() {
-        val history = listOf(PricePoint(50, usd(100)), PricePoint(300, usd(300)))
+        val history = listOf(FiatPricePoint(50, usd(100)), FiatPricePoint(300, usd(300)))
         assertEquals(usd(100), RichPortfolio.priceAt(history, 100))
         assertEquals(usd(300), RichPortfolio.priceAt(history, 500))
         assertEquals(usd(100), RichPortfolio.priceAt(history, 10)) // before first → first

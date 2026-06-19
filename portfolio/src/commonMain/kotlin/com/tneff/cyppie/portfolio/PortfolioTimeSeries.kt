@@ -1,5 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.FiatPricePoint
+
 import com.tneff.cyppie.evm.Quantity
 
 /** A timestamped balance change for series reconstruction: [received] adds, else removes [amount]. */
@@ -17,7 +20,7 @@ object PortfolioTimeSeries {
      * Value series for one token: at each [history] price point, the **cumulative net holding**
      * reconstructed from [transfers] (received − sent up to that timestamp) valued at that price.
      */
-    fun tokenValueSeries(decimals: Int, transfers: List<TimedAmount>, history: List<PricePoint>): List<ValuePoint> {
+    fun tokenValueSeries(decimals: Int, transfers: List<TimedAmount>, history: List<FiatPricePoint>): List<ValuePoint> {
         val sorted = transfers.sortedBy { it.epochSeconds }
         return history.sortedBy { it.epochSeconds }.map { point ->
             var net = Quantity.ZERO

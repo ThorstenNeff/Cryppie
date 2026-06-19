@@ -1,5 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.FiatPricePoint
+
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.Quantity
 import com.tneff.cyppie.rpc.AssetTransfer
@@ -51,7 +54,7 @@ object RichPortfolio {
     }
 
     /** The price at-or-before [epoch] in a price [history] (nearest prior; first point if all later). */
-    fun priceAt(history: List<PricePoint>, epoch: Long): Money? {
+    fun priceAt(history: List<FiatPricePoint>, epoch: Long): Money? {
         if (history.isEmpty()) return null
         val sorted = history.sortedBy { it.epochSeconds }
         var chosen: Money? = null
@@ -70,7 +73,7 @@ object RichPortfolio {
         token: PortfolioToken,
         account: EvmAddress,
         transfers: List<AssetTransfer>,
-        history: List<PricePoint>,
+        history: List<FiatPricePoint>,
         truncated: Boolean = false,
     ): CostBasisEngine.CostBasis {
         val fallbackCurrency = history.firstOrNull()?.price?.currency ?: "USD"
@@ -90,7 +93,7 @@ object RichPortfolio {
         token: PortfolioToken,
         account: EvmAddress,
         transfers: List<AssetTransfer>,
-        history: List<PricePoint>,
+        history: List<FiatPricePoint>,
     ): List<ValuePoint> {
         val timed = tokenEvents(transfers, token, account).map { (epoch, received, amount) -> TimedAmount(epoch, received, amount) }
         return PortfolioTimeSeries.tokenValueSeries(token.decimals, timed, history)

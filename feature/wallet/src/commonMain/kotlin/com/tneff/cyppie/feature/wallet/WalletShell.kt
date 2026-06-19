@@ -15,7 +15,7 @@ import com.tneff.cyppie.feature.portfolio.PortfolioOverviewViewModel
 import com.tneff.cyppie.portfolio.AlchemyPriceSource
 import com.tneff.cyppie.portfolio.ApproxReason
 import com.tneff.cyppie.portfolio.Metric
-import com.tneff.cyppie.portfolio.Money
+import com.tneff.cyppie.market.Money
 import com.tneff.cyppie.portfolio.Portfolio
 import com.tneff.cyppie.portfolio.PortfolioConfig
 import com.tneff.cyppie.portfolio.PortfolioPerformance

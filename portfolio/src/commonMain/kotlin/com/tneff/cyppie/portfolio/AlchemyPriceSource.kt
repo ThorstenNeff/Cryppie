@@ -1,5 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.FiatPricePoint
+import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.TokenPrice
 import com.tneff.cyppie.rpc.AlchemyPriceClient
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -39,7 +42,7 @@ class AlchemyPriceSource(
         fromEpochSeconds: Long,
         toEpochSeconds: Long,
         intervalSeconds: Long,
-    ): List<PricePoint> {
+    ): List<FiatPricePoint> {
         val contract = token.contract ?: return emptyList()
         val raw = client.historicalByAddress(
             chainId = token.chainId,
@@ -51,7 +54,7 @@ class AlchemyPriceSource(
         return raw.mapNotNull { p ->
             val epoch = p.timestampIso?.let { runCatching { Instant.parse(it).epochSeconds }.getOrNull() } ?: return@mapNotNull null
             val scaled = Valuation.parseDecimalToScaled(p.priceDecimal, Valuation.PRICE_SCALE) ?: return@mapNotNull null
-            PricePoint(epoch, Money(scaled, Valuation.PRICE_SCALE, vs))
+            FiatPricePoint(epoch, Money(scaled, Valuation.PRICE_SCALE, vs))
         }.sortedBy { it.epochSeconds }
     }
 

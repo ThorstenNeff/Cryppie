@@ -1,5 +1,7 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+
 /** A point in the portfolio value-over-time series (KAN-100 P4). The series itself is reconstructed. */
 data class ValuePoint(val epochSeconds: Long, val value: Money)
 

@@ -1,5 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.FiatPricePoint
+
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.Quantity
 import kotlin.test.Test
@@ -18,7 +21,7 @@ class PortfolioTimeSeriesTest {
     }
 
     private fun usd(dollars: Long) = Money(dollars * 100_000_000, 8, "USD")
-    private fun pp(epoch: Long, dollars: Long) = PricePoint(epoch, usd(dollars))
+    private fun pp(epoch: Long, dollars: Long) = FiatPricePoint(epoch, usd(dollars))
 
     @Test
     fun valueSeriesReconstructsCumulativeHoldings() {

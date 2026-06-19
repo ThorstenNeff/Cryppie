@@ -44,7 +44,7 @@ import com.tneff.cyppie.feature.portfolio.generated.resources.pf_title
 import com.tneff.cyppie.feature.portfolio.generated.resources.pf_total_value
 import com.tneff.cyppie.portfolio.AllocationSlice
 import com.tneff.cyppie.portfolio.Metric
-import com.tneff.cyppie.portfolio.Money
+import com.tneff.cyppie.market.Money
 import org.jetbrains.compose.resources.stringResource
 
 /**

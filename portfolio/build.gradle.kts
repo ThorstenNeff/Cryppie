@@ -42,6 +42,7 @@ kotlin {
         commonMain.dependencies {
             api(projects.evm)
             api(projects.rpc) // L3 abstraction + the upcoming Data/Prices REST clients (ADR-0010 update)
+            api(projects.market) // Money + TokenPrice + FiatPricePoint relocated here (ADR-0025 Phase 1)
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {

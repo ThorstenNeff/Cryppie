@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tneff.cyppie.portfolio.Metric
-import com.tneff.cyppie.portfolio.Money
+import com.tneff.cyppie.market.Money
 import com.tneff.cyppie.portfolio.Portfolio
 import kotlinx.coroutines.launch
 

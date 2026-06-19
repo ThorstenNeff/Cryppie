@@ -1,5 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.TokenPrice
+
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.Quantity
 import kotlin.test.Test

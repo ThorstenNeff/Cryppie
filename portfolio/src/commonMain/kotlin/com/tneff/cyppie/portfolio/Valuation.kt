@@ -1,5 +1,7 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.Money
+
 import com.tneff.cyppie.evm.Quantity
 
 /**
