@@ -155,12 +155,13 @@ private val marketWatchlist: List<WatchedAsset> by lazy {
 /**
  * PRD-05 Ph1 (KAN-138/KAN-141) — DCA / AA endpoints.
  * - [KEYCLOAK_BASE_URL]: the SIWE realm (KAN-141, real).
- * - [USER_SERVICE_BASE_URL]: the JWT User-Service (Ph0 §4). HTTPS placeholder until the backend publishes
- *   its surface — unreachable today → the DCA VM maps the failure to Error (FR-4 graceful), exactly like
- *   Market degrades on a 503. The nav + SIWE flow are live; only the live data awaits the backend.
+ * - [USER_SERVICE_BASE_URL]: the JWT User-Service (Ph0 §4) — per the runbook it lives at
+ *   `auth.cyppie.com/v1/*` (api.cyppie.com is the Alchemy key-proxy, a different host). The exact base
+ *   URL is fixed at deploy; until then a 404/unreachable surface maps to Error (FR-4 graceful), exactly
+ *   like Market degrades on a 503. The nav + SIWE flow are live; only the live data awaits the backend.
  */
 private const val KEYCLOAK_BASE_URL = "https://auth.cyppie.com"
-private const val USER_SERVICE_BASE_URL = "https://api.cyppie.com"
+private const val USER_SERVICE_BASE_URL = "https://auth.cyppie.com"
 
 /** The fixed DCA grant routing/token config (MVP). The real allowed router/selector/spend-token are
  *  backend-published (Ph1); these mainnet defaults drive the grant UX + disclosure until then. */
