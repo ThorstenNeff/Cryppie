@@ -102,6 +102,59 @@ class SmartSessionEnableDigestTest {
         assertEquals(false, digest(1L, permissionsB) == digest(1L, permissionsC))
     }
 
+    // ── Vector D — the REAL DCA pin: real OwnableValidator + GLOBAL_CONSTANTS policies + paymaster=true.
+    // This is the byte-exact target for Dev-1's app-built enable (A/B/C used placeholder validator/policies). ──
+
+    // EMITTED OwnableValidator (GLOBAL_CONSTANTS.OWNABLE_VALIDATOR_ADDRESS), NOT the legacy 0x2483DA… export.
+    private val validatorD = "0x000000000013fdB5234E4E3162a810F54d9f7E98"
+    // sessionValidatorInitData = abi.encode(uint256 threshold=1, address[] owners=[account]).
+    private val validatorInitDataD = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000001" + // threshold = 1
+        "0000000000000000000000000000000000000000000000000000000000000040" + // offset to owners[]
+        "0000000000000000000000000000000000000000000000000000000000000001" + // owners.length = 1
+        "000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266"    // owners[0] = account
+    private val permissionsD = SignedPermissions(
+        permitERC4337Paymaster = true,
+        userOpPolicies = listOf(
+            PolicyData(
+                policy = "0x000000000033212e272655d8a22402db819477a6", // real SpendingLimits (GLOBAL_CONSTANTS)
+                initData = "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" +
+                    "00000000000000000000000000000000000000000000000000000000000f4240",
+            ),
+        ),
+        actions = listOf(
+            ActionData(
+                actionTargetSelector = "0x5ae401dc",
+                actionTarget = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+                actionPolicies = listOf(
+                    PolicyData(
+                        policy = "0x0000000000D30f611fA3bf652ac6879428586930", // real TimeFrame (GLOBAL_CONSTANTS)
+                        initData = "0x00000000000000000000000000000000000000000000000000000000683f9e80" +
+                            "00000000000000000000000000000000000000000000000000000000687a4f00",
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    private fun digestD(chainId: Long): String = Hex.encode(
+        SmartSessionEnableDigest.enableDigest(
+            account = account, chainId = chainId, sessionValidator = validatorD,
+            sessionValidatorInitData = validatorInitDataD, salt = salt, nonce = nonce, permissions = permissionsD,
+        ),
+    )
+
+    @Test
+    fun vectorD_realDcaPin_chain1() {
+        // Also validates the abi.encode(1,[owner]) sessionValidatorInitData byte-exact (it feeds the digest).
+        assertEquals("ba3ebab8845eff4c0f5c2871bdccaecb934b9909049bd36d776386a0390a133a", digestD(1L))
+    }
+
+    @Test
+    fun vectorD_realDcaPin_base() {
+        assertEquals("b45d0bc89f3abd41006eab254dccc8e5d9e206a3e3c180da16dfafb719191ca8", digestD(8453L))
+    }
+
     @Test
     fun chainBindingChangesDigest() {
         // chainId 1 vs 8453 must differ (binding lives in ChainSession.chainId, not the domain).
