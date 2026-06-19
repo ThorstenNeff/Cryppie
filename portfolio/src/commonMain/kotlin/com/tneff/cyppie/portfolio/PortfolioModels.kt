@@ -2,6 +2,7 @@ package com.tneff.cyppie.portfolio
 
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.Quantity
+import com.tneff.cyppie.market.MarketAsset
 import com.tneff.cyppie.market.Money
 
 // Money relocated to :market (ADR-0025, single-source money/pricing foundation) — imported above.
@@ -15,6 +16,14 @@ data class PortfolioToken(
 ) {
     val isNative: Boolean get() = contract == null
 }
+
+/**
+ * Maps a [PortfolioToken] to the `:market` pricing key [MarketAsset] (ADR-0025 Phase 2): native → [MarketAsset.Native],
+ * ERC-20 → [MarketAsset.Erc20]. The single conversion point between `:portfolio`'s domain token and the pricing
+ * foundation, applied at the [PortfolioService] adapter boundary.
+ */
+fun PortfolioToken.toMarketAsset(): MarketAsset =
+    contract?.let { MarketAsset.Erc20(chainId, it) } ?: MarketAsset.Native(chainId)
 
 /** A raw balance of [token] held by [account]; [value] is the fiat valuation once priced (null until). */
 data class Holding(

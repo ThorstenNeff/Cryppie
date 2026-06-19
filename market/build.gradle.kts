@@ -45,6 +45,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.evm) // EvmAddress for ERC-20 asset refs; web-safe (no secp256k1)
+            api(projects.rpc) // AlchemyPriceClient for AlchemyPriceSource (ADR-0025 Phase 2); :rpc is web-safe — no cycle
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.serialization.kotlinxJson)

@@ -1,6 +1,8 @@
 package com.tneff.cyppie.portfolio
 
+import com.tneff.cyppie.market.MarketAsset
 import com.tneff.cyppie.market.Money
+import com.tneff.cyppie.market.PriceSource
 import com.tneff.cyppie.market.TokenPrice
 
 import com.tneff.cyppie.evm.EvmAddress
@@ -30,9 +32,9 @@ class PortfolioServiceTest {
             fetchErc20Holdings = { _, _ -> listOf(RawTokenHolding(account, 1L, usdcContract, Quantity.of(2_000_000), "USDC", 6)) },
             fetchNativeBalance = { _, _ -> wholeEth(1) }, // 1 ETH
             priceSource = object : PriceSource {
-                override suspend fun currentPrices(tokens: List<PortfolioToken>, vs: String) = mapOf(
-                    usdc to TokenPrice(Money(100_000_000, 8, "USD"), asOfEpochSeconds = 1_000), // $1.00
-                    weth to TokenPrice(Money(250_000_000_000, 8, "USD"), asOfEpochSeconds = 1_000), // $2,500
+                override suspend fun currentPrices(assets: List<MarketAsset>, vs: String): Map<MarketAsset, TokenPrice> = mapOf(
+                    usdc.toMarketAsset() to TokenPrice(Money(100_000_000, 8, "USD"), asOfEpochSeconds = 1_000), // $1.00
+                    weth.toMarketAsset() to TokenPrice(Money(250_000_000_000, 8, "USD"), asOfEpochSeconds = 1_000), // $2,500
                 )
             },
             config = PortfolioConfig(knownGood = emptySet(), currency = "USD", dustThresholdCents = 1),

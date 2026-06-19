@@ -2,6 +2,7 @@ package com.tneff.cyppie.portfolio
 
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.Quantity
+import com.tneff.cyppie.market.PriceSource
 import com.tneff.cyppie.rpc.RawTokenHolding
 
 /**
@@ -28,11 +29,17 @@ class PortfolioService(
         }
         val holdings = erc20 + native
 
-        // Price each token; native ETH borrows its chain's WETH price.
+        // Price each token; native ETH borrows its chain's WETH price. Adapter boundary (ADR-0025 Phase 2):
+        // convert price tokens → :market's MarketAsset, call the relocated PriceSource, then re-key the result
+        // back to PortfolioToken so the valuator/consumers stay on PortfolioToken (no consumer churn).
         val priceTokens = holdings.mapNotNull { priceTokenFor(it.token) }.distinct()
-        val rawPrices = if (priceTokens.isEmpty()) emptyMap() else priceSource.currentPrices(priceTokens, vs)
+        val rawPrices = if (priceTokens.isEmpty()) {
+            emptyMap()
+        } else {
+            priceSource.currentPrices(priceTokens.map { it.toMarketAsset() }.distinct(), vs)
+        }
         val prices = holdings.mapNotNull { h ->
-            priceTokenFor(h.token)?.let { pt -> rawPrices[pt]?.let { price -> h.token to price } }
+            priceTokenFor(h.token)?.let { pt -> rawPrices[pt.toMarketAsset()]?.let { price -> h.token to price } }
         }.toMap()
 
         return PortfolioValuator.value(holdings, prices, config, clockEpochSeconds())

@@ -12,7 +12,8 @@ import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.feature.portfolio.PortfolioOverview
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewScreen
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewViewModel
-import com.tneff.cyppie.portfolio.AlchemyPriceSource
+import com.tneff.cyppie.market.AlchemyPriceSource
+import com.tneff.cyppie.portfolio.toMarketAsset
 import com.tneff.cyppie.portfolio.ApproxReason
 import com.tneff.cyppie.portfolio.Metric
 import com.tneff.cyppie.market.Money
@@ -157,7 +158,7 @@ private suspend fun computePerformance(
         for (h in holdings) {
             val priceToken = PortfolioService.priceTokenFor(h.token) ?: continue // unpriceable chain → skip (as the valuation does)
             val priceHistory = priceSource.priceHistory(
-                priceToken, currentValue.currency, now - PNL_HISTORY_WINDOW_SECONDS, now, ONE_DAY_SECONDS,
+                priceToken.toMarketAsset(), currentValue.currency, now - PNL_HISTORY_WINDOW_SECONDS, now, ONE_DAY_SECONDS,
             )
             val cb = RichPortfolio.tokenCostBasis(h.token, h.account, history.transfers, priceHistory, history.truncated)
             // Saturate rather than wrap on an absurd sum (same family as PortfolioPerformance's saturatingSub).

@@ -4,6 +4,21 @@ All notable changes to Cyppie are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project tracks work per Jira ticket
 (project `KAN`). Entries are summarised changes (what/why + ticket key), not raw commit logs.
 
+## [Unreleased]-marker
+
+### Changed
+- **KAN-128 / ADR-0025 Phase 2 — `PriceSource` + `AlchemyPriceSource` relocated to `:market`, re-typed over `MarketAsset`.**
+  Completes the pricing-foundation reconcile (Phase 1 moved `Money`/`TokenPrice`/`FiatPricePoint`). The `PriceSource`
+  contract + its Alchemy impl now live in `:market` and are keyed by **`MarketAsset`** (not `PortfolioToken`); the
+  price-decimal util (`PRICE_SCALE`/`parseDecimalToScaled`) is canonical in `:market` (`:portfolio`'s `Valuation`
+  delegates — single source). `:market` now `api(:rpc)` (for `AlchemyPriceClient`; no cycle — both web-safe). The
+  string→`Money` conversion stays a single step at the adapter edge (FR-6, no float). **Consumers unchanged:**
+  `PortfolioService` is the adapter boundary (converts holdings → `MarketAsset` via the new `PortfolioToken.toMarketAsset()`
+  before pricing, re-keys the result back to `PortfolioToken`), so `PortfolioValuator`/`TimeSeries`/`RichPortfolio`/
+  `CostBasisEngine`/`PortfolioPerformance` keep their `PortfolioToken`/`Money`/`FiatPricePoint` contracts (FR-9/TTL/
+  saturating intact); native-ETH→WETH pricing preserved; the KAN-124 P&L call site (`WalletShell.computePerformance`)
+  updated. Verified green incl. `:market`/`:portfolio` js+wasm (web-capability held), iOS framework export, Android app.
+
 ## [Unreleased]
 
 ### Added
