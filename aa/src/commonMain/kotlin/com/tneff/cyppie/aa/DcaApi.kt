@@ -9,6 +9,10 @@ import kotlinx.serialization.Serializable
  * publishes the User-Service surface. All amounts are base-unit decimal Strings (FR-6).
  */
 interface DcaApi {
+    /** Build the session-enable owner-userOp for [config]; returns the 32-byte digest the app signs
+     *  on-device (Ph0 §4 — session-enable is an owner-userOp, so the app just signs its hash). */
+    suspend fun buildSessionEnable(config: SessionConfig): SessionEnable
+
     /** Register an on-device-enabled Smart Session (grant UX → §2 config + the enable signature). */
     suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult
 
@@ -30,6 +34,10 @@ interface DcaApi {
     /** Global kill-switch state (backend pause flag); when paused, no op can be signed/submitted. */
     suspend fun aaStatus(): AaStatus
 }
+
+/** The session-enable digest the app signs on-device to authorize a new Smart Session. */
+@Serializable
+data class SessionEnable(val digestToSign: String, val validUntil: Long = 0)
 
 @Serializable
 data class GrantResult(val sessionId: String)
