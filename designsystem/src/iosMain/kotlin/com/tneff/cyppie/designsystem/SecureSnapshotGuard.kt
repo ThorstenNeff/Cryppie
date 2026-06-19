@@ -49,9 +49,13 @@ object SecureSnapshotGuard {
 
     private fun installObservers() {
         val center = NSNotificationCenter.defaultCenter
-        val main = NSOperationQueue.mainQueue
-        resignObserver = center.addObserverForName(UIApplicationWillResignActiveNotification, null, main) { _ -> showCover() }
-        activeObserver = center.addObserverForName(UIApplicationDidBecomeActiveNotification, null, main) { _ -> removeCover() }
+        // queue = null → the block runs SYNCHRONOUSLY on the posting thread (Apple docs). The system
+        // snapshots for the app switcher right after willResignActive, so the cover MUST be up before
+        // this returns — an async mainQueue hop could land the blur after the snapshot (review M1). The
+        // resign notification is posted on the main thread, so showCover() stays main-thread-safe.
+        resignObserver = center.addObserverForName(UIApplicationWillResignActiveNotification, null, null) { _ -> showCover() }
+        // Removal isn't timing-critical → main queue is fine.
+        activeObserver = center.addObserverForName(UIApplicationDidBecomeActiveNotification, null, NSOperationQueue.mainQueue) { _ -> removeCover() }
     }
 
     private fun removeObservers() {
