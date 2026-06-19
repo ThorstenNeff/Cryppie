@@ -4,11 +4,19 @@ import com.tneff.cyppie.market.CandleInterval
 import com.tneff.cyppie.market.TimeRange
 
 /**
- * A chart render point (UI-only). [price] is a `Double` for **pixel mapping only** — financial values
- * stay String/`Money` in `:market` (FR-6); the VM converts `:market`'s decimal-String `PricePoint` here
- * just to draw the polyline.
+ * A candlestick render bar (UI-only). OHLC are `Double` for **pixel mapping only** (KAN-133) — financial
+ * values stay decimal-String/`Money` in `:market` (FR-6); the VM parses `:market`'s decimal-String
+ * `Candle` here just to draw bodies/wicks. [up] = close ≥ open (green vs red body).
  */
-data class MarketChartPoint(val epochSeconds: Long, val price: Double)
+data class CandleBar(
+    val openEpochSeconds: Long,
+    val open: Double,
+    val high: Double,
+    val low: Double,
+    val close: Double,
+) {
+    val up: Boolean get() = close >= open
+}
 
 /** Chart time ranges (PRD-04 market detail) → a (CandleInterval, TimeRange) query against MarketDataApi. */
 enum class MarketRange { DAY, WEEK, MONTH, YEAR }

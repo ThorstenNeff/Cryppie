@@ -65,7 +65,14 @@ fun MarketScreen(
                         }
                     is MarketUiState.Content -> {
                         PriceHeader(state.spot)
-                        MarketChart(points = state.points, modifier = Modifier.padding(top = spacing.md))
+                        if (state.candles.isEmpty()) {
+                            // FR-4: priced/loaded but no candle data for this range → empty state (no crash).
+                            Box(Modifier.fillMaxWidth().padding(top = spacing.xl), contentAlignment = Alignment.Center) {
+                                Text(stringResource(Res.string.mkt_load_error), style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant)
+                            }
+                        } else {
+                            MarketChart(candles = state.candles, modifier = Modifier.padding(top = spacing.md).testTag("mkt_chart"))
+                        }
                         RangeSelector(viewModel)
                     }
                     is MarketUiState.Error ->

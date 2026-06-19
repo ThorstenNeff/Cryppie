@@ -5,4 +5,4 @@ import androidx.compose.ui.Modifier
 
 // Android: Compose Canvas (the shared native renderer).
 @Composable
-actual fun MarketChart(points: List<MarketChartPoint>, modifier: Modifier) = CanvasMarketChart(points, modifier)
+actual fun MarketChart(candles: List<CandleBar>, modifier: Modifier) = CanvasCandlestickChart(candles, modifier)

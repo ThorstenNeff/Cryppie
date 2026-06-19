@@ -10,19 +10,20 @@ import com.tneff.cyppie.market.MarketDataApi
 import com.tneff.cyppie.market.SpotPrice
 import kotlinx.coroutines.launch
 
-/** Market detail UI state (PRD-04). [spot] drives the price/Δ header; [points] the chart. */
+/** Market detail UI state (PRD-04). [spot] drives the price/Δ header; [candles] the candlestick chart. */
 sealed interface MarketUiState {
     data object Loading : MarketUiState
-    data class Content(val points: List<MarketChartPoint>, val spot: SpotPrice?) : MarketUiState
+    data class Content(val candles: List<CandleBar>, val spot: SpotPrice?) : MarketUiState
     data object Error : MarketUiState
 }
 
 /**
- * KAN-131 (PRD-04) — drives the Market detail screen over `:market`'s [MarketDataApi] (the app shell
- * DI-s the live `BridgeMarketDataApi` binding when Dev-2 lands it; this consumes the **interface**).
- * Loads the price history for the selected [range] (mapped to a CandleInterval+TimeRange) + the current
- * spot. FR-4 graceful (failure → [MarketUiState.Error], retryable). FR-6: prices stay decimal-String in
- * the data layer; only the chart polyline parses to Double for pixel mapping.
+ * KAN-131/KAN-133 (PRD-04) — drives the Market detail screen over `:market`'s [MarketDataApi] (the app
+ * shell DI-s the live `BridgeMarketDataApi` binding when Dev-2 lands it; this consumes the **interface**).
+ * Loads OHLC candles for the selected [range] (mapped to a CandleInterval+TimeRange) + the current spot.
+ * FR-4 graceful (failure → [MarketUiState.Error], retryable). FR-6: prices stay decimal-String in the
+ * data layer; only the chart parses OHLC to Double for pixel mapping (a candle with any unparseable
+ * field is dropped).
  */
 class MarketViewModel(
     private val asset: MarketAsset,
@@ -49,11 +50,15 @@ class MarketViewModel(
         viewModelScope.launch {
             uiState = runCatching {
                 val (interval, timeRange) = range.toQuery(nowEpochSeconds())
-                val points = data.priceHistory(asset, vs, interval, timeRange).mapNotNull { p ->
-                    p.priceDecimal.toDoubleOrNull()?.let { MarketChartPoint(p.epochSeconds, it) }
+                val candles = data.candles(asset, interval, timeRange).mapNotNull { c ->
+                    val o = c.open.toDoubleOrNull(); val h = c.high.toDoubleOrNull()
+                    val l = c.low.toDoubleOrNull(); val cl = c.close.toDoubleOrNull()
+                    if (o != null && h != null && l != null && cl != null) {
+                        CandleBar(c.openEpochSeconds, o, h, l, cl)
+                    } else null
                 }
                 val spot = data.spotPrices(listOf(asset), vs)[asset]
-                MarketUiState.Content(points, spot)
+                MarketUiState.Content(candles, spot)
             }.getOrElse { MarketUiState.Error }
         }
     }
