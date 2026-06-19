@@ -8,7 +8,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tneff.cyppie.rpc.AlchemyNetworks
+import com.tneff.cyppie.rpc.AlchemyNftClient
+import com.tneff.cyppie.rpc.AlchemyProxyConfig
 import com.tneff.cyppie.rpc.EvmRpcClient
+import com.tneff.cyppie.rpc.NftReadClient
 import com.tneff.cyppie.rpc.RpcEndpoint
 import com.tneff.cyppie.send.SendOrchestrator
 import com.tneff.cyppie.storage.CiphertextStore
@@ -26,22 +30,30 @@ import com.tneff.cyppie.walletcore.WalletRepository
 private enum class WalletDest { Home, Receive, AddToken, Nfts, Send }
 
 /**
- * Public dev/test RPC endpoints (no API key). Release builds inject Alchemy/Infura keys via build-config
- * (KAN-103 follow-up); these public nodes serve the read paths (balances / `eth_call`) meanwhile.
+ * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
+ * is injected server-side, so **no key ships in the client binary**. Dev default below; release injects
+ * the deployed proxy URL via build-config (follow-up). If the proxy is down / its key is unconfigured
+ * it answers 503 → the clients map that to `AllProvidersFailed` and the UI degrades cleanly (FR-4).
+ * (Android-emulator caveat: the host proxy is reachable at `10.0.2.2:8080`, not `localhost`.)
  */
+private const val PROXY_BASE_URL = "http://localhost:8080"
+private val alchemyProxy = AlchemyProxyConfig(PROXY_BASE_URL)
+
 private val defaultRpcByChain: Map<Long, EvmRpcClient> by lazy {
-    mapOf(
-        EvmChain.ETHEREUM.chainId to EvmRpcClient.create(
-            listOf(RpcEndpoint("publicnode", "https://ethereum-rpc.publicnode.com")),
-        ),
-        EvmChain.BASE.chainId to EvmRpcClient.create(
-            listOf(RpcEndpoint("publicnode", "https://base-rpc.publicnode.com")),
-        ),
-    )
+    AlchemyNetworks.supportedChainIds.associateWith { chainId ->
+        EvmRpcClient.create(listOf(RpcEndpoint("proxy", alchemyProxy.rpcUrl(chainId))))
+    }
+}
+
+/** NFT read clients per chain via the proxy (KAN-105 grid now has real data through the key-proxy). */
+private val defaultNftByChain: Map<Long, NftReadClient> by lazy {
+    AlchemyNetworks.supportedChainIds.associateWith { chainId ->
+        AlchemyNftClient(chainId, alchemyProxy.nftBaseUrl(chainId))
+    }
 }
 
 private fun buildRepository(seedSource: SeedSource): WalletRepository =
-    WalletRepository(AccountManager(EvmKeyManager(seedSource)), defaultRpcByChain)
+    WalletRepository(AccountManager(EvmKeyManager(seedSource)), defaultRpcByChain, defaultNftByChain)
 
 /**
  * KAN-103 — the live wallet shell behind the app-shell Home destination. Builds a [WalletRepository]
