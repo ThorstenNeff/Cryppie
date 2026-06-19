@@ -63,6 +63,7 @@ tasks.withType<Test>().configureEach {
     if (name == "testAndroidHostTest") {
         filter {
             excludeTestsMatching("com.tneff.cyppie.walletconnect.WalletConnectSignerTest")
+            excludeTestsMatching("com.tneff.cyppie.walletconnect.WcSignerExternalVectorsTest") // KAN-63 secp256k1 vectors
             excludeTestsMatching("com.tneff.cyppie.walletconnect.Eip712Test.signTypedDataV4RecoversToSigner")
             isFailOnNoMatchingTests = false
         }

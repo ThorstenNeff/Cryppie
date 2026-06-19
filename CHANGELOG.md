@@ -7,6 +7,20 @@ All notable changes to Cyppie are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- **KAN-123 — AGP 9.1.0 / Gradle 9.3.1 / compileSdk 37 + self-healing `android-37` symlink (build-infra, unblocks WC-on-Android).**
+  reown 1.6.14's own AARs (`com.reown:android-core`, `com.walletconnect:pay`) require **compileSdk 37** (Android 17)
+  + **AGP 9.1.0** (which needs **Gradle ≥9.3.1**) — so `:walletconnect`'s android `assemble` couldn't build on the
+  old toolchain (KAN-62 deferred it). Bumped AGP 9.0.1→9.1.0, the Gradle wrapper 9.1.0→9.3.1, and compileSdk 36→37.
+  API 37 installs as the **minor-versioned `android-37.0`** (no plain `android-37`), and the KMP `androidLibrary` DSL
+  has no `compileSdkMinor`; rather than the disruptive alternatives, `settings.gradle.kts` now **self-heals** by
+  idempotently symlinking `platforms/android-37 → android-37.0` per machine (reads `sdk.dir`/`$ANDROID_HOME`, runs
+  before plugin resolution) so a fresh clone + CI build with no manual setup. Regenerated the strict
+  `verification-metadata.xml` (`pgp,sha256`) for the new AGP/androidx.core-1.19.0 graph + `:walletconnect:assemble`'s
+  deps (`groovy-3.0.22` manually sha256-pinned — an AGP tooling dep `--write` doesn't capture). Folded the KAN-117
+  host-test exclusion for the new secp256k1-bound `WcSignerExternalVectorsTest` (KAN-63). **Verified green
+  (`--refresh-dependencies`):** app `assembleDebug`, web js/wasm, `:server:build`, jvmTest, `testAndroidHostTest`,
+  **`:walletconnect:assemble`**, iOS compiles. Unblocks the WC-Android app-embed (KAN-114-export). ⚠️ Disruptive —
+  every open branch must rebase onto this AGP bump.
 - **KAN-125 — Key-proxy production hardening + deploy artifacts (`:server`, ADR-0022, security/GA).** Prepares
   the key-proxy for the public Mac Mini deployment (a P0 GA-blocker — a shipped client can't reach `localhost`).
   Server-side hardening (testable): the rate-limiter now keys on the **real client IP from `X-Forwarded-For`**

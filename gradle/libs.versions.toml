@@ -1,6 +1,7 @@
 [versions]
-agp = "9.0.1"
-android-compileSdk = "36"
+# KAN-123: AGP 9.1.0 (needs Gradle ≥9.3.1, see wrapper) + compileSdk 37 — prereq for reown/WalletConnect-Android.
+agp = "9.1.0"
+android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "36"
 androidx-activity = "1.13.0"
