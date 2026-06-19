@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Ange ett belopp</string>
   <string name="dca_selector">Tillåten funktion</string>
   <string name="dca_rolling">Rullande gränsfönster</string>
+  <string name="dca_total_cap">Totalt tak</string>
 </resources>

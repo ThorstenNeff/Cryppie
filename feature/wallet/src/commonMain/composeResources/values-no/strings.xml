@@ -139,4 +139,5 @@
   <string name="wc_signer_label">Signeringskonto</string>
   <string name="wc_send_amount_label">Beløp</string>
   <string name="home_market">Markeder</string>
+  <string name="home_dca">Auto-invester</string>
 </resources>

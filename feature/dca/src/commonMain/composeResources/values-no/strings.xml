@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Skriv inn et beløp</string>
   <string name="dca_selector">Tillatt funksjon</string>
   <string name="dca_rolling">Rullerende grensevindu</string>
+  <string name="dca_total_cap">Total grense</string>
 </resources>

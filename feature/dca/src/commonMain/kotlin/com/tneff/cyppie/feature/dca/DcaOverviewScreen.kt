@@ -25,6 +25,7 @@ import com.tneff.cyppie.feature.dca.generated.resources.dca_rolling
 import com.tneff.cyppie.feature.dca.generated.resources.dca_sign_submit
 import com.tneff.cyppie.feature.dca.generated.resources.dca_spend
 import com.tneff.cyppie.feature.dca.generated.resources.dca_title
+import com.tneff.cyppie.feature.dca.generated.resources.dca_total_cap
 import org.jetbrains.compose.resources.stringResource
 
 import androidx.compose.foundation.background
@@ -193,7 +194,7 @@ private fun SessionCard(session: SessionConfig, onRevoke: () -> Unit) {
             DisclosureRow(stringResource(Res.string.dca_max_ops), a.usageLimit.toString(), ltr = true)
             DisclosureRow(stringResource(Res.string.dca_expires), a.validUntil.toString(), ltr = true)
         }
-        session.totalExposureCap?.let { DisclosureRow("Total exposure cap", BidiSanitizer.sanitize(it.cap), ltr = true) } // dca_total_cap = UX follow
+        session.totalExposureCap?.let { DisclosureRow(stringResource(Res.string.dca_total_cap), BidiSanitizer.sanitize(it.cap), ltr = true) }
         CryptasaButton(text = stringResource(Res.string.dca_revoke), onClick = onRevoke, style = CryptasaButtonStyle.Secondary, modifier = Modifier.fillMaxWidth().padding(top = spacing.sm).testTag("dca_revoke"))
     }
 }

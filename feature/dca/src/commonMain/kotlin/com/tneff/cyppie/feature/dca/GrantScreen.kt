@@ -3,19 +3,18 @@ package com.tneff.cyppie.feature.dca
 import com.tneff.cyppie.feature.dca.generated.resources.Res
 import com.tneff.cyppie.feature.dca.generated.resources.dca_amount_per_buy
 import com.tneff.cyppie.feature.dca.generated.resources.dca_authorize
+import com.tneff.cyppie.feature.dca.generated.resources.dca_account
+import com.tneff.cyppie.feature.dca.generated.resources.dca_chain
 import com.tneff.cyppie.feature.dca.generated.resources.dca_authorizing
-import com.tneff.cyppie.feature.dca.generated.resources.dca_cap_per_buy
 import com.tneff.cyppie.feature.dca.generated.resources.dca_expires
 import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_daily
 import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_weekly
-import com.tneff.cyppie.feature.dca.generated.resources.dca_frequency
-import com.tneff.cyppie.feature.dca.generated.resources.dca_max_buys
 import com.tneff.cyppie.feature.dca.generated.resources.dca_new
 import com.tneff.cyppie.feature.dca.generated.resources.dca_password
 import com.tneff.cyppie.feature.dca.generated.resources.dca_router
 import com.tneff.cyppie.feature.dca.generated.resources.dca_selector
-import com.tneff.cyppie.feature.dca.generated.resources.dca_rolling
 import com.tneff.cyppie.feature.dca.generated.resources.dca_spend_token
+import com.tneff.cyppie.feature.dca.generated.resources.dca_total_cap
 import com.tneff.cyppie.feature.dca.generated.resources.dca_you_authorize
 import org.jetbrains.compose.resources.stringResource
 
@@ -57,9 +56,11 @@ import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 // Pre-i18n labels (dca_* keys → UX follow-up; no composeResources change → checkI18n unaffected).
 
 /**
- * DCA Smart-Session grant (PRD-05 Ph1): set the per-buy amount + frequency + duration, see the **no-blind
- * disclosure** of the exact §2 session being authorized (allowed router, cap+token, frequency, max ops,
- * expiry), then re-auth → on-device enable-sign. On success → [onDone].
+ * DCA Smart-Session grant (PRD-05 Ph1, KAN-144). Two phases: set the buy amount + frequency → **Review**
+ * (backend enable op → **on-device `verifyGrant`**), then the **no-blind disclosure renders ONLY the
+ * verified grant** (account/target/selector/token/cap/window — decoded from the bytes inside the signed
+ * digest, never the raw backend material) → re-auth → on-device sign of the verified digest. A verification
+ * failure is fail-closed (no disclosure, no sign). On success → [onDone].
  */
 @Composable
 fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Unit = {}, modifier: Modifier = Modifier) {
@@ -94,44 +95,52 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                     optionTestTag = { "dca_freq_${it.name.lowercase()}" },
                 )
 
-                // No-blind disclosure of the exact §2 session being authorized (what gets signed).
-                val config = viewModel.buildConfig()
-                val action = config.actions.first()
-                Column(
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag("dca_grant_disclosure"),
-                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
-                ) {
-                    // P1-10: disclose EVERY signed policy field; external strings sanitized (BidiSanitizer).
-                    Text(stringResource(Res.string.dca_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
-                    DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(action.target), ltr = true, truncate = false)
-                    DisclosureRow(stringResource(Res.string.dca_selector), BidiSanitizer.sanitize(action.selector), ltr = true, truncate = false)
-                    action.spendingLimits.firstOrNull()?.let {
-                        DisclosureRow(stringResource(Res.string.dca_spend_token), BidiSanitizer.sanitize(it.token), ltr = true, truncate = false)
-                        DisclosureRow(stringResource(Res.string.dca_cap_per_buy), BidiSanitizer.sanitize(it.cap), ltr = true, valueTestTag = "dca_grant_cap")
-                    }
-                    DisclosureRow(stringResource(Res.string.dca_frequency), (if (viewModel.frequency == DcaFrequency.DAILY) freqDaily else freqWeekly), ltr = true)
-                    DisclosureRow(stringResource(Res.string.dca_rolling), action.rollingWindowSeconds.toString(), ltr = true)
-                    DisclosureRow(stringResource(Res.string.dca_max_buys), action.usageLimit.toString(), ltr = true)
-                    DisclosureRow(stringResource(Res.string.dca_expires), action.validUntil.toString(), ltr = true)
-                }
-
                 viewModel.error?.let { CryptasaBanner(title = it.text(), tone = CryptasaBannerTone.Danger, modifier = Modifier.testTag("dca_grant_error")) }
 
-                // Re-auth gate (ADR-0009) → on-device enable-sign of the disclosed session.
-                CryptasaTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = stringResource(Res.string.dca_password),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardType = KeyboardType.Password,
-                    modifier = Modifier.fillMaxWidth().testTag("dca_grant_password"),
-                )
-                CryptasaButton(
-                    text = if (viewModel.submitting) stringResource(Res.string.dca_authorizing) else stringResource(Res.string.dca_authorize),
-                    onClick = { viewModel.grant(password) },
-                    enabled = !viewModel.submitting && password.isNotBlank() && viewModel.capAmount.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag("dca_grant_authorize"),
-                )
+                val verified = viewModel.verified
+                if (verified == null) {
+                    // Phase 1 (KAN-144): the disclosure is the ON-DEVICE-VERIFIED grant, so we must first run
+                    // verifyGrant against the backend enable digest. No blind config preview here.
+                    CryptasaButton(
+                        text = if (viewModel.reviewing) stringResource(Res.string.dca_authorizing) else "Review grant",
+                        onClick = { viewModel.review() },
+                        enabled = !viewModel.reviewing && viewModel.capAmount.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag("dca_grant_review"),
+                    )
+                } else {
+                    // No-blind disclosure — renders ONLY the VerifiedGrant (decoded from the bytes inside the
+                    // signed enable digest), never the raw backend material. External strings sanitized.
+                    Column(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag("dca_grant_disclosure"),
+                        verticalArrangement = Arrangement.spacedBy(spacing.xs),
+                    ) {
+                        Text(stringResource(Res.string.dca_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+                        DisclosureRow(stringResource(Res.string.dca_account), BidiSanitizer.sanitize(verified.account), ltr = true, truncate = false)
+                        DisclosureRow(stringResource(Res.string.dca_chain), verified.chainId.toString(), ltr = true)
+                        DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(verified.actionTarget), ltr = true, truncate = false)
+                        DisclosureRow(stringResource(Res.string.dca_selector), BidiSanitizer.sanitize(verified.actionSelector), ltr = true, truncate = false)
+                        DisclosureRow(stringResource(Res.string.dca_spend_token), BidiSanitizer.sanitize(verified.spendToken), ltr = true, truncate = false)
+                        DisclosureRow(stringResource(Res.string.dca_total_cap), viewModel.capHuman(verified), ltr = true, valueTestTag = "dca_grant_cap")
+                        DisclosureRow("Active from", verified.windowStartEpochSeconds.toString(), ltr = true) // dca_window_start = UX follow
+                        DisclosureRow(stringResource(Res.string.dca_expires), verified.windowEndEpochSeconds.toString(), ltr = true)
+                    }
+
+                    // Re-auth gate (ADR-0009) → on-device sign of the VERIFIED enable digest.
+                    CryptasaTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = stringResource(Res.string.dca_password),
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardType = KeyboardType.Password,
+                        modifier = Modifier.fillMaxWidth().testTag("dca_grant_password"),
+                    )
+                    CryptasaButton(
+                        text = if (viewModel.submitting) stringResource(Res.string.dca_authorizing) else stringResource(Res.string.dca_authorize),
+                        onClick = { viewModel.grant(password) },
+                        enabled = !viewModel.submitting && password.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag("dca_grant_authorize"),
+                    )
+                }
             }
         }
     }

@@ -52,6 +52,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_degraded
 import com.tneff.cyppie.feature.wallet.generated.resources.home_empty
 import com.tneff.cyppie.feature.wallet.generated.resources.home_error
 import com.tneff.cyppie.feature.wallet.generated.resources.home_nfts
+import com.tneff.cyppie.feature.wallet.generated.resources.home_dca
 import com.tneff.cyppie.feature.wallet.generated.resources.home_market
 import com.tneff.cyppie.feature.wallet.generated.resources.home_portfolio
 import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
@@ -195,7 +196,7 @@ fun WalletHomeScreen(
             // DCA / Auto-Invest entry (PRD-05 Ph1, KAN-138) — full-width secondary. Label is pre-i18n
             // (home_dca = UX follow-up, same as home_market was); the destination is JWT-gated (SIWE).
             CryptasaButton(
-                text = "Auto-Invest",
+                text = stringResource(Res.string.home_dca),
                 onClick = onDca,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag("home_dca"),

@@ -139,4 +139,5 @@
   <string name="wc_signer_label">İmzalayan hesap</string>
   <string name="wc_send_amount_label">Tutar</string>
   <string name="home_market">Piyasalar</string>
+  <string name="home_dca">Otomatik Yatırım</string>
 </resources>

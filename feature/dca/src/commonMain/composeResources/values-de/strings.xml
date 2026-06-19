@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Betrag eingeben</string>
   <string name="dca_selector">Erlaubte Funktion</string>
   <string name="dca_rolling">Rollendes Limit-Fenster</string>
+  <string name="dca_total_cap">Gesamtlimit</string>
 </resources>

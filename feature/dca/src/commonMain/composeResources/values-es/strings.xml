@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Introduce un importe</string>
   <string name="dca_selector">Función permitida</string>
   <string name="dca_rolling">Ventana de límite móvil</string>
+  <string name="dca_total_cap">Límite total</string>
 </resources>

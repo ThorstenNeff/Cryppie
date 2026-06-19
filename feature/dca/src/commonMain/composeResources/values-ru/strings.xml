@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Введите сумму</string>
   <string name="dca_selector">Разрешённая функция</string>
   <string name="dca_rolling">Скользящее окно лимита</string>
+  <string name="dca_total_cap">Общий лимит</string>
 </resources>

@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Nhập số tiền</string>
   <string name="dca_selector">Hàm được phép</string>
   <string name="dca_rolling">Cửa sổ giới hạn luân phiên</string>
+  <string name="dca_total_cap">Tổng giới hạn</string>
 </resources>

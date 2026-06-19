@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Bir tutar gir</string>
   <string name="dca_selector">İzin verilen işlev</string>
   <string name="dca_rolling">Kayan limit penceresi</string>
+  <string name="dca_total_cap">Toplam üst sınır</string>
 </resources>

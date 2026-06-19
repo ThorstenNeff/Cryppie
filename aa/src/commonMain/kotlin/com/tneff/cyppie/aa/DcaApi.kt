@@ -1,5 +1,6 @@
 package com.tneff.cyppie.aa
 
+import com.tneff.cyppie.evm.SmartSessionEnableDigest
 import kotlinx.serialization.Serializable
 
 /**
@@ -35,9 +36,65 @@ interface DcaApi {
     suspend fun aaStatus(): AaStatus
 }
 
-/** The session-enable digest the app signs on-device to authorize a new Smart Session. */
+/**
+ * The session-enable response the app signs on-device to authorize a new Smart Session. Carries the
+ * **full grant material** (not just [digestToSign]) so the app can independently verify on-device
+ * (KAN-144 `SmartSessionGrantVerifier`): recompute the enable digest over this material + pinned modules
+ * and decode the policies → render the verified values, never the raw fields. Extra fields default so the
+ * shape stays backward-compatible while the backend's published surface is reconciled.
+ */
 @Serializable
-data class SessionEnable(val digestToSign: String, val validUntil: Long = 0)
+data class SessionEnable(
+    val digestToSign: String,
+    val account: String = "",
+    val chainId: Long = 0,
+    val sessionValidator: String = "",
+    val sessionValidatorInitData: String = "",
+    val salt: String = "",
+    val nonce: String = "",
+    val permissions: GrantPermissions = GrantPermissions(),
+    val validUntil: Long = 0,
+)
+
+/**
+ * The signed-permissions grant material, wire DTO (mirrors the `:evm`
+ * `SmartSessionEnableDigest.SignedPermissions` so the User-Service JSON deserializes here without making
+ * the `:evm` domain types serializable). [toSigned] maps it to the verifier's input.
+ */
+@Serializable
+data class GrantPermissions(
+    val permitGenericPolicy: Boolean = false,
+    val permitAdminAccess: Boolean = false,
+    val ignoreSecurityAttestations: Boolean = false,
+    val userOpPolicies: List<GrantPolicyData> = emptyList(),
+    val actions: List<GrantActionData> = emptyList(),
+)
+
+@Serializable
+data class GrantPolicyData(val policy: String, val initData: String)
+
+@Serializable
+data class GrantActionData(
+    val actionTargetSelector: String,
+    val actionTarget: String,
+    val actionPolicies: List<GrantPolicyData> = emptyList(),
+)
+
+/** Map the wire DTO → the `:evm` verifier input (the broad-access flags + policies the digest is over). */
+fun GrantPermissions.toSigned(): SmartSessionEnableDigest.SignedPermissions =
+    SmartSessionEnableDigest.SignedPermissions(
+        permitGenericPolicy = permitGenericPolicy,
+        permitAdminAccess = permitAdminAccess,
+        ignoreSecurityAttestations = ignoreSecurityAttestations,
+        userOpPolicies = userOpPolicies.map { SmartSessionEnableDigest.PolicyData(it.policy, it.initData) },
+        actions = actions.map { a ->
+            SmartSessionEnableDigest.ActionData(
+                actionTargetSelector = a.actionTargetSelector,
+                actionTarget = a.actionTarget,
+                actionPolicies = a.actionPolicies.map { SmartSessionEnableDigest.PolicyData(it.policy, it.initData) },
+            )
+        },
+    )
 
 @Serializable
 data class GrantResult(val sessionId: String)

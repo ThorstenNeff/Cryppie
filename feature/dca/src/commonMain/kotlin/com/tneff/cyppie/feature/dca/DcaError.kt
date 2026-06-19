@@ -9,7 +9,7 @@ import com.tneff.cyppie.feature.dca.generated.resources.dca_err_submit
 import org.jetbrains.compose.resources.stringResource
 
 /** A DCA error code (VMs are non-composable → they expose the code; the screen resolves the dca_err_* string). */
-enum class DcaError { WRONG_PASSWORD, SUBMIT_FAILED, AUTHORIZE_FAILED, ENTER_AMOUNT }
+enum class DcaError { WRONG_PASSWORD, SUBMIT_FAILED, AUTHORIZE_FAILED, ENTER_AMOUNT, VERIFY_FAILED }
 
 @Composable
 fun DcaError.text(): String = when (this) {
@@ -17,4 +17,6 @@ fun DcaError.text(): String = when (this) {
     DcaError.SUBMIT_FAILED -> stringResource(Res.string.dca_err_submit)
     DcaError.AUTHORIZE_FAILED -> stringResource(Res.string.dca_err_authorize)
     DcaError.ENTER_AMOUNT -> stringResource(Res.string.dca_err_amount)
+    // KAN-144: on-device grant verification failed → we refuse to sign. dca_err_verify = UX follow.
+    DcaError.VERIFY_FAILED -> "Couldn't verify the grant on-device — not signed"
 }

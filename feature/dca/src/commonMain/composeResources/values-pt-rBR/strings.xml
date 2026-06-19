@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Insira um valor</string>
   <string name="dca_selector">Função permitida</string>
   <string name="dca_rolling">Janela de limite contínua</string>
+  <string name="dca_total_cap">Limite total</string>
 </resources>

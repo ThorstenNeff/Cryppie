@@ -139,4 +139,5 @@
   <string name="wc_signer_label">Signing account</string>
   <string name="wc_send_amount_label">Amount</string>
   <string name="home_market">Markets</string>
+  <string name="home_dca">Auto-Invest</string>
 </resources>

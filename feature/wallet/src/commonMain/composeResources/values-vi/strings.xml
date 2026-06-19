@@ -139,4 +139,5 @@
   <string name="wc_signer_label">Tài khoản ký</string>
   <string name="wc_send_amount_label">Số tiền</string>
   <string name="home_market">Thị trường</string>
+  <string name="home_dca">Tự động đầu tư</string>
 </resources>

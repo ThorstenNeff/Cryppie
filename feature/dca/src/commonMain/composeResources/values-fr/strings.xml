@@ -44,4 +44,5 @@
   <string name="dca_err_amount">Saisissez un montant</string>
   <string name="dca_selector">Fonction autorisée</string>
   <string name="dca_rolling">Fenêtre de limite glissante</string>
+  <string name="dca_total_cap">Plafond total</string>
 </resources>

@@ -44,4 +44,5 @@
   <string name="dca_err_amount">أدخل مبلغًا</string>
   <string name="dca_selector">الدالة المسموح بها</string>
   <string name="dca_rolling">نافذة الحد المتجدّدة</string>
+  <string name="dca_total_cap">الحد الأقصى الإجمالي</string>
 </resources>
