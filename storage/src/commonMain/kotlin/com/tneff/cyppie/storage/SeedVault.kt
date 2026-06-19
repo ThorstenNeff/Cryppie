@@ -103,6 +103,13 @@ class SeedVault(
         }
     }
 
+    /**
+     * Whether a biometric-unlock credential is enrolled — non-interactively (no prompt). The unlock
+     * affordance should only be offered when this is true (KAN-101-L1); otherwise [unlockWithBiometrics]
+     * would just fail with [StorageException.KeyStoreUnavailable].
+     */
+    fun hasBiometricCredential(): Boolean = keyStore.hasCredential(SEED_UNLOCK_ALIAS)
+
     /** Unlocks via biometrics (releases the stored password bytes, then decrypts). */
     suspend fun unlockWithBiometrics(): SecureSeedSource {
         val pwBytes = keyStore.retrieve(SEED_UNLOCK_ALIAS)
