@@ -136,4 +136,5 @@
   <string name="send_auth_password">كلمة المرور</string>
   <string name="send_auth_error">كلمة المرور غير صحيحة.</string>
   <string name="home_portfolio">المحفظة</string>
+  <string name="wc_signer_label">حساب التوقيع</string>
 </resources>

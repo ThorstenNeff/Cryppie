@@ -61,7 +61,7 @@ object WalletConnectIos {
             WcEvent.OnSessionProposal(
                 WcSessionProposal(
                     proposalId = proposalId,
-                    dapp = WcDappMetadata(dappName, dappDescription, dappUrl, verifyContext = verifyContext),
+                    dapp = WcDappMetadata(dappName, dappDescription, dappUrl, verify = WcVerify.from(verifyContext)),
                     chains = chains,
                     methods = methods,
                 ),
@@ -87,7 +87,7 @@ object WalletConnectIos {
                     chainId = chainId,
                     method = method,
                     params = params,
-                    dapp = WcDappMetadata(dappName, "", dappUrl, verifyContext = verifyContext),
+                    dapp = WcDappMetadata(dappName, "", dappUrl, verify = WcVerify.from(verifyContext)),
                 ),
             ),
         )

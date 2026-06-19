@@ -136,4 +136,5 @@
   <string name="send_auth_password">Hasło</string>
   <string name="send_auth_error">Nieprawidłowe hasło.</string>
   <string name="home_portfolio">Portfolio</string>
+  <string name="wc_signer_label">Konto podpisujące</string>
 </resources>

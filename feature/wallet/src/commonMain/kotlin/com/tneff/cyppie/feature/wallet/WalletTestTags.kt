@@ -68,6 +68,7 @@ object WalletTestTags {
     const val SEND_FEESPIKE_BANNER = "send_err_feespike"
     const val SEND_DISCLOSURE = "send_disclosure"
     const val SEND_DISCLOSURE_ASSET = "send_disclosure_asset"
+    const val SEND_DISCLOSURE_FROM = "send_disclosure_from"
     const val SEND_DISCLOSURE_NETWORK = "send_disclosure_network"
     const val SEND_DISCLOSURE_MAXFEE = "send_disclosure_maxfee"
     const val SEND_DISCLOSURE_FEE = "send_disclosure_fee"

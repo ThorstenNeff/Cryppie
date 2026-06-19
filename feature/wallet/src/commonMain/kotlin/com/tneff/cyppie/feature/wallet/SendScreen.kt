@@ -90,6 +90,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.send_status_failed_ti
 import com.tneff.cyppie.feature.wallet.generated.resources.send_status_pending_body
 import com.tneff.cyppie.feature.wallet.generated.resources.send_status_pending_title
 import com.tneff.cyppie.feature.wallet.generated.resources.send_title
+import com.tneff.cyppie.feature.wallet.generated.resources.wc_signer_label
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -306,6 +307,8 @@ private fun SendConfirm(viewModel: SendViewModel, onBack: () -> Unit, modifier: 
                 // KAN-122: bidi-sanitize attacker-controlled disclosure strings — a hostile ERC-20
                 // symbol (or, defensively, the recipient) must not spoof via RTL-override/zero-width.
                 DisclosureRow(stringResource(Res.string.send_disclosure_asset), BidiSanitizer.sanitize(asset.symbol), valueTestTag = WalletTestTags.SEND_DISCLOSURE_ASSET)
+                // Signing account (KAN-126 M2): the `from` shown consistently with the WC-Request disclosure.
+                DisclosureRow(stringResource(Res.string.wc_signer_label), prepared.disclosure.from.value, ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_FROM)
                 DisclosureRow(stringResource(Res.string.send_disclosure_to), BidiSanitizer.sanitize(viewModel.disclosedRecipient(prepared).value), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_TO)
                 DisclosureRow(stringResource(Res.string.send_disclosure_network), d.chain.displayName, valueTestTag = WalletTestTags.SEND_DISCLOSURE_NETWORK)
                 DisclosureRow(stringResource(Res.string.send_disclosure_nonce), d.nonce.toLong().toString(), ltr = true, valueTestTag = WalletTestTags.SEND_DISCLOSURE_NONCE)

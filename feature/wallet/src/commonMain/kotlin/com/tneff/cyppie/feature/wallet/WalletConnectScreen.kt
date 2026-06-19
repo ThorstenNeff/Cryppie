@@ -45,6 +45,7 @@ import com.tneff.cyppie.walletconnect.WcDecodedRequest
 import com.tneff.cyppie.walletconnect.WcSessionProposal
 import com.tneff.cyppie.walletconnect.WcSessionRequest
 import com.tneff.cyppie.walletconnect.WcSigningRequest
+import com.tneff.cyppie.walletconnect.WcVerify
 import com.tneff.cyppie.feature.wallet.generated.resources.Res
 import com.tneff.cyppie.feature.wallet.generated.resources.common_cancel
 import com.tneff.cyppie.feature.wallet.generated.resources.send_auth_error
@@ -70,6 +71,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_method
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_sign_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_req_typed_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_sign_message_label
+import com.tneff.cyppie.feature.wallet.generated.resources.wc_signer_label
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_sign_warning
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_typed_domain
 import com.tneff.cyppie.feature.wallet.generated.resources.wc_typed_message
@@ -172,7 +174,7 @@ private fun WcProposalScreen(
         ) {
             Text(BidiSanitizer.sanitize(proposal.dapp.name), style = CryptasaTheme.typography.titleLarge, color = colors.onSurface)
             WcScopeRow(stringResource(Res.string.wc_origin_label), BidiSanitizer.sanitize(proposal.dapp.url), ltr = true)
-            VerifyBadge(proposal.dapp.verifyContext)
+            VerifyBadge(proposal.dapp.verify)
             WcScopeRow(stringResource(Res.string.wc_chains_label), proposal.chains.joinToString { BidiSanitizer.sanitize(it) })
             if (viewModel.sharedAccountLabels.isNotEmpty()) {
                 WcScopeRow(stringResource(Res.string.wc_accounts_label), viewModel.sharedAccountLabels.joinToString(), ltr = true)
@@ -229,9 +231,16 @@ private fun WcRequestScreen(
                 .padding(vertical = spacing.md).testTag(WalletTestTags.WC_REQUEST),
             verticalArrangement = Arrangement.spacedBy(spacing.md),
         ) {
-            // Context header (SPEC §3): origin + verifyContext + the chain of the signature context.
+            // Context header (SPEC §3): origin + verifyContext + the signing account + the chain. The
+            // signing account (M2) is the full address as an LTR island — essential disclosure for any
+            // signature; consistent with the Send-Confirm `from` row.
             WcScopeRow(stringResource(Res.string.wc_origin_label), BidiSanitizer.sanitize(request.dapp.url), ltr = true)
-            VerifyBadge(request.dapp.verifyContext)
+            VerifyBadge(request.dapp.verify)
+            val signerAddress = when (decoded) {
+                is WcDecodedRequest.SignNow -> decoded.request.address.value
+                is WcDecodedRequest.SendTransaction -> decoded.params.from.value
+            }
+            WcScopeRow(stringResource(Res.string.wc_signer_label), BidiSanitizer.sanitize(signerAddress), ltr = true)
             WcScopeRow(stringResource(Res.string.wc_chains_label), BidiSanitizer.sanitize(request.chainId), ltr = true)
 
             // M1 (review, sign-what-you-saw): EIP-712 is parsed ONCE here; the same parse drives the
@@ -382,20 +391,16 @@ private fun WcAuthorizePanel(viewModel: WalletConnectViewModel) {
     if (viewModel.busy) BusyRing()
 }
 
-/** verifyContext badge — icon + text + colour (never colour alone; FR-3 / WCAG-AA). Tolerates the SDK's
- * Validation tokens (VALID/INVALID/UNKNOWN) and the iOS-shim aliases (VERIFIED/SCAM). Fail-safe: anything
- * unrecognised warns. (Pre-merge fold: normalise to a typed enum at the controller edge — review M1.) */
+/** verifyContext badge — icon + text + colour (never colour alone; FR-3 / WCAG-AA). Matches the typed
+ * [WcVerify] (normalised at the controller edge — review M1), so no raw SDK-token matching in the UI. */
 @Composable
-private fun VerifyBadge(verifyContext: String?) {
+private fun VerifyBadge(verify: WcVerify) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
-    val verified = setOf("VALID", "VERIFIED")
-    val invalid = setOf("INVALID", "SCAM", "MALICIOUS")
-    val token = verifyContext?.trim()?.uppercase()
-    val (icon: ImageVector, tint: Color, text: String) = when (token) {
-        in verified -> Triple(CryptasaIcons.CheckCircle, colors.success, stringResource(Res.string.wc_verify_verified))
-        in invalid -> Triple(CryptasaIcons.Error, colors.danger, stringResource(Res.string.wc_verify_invalid))
-        else -> Triple(CryptasaIcons.Warning, colors.warning, stringResource(Res.string.wc_verify_unknown)) // UNKNOWN / null
+    val (icon: ImageVector, tint: Color, text: String) = when (verify) {
+        WcVerify.Verified -> Triple(CryptasaIcons.CheckCircle, colors.success, stringResource(Res.string.wc_verify_verified))
+        WcVerify.Invalid -> Triple(CryptasaIcons.Error, colors.danger, stringResource(Res.string.wc_verify_invalid))
+        WcVerify.Unknown -> Triple(CryptasaIcons.Warning, colors.warning, stringResource(Res.string.wc_verify_unknown))
     }
     Row(
         modifier = Modifier.testTag(WalletTestTags.WC_VERIFY),

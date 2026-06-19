@@ -136,4 +136,5 @@
   <string name="send_auth_password">Пароль</string>
   <string name="send_auth_error">Неверный пароль.</string>
   <string name="home_portfolio">Портфель</string>
+  <string name="wc_signer_label">Подписывающий аккаунт</string>
 </resources>

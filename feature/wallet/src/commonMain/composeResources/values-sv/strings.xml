@@ -136,4 +136,5 @@
   <string name="send_auth_password">Applösenord</string>
   <string name="send_auth_error">Felaktigt lösenord.</string>
   <string name="home_portfolio">Portfölj</string>
+  <string name="wc_signer_label">Signeringskonto</string>
 </resources>

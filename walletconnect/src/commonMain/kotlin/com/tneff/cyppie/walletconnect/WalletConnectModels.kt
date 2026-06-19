@@ -4,14 +4,32 @@ import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.evm.Hex
 import com.tneff.cyppie.wallet.tx.Eip1559Transaction
 
+/**
+ * The relay's phishing-check verdict (reown `verifyContext.validation`), normalised to a typed status
+ * at the controller edge so the UI never string-matches raw SDK tokens (KAN-126 review M1). The reown
+ * Validation enums differ subtly across platforms/versions (Android `VALID/INVALID/UNKNOWN`, plus
+ * `VERIFIED/SCAM` aliases some surfaces use) — [from] folds them all; anything unrecognised is
+ * [Unknown] (fail-safe: an unverifiable origin warns, never silently "verified").
+ */
+enum class WcVerify {
+    Verified, Unknown, Invalid;
+
+    companion object {
+        fun from(raw: String?): WcVerify = when (raw?.trim()?.uppercase()) {
+            "VALID", "VERIFIED" -> Verified
+            "INVALID", "SCAM", "MALICIOUS" -> Invalid
+            else -> Unknown // UNKNOWN / null / anything unrecognised
+        }
+    }
+}
+
 /** Dapp identity shown in approval UIs, incl. the relay's phishing-check verdict (FR-3). */
 data class WcDappMetadata(
     val name: String,
     val description: String,
     val url: String,
     val icons: List<String> = emptyList(),
-    /** Reown `verifyContext` validation ("VERIFIED" / "UNKNOWN" / "SCAM" …) — surfaced to the user. */
-    val verifyContext: String? = null,
+    val verify: WcVerify = WcVerify.Unknown,
 )
 
 /** An incoming session proposal (chains/methods the dapp requests). */

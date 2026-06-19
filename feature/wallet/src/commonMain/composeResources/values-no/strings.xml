@@ -136,4 +136,5 @@
   <string name="send_auth_password">Passord</string>
   <string name="send_auth_error">Feil passord.</string>
   <string name="home_portfolio">Portefølje</string>
+  <string name="wc_signer_label">Signeringskonto</string>
 </resources>

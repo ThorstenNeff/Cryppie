@@ -136,4 +136,5 @@
   <string name="send_auth_password">Adgangskode</string>
   <string name="send_auth_error">Forkert adgangskode.</string>
   <string name="home_portfolio">Portefølje</string>
+  <string name="wc_signer_label">Signeringskonto</string>
 </resources>

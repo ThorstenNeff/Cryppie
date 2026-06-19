@@ -139,7 +139,7 @@ private fun Wallet.Model.SessionProposal.toWcProposal(verifyContext: Wallet.Mode
     val namespaces = requiredNamespaces.values + optionalNamespaces.values
     return WcSessionProposal(
         proposalId = proposerPublicKey,
-        dapp = WcDappMetadata(name, description, url, icons.map { it.toString() }, verifyContext.validation.name),
+        dapp = WcDappMetadata(name, description, url, icons.map { it.toString() }, WcVerify.from(verifyContext.validation.name)),
         chains = namespaces.flatMap { it.chains ?: emptyList() }.distinct(),
         methods = namespaces.flatMap { it.methods }.distinct(),
         events = namespaces.flatMap { it.events }.distinct(),
@@ -158,6 +158,6 @@ private fun Wallet.Model.SessionRequest.toWcRequest(verifyContext: Wallet.Model.
             description = peerMetaData?.description ?: "",
             url = peerMetaData?.url ?: "",
             icons = peerMetaData?.icons?.map { it.toString() } ?: emptyList(),
-            verifyContext = verifyContext.validation.name,
+            verify = WcVerify.from(verifyContext.validation.name),
         ),
     )
