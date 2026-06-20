@@ -51,6 +51,9 @@ object DcaEnableBuilder {
     const val GET_NONCE_SELECTOR: String = "0x795f9269"
     val SMART_SESSION_ADDRESS: String get() = SmartSessionEnableDigest.SMART_SESSION_ADDRESS
 
+    /** `approve(address,uint256)` — the spend cap (SpendingLimits) sits on the TOKEN's approve action (KAN-150). */
+    const val APPROVE_SELECTOR: String = "0x095ea7b3"
+
     /** `OwnableValidator` initData = `abi.encode(uint256 threshold, address[] owners)`, single owner / threshold 1. */
     fun ownableInitData(owner: String): String {
         val words = word(Quantity.of(1).toBytes32()) +    // threshold = 1
@@ -60,13 +63,22 @@ object DcaEnableBuilder {
         return "0x" + Hex.encode(words)
     }
 
-    /** spending-limit initData = `abi.encode(address token, uint256 cap)` (cap = base-unit decimal String). */
-    fun spendingLimitInitData(token: String, capBaseUnits: String): String =
-        "0x" + Hex.encode(addr32(token) + decimalTo32(capBaseUnits))
+    /** spending-limit initData = `abi.encode(address[] tokens, uint256[] limits)` — single (token, cap) pair
+     *  (the real Rhinestone `SpendingLimitsPolicy` shape; KAN-150). */
+    fun spendingLimitInitData(token: String, capBaseUnits: String): String {
+        val words = word(Quantity.of(0x40).toBytes32()) +  // offset → tokens[]
+            word(Quantity.of(0x80).toBytes32()) +           // offset → limits[]
+            word(Quantity.of(1).toBytes32()) +              // tokens.length = 1
+            word(addr32(token)) +                           // tokens[0]
+            word(Quantity.of(1).toBytes32()) +              // limits.length = 1
+            word(decimalTo32(capBaseUnits))                 // limits[0] = cap
+        return "0x" + Hex.encode(words)
+    }
 
-    /** time-frame initData = `abi.encode(uint256 start, uint256 end)` (unix seconds). */
-    fun timeFrameInitData(start: Long, end: Long): String =
-        "0x" + Hex.encode(Quantity.of(start).toBytes32() + Quantity.of(end).toBytes32())
+    /** time-frame initData = `abi.encodePacked(uint48 validUntil, uint48 validAfter)` — the real Rhinestone
+     *  `TimeFramePolicy` shape (12 bytes; KAN-150), NOT two 32-byte words. */
+    fun timeFrameInitData(validAfter: Long, validUntil: Long): String =
+        "0x" + Hex.encode(uint48(validUntil) + uint48(validAfter))
 
     /** `permissionId = keccak256(abi.encode(address sessionValidator, bytes initData, bytes32 salt))`. */
     fun permissionId(sessionValidator: String, sessionValidatorInitData: String, salt: String): String {
@@ -77,29 +89,37 @@ object DcaEnableBuilder {
         return "0x" + Hex.encode(Keccak.keccak256(head + tail))
     }
 
-    /** The signed-permissions for a single-action DCA session (one spending-limit + one time-frame policy). */
+    /**
+     * The signed-permissions for a DCA session (KAN-150, C3-corrected placement, on-chain-proven): the spend
+     * CAP sits on the [spendToken]'s `approve` action — the `SpendingLimitsPolicy` parses the ERC-20 approve
+     * on the token (it is rejected in `userOpPolicies`); the TimeFrame **window** is the `userOpPolicy` and is
+     * repeated on the swap action; the DEX swap on [swapTarget] is a **separate** action.
+     */
     fun permissions(
         spendToken: String,
         capBaseUnits: String,
-        windowStart: Long,
-        windowEnd: Long,
-        actionTarget: String,
-        actionSelector: String,
-    ): SignedPermissions = SignedPermissions(
-        permitERC4337Paymaster = true, // DCA uses Pimlico sponsoring (part of the signed hash)
-        userOpPolicies = listOf(PolicyData(SPENDING_LIMIT_POLICY, spendingLimitInitData(spendToken, capBaseUnits))),
-        actions = listOf(
-            ActionData(
-                actionTargetSelector = actionSelector,
-                actionTarget = actionTarget,
-                actionPolicies = listOf(PolicyData(TIMEFRAME_POLICY, timeFrameInitData(windowStart, windowEnd))),
+        validAfter: Long,
+        validUntil: Long,
+        swapTarget: String,
+        swapSelector: String,
+    ): SignedPermissions {
+        val timeFrame = PolicyData(TIMEFRAME_POLICY, timeFrameInitData(validAfter, validUntil))
+        return SignedPermissions(
+            permitERC4337Paymaster = true, // DCA uses Pimlico sponsoring (part of the signed hash)
+            userOpPolicies = listOf(timeFrame), // TimeFrame WINDOW (IUserOpPolicy)
+            actions = listOf(
+                // cap: SpendingLimits on the spend-token approve (IActionPolicy) — caps what the router can pull
+                ActionData(APPROVE_SELECTOR, spendToken, listOf(PolicyData(SPENDING_LIMIT_POLICY, spendingLimitInitData(spendToken, capBaseUnits)))),
+                // the DEX swap — a separate, window-bounded action
+                ActionData(swapSelector, swapTarget, listOf(timeFrame)),
             ),
-        ),
-    )
+        )
+    }
 
     /**
-     * The complete on-device enable for [config] (single action) as [owner], with the app-chosen [salt] and
-     * the RPC-read [nonce]. Throws if the config isn't the single-spending-limit single-action DCA shape.
+     * The complete on-device enable for [config] (single DCA action) as [owner], with the app-chosen [salt],
+     * the RPC-read [nonce], and the window start [windowStart] (validAfter; validUntil = the action's expiry).
+     * Throws if the config isn't the single-spending-limit single-action DCA shape.
      */
     fun build(config: SessionConfig, owner: String, salt: String, nonce: Long, windowStart: Long): BuiltEnable {
         val action = config.actions.singleOrNull() ?: error("DCA enable expects exactly one action")
@@ -108,10 +128,10 @@ object DcaEnableBuilder {
         val permissions = permissions(
             spendToken = limit.token,
             capBaseUnits = limit.cap,
-            windowStart = windowStart,
-            windowEnd = action.validUntil,
-            actionTarget = action.target,
-            actionSelector = action.selector,
+            validAfter = windowStart,
+            validUntil = action.validUntil,
+            swapTarget = action.target,
+            swapSelector = action.selector,
         )
         val digest = "0x" + Hex.encode(
             SmartSessionEnableDigest.enableDigest(
@@ -166,6 +186,13 @@ object DcaEnableBuilder {
     private fun word(b: ByteArray): ByteArray { require(b.size == 32); return b }
     private fun bytes(hex: String): ByteArray = Hex.decodeOrNull(hex.removePrefix("0x").removePrefix("0X")) ?: error("bad hex")
     private fun pad32Left(b: ByteArray): ByteArray { val out = ByteArray(32); b.copyInto(out, 32 - b.size); return out }
+    /** 6-byte big-endian uint48 (for the packed TimeFrame initData). */
+    private fun uint48(v: Long): ByteArray {
+        require(v in 0..0xFFFFFFFFFFFFL) { "uint48 out of range: $v" }
+        val out = ByteArray(6); var x = v
+        for (i in 5 downTo 0) { out[i] = (x and 0xFF).toByte(); x = x ushr 8 }
+        return out
+    }
     private fun pad32(b: ByteArray): ByteArray { val n = ((b.size + 31) / 32) * 32; val out = ByteArray(n); b.copyInto(out); return out }
 
     /** Decimal (base-10) string → 32-byte big-endian uint256, float-free; throws on overflow/non-digit. */
