@@ -8,34 +8,58 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
- * KAN-143 — the on-device Smart-Sessions ENABLE-digest recompute must reproduce the backend's 4 reference
- * vectors **exactly** (A-minimal + B-dca, each on chainId 1 and 8453), proven SDK==raw-viem in
- * `Backend/aa-trigger/scripts/enable-vector.mjs`. A byte-mismatch on any of the four means the Kotlin EIP-712
- * encoding of the `MultiChainSession` type table diverges from `@rhinestone/module-sdk` 0.3.1.
+ * Byte-exact pins of the on-device enable digest against the backend's regenerated reference vectors
+ * (`Backend/aa-trigger/scripts/enable-vector.mjs`, SDK==raw-viem), with the **C3-corrected placement**
+ * (KAN-150): TimeFrame window in `userOpPolicies`; the spending-limit cap on the **token-approve action**;
+ * the swap as a separate time-boxed action. The policy `initData` are the **real audited helper outputs**
+ * (`getSpendingLimitsPolicy` = `abi.encode(address[],uint256[])`; `getTimeFramePolicy` =
+ * `encodePacked(uint48 validUntil, uint48 validAfter)`). A mismatch means the app would sign a digest the
+ * on-chain session can't validate.
  */
 class SmartSessionEnableDigestTest {
 
-    // Fixed literal inputs shared by both vectors (= the backend spec / enable-vector.mjs).
+    // Shared literals (= enable-vector.mjs).
     private val account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-    private val sessionValidator = "0x0000000000000000000000000000000000000777"
-    private val sessionValidatorInitData = "0x000000000000000000000000cafecafecafecafecafecafecafecafecafecafe"
     private val salt = "0x0000000000000000000000000000000000000000000000000000000000000001"
     private val nonce = "0"
+    private val usdc = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    private val router = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
+    private val approveSelector = "0x095ea7b3"
+    private val swapSelector = "0x5ae401dc"
 
-    private fun digest(chainId: Long, permissions: SignedPermissions): String =
-        Hex.encode(
-            SmartSessionEnableDigest.enableDigest(
-                account = account,
-                chainId = chainId,
-                sessionValidator = sessionValidator,
-                sessionValidatorInitData = sessionValidatorInitData,
-                salt = salt,
-                nonce = nonce,
-                permissions = permissions,
-            ),
-        )
+    // A/B/C use placeholder validator + validatorInitData (isolate the typed-data encoding from real addrs).
+    private val placeholderValidator = "0x0000000000000000000000000000000000000777"
+    private val placeholderValidatorInitData = "0x000000000000000000000000cafecafecafecafecafecafecafecafecafecafe"
 
-    // ── Vector A — minimal (no userOpPolicies, no actions) ──
+    // Real audited policy initData (the helper outputs — same bytes for B/C/D; only the addresses differ).
+    private val spendInitData = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000040" + // offset tokens[]
+        "0000000000000000000000000000000000000000000000000000000000000080" + // offset limits[]
+        "0000000000000000000000000000000000000000000000000000000000000001" + // tokens.length
+        "000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" + // tokens[0] = USDC
+        "0000000000000000000000000000000000000000000000000000000000000001" + // limits.length
+        "00000000000000000000000000000000000000000000000000000000000f4240"   // limits[0] = 1_000_000
+    private val timeInitData = "0x0000687c05000000683f1a80" // encodePacked(uint48 validUntil, uint48 validAfter)
+
+    /** The C3-corrected DCA permission shape: TimeFrame in userOpPolicies; cap on approve; swap separate. */
+    private fun dcaPermissions(spendPolicy: String, timePolicy: String, paymaster: Boolean) = SignedPermissions(
+        permitERC4337Paymaster = paymaster,
+        userOpPolicies = listOf(PolicyData(timePolicy, timeInitData)),
+        actions = listOf(
+            ActionData(approveSelector, usdc, listOf(PolicyData(spendPolicy, spendInitData))),
+            ActionData(swapSelector, router, listOf(PolicyData(timePolicy, timeInitData))),
+        ),
+    )
+
+    /** Digest with the placeholder validator (A/B/C). */
+    private fun digest(chainId: Long, permissions: SignedPermissions): String = Hex.encode(
+        SmartSessionEnableDigest.enableDigest(
+            account = account, chainId = chainId, sessionValidator = placeholderValidator,
+            sessionValidatorInitData = placeholderValidatorInitData, salt = salt, nonce = nonce, permissions = permissions,
+        ),
+    )
+
+    // ── Vector A — minimal (no policies/actions): isolates the typed-data encoding (unchanged by the placement) ──
     private val permissionsA = SignedPermissions()
 
     @Test
@@ -48,93 +72,48 @@ class SmartSessionEnableDigestTest {
         assertEquals("4e72e4786fd4b20eadd3211939947907da495ef97899faad30ce99801aa1f76b", digest(8453L, permissionsA))
     }
 
-    // ── Vector B — realistic DCA (one spending-limit userOpPolicy + one swap action w/ time-frame policy) ──
-    private val permissionsB = SignedPermissions(
-        userOpPolicies = listOf(
-            PolicyData(
-                policy = "0x0000000000000000000000000000000000000511", // spending-limit policy
-                // USDC (0xa0b8…eb48), cap 1_000_000 (0x0f4240)
-                initData = "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" +
-                    "00000000000000000000000000000000000000000000000000000000000f4240",
-            ),
-        ),
-        actions = listOf(
-            ActionData(
-                actionTargetSelector = "0x5ae401dc", // multicall(uint256,bytes[])
-                actionTarget = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45", // UniV3 router (example)
-                actionPolicies = listOf(
-                    PolicyData(
-                        policy = "0x0000000000000000000000000000000000000522", // time-frame policy
-                        initData = "0x00000000000000000000000000000000000000000000000000000000683f9e80" +
-                            "00000000000000000000000000000000000000000000000000000000687a4f00",
-                    ),
-                ),
-            ),
-        ),
-    )
+    // ── Vector B — corrected DCA shape, placeholder policy addrs, paymaster=false ──
+    private val permissionsB = dcaPermissions("0x0000000000000000000000000000000000000511", "0x0000000000000000000000000000000000000522", paymaster = false)
 
     @Test
     fun vectorB_chain1() {
-        assertEquals("4b7fe8e3ab2cf1929e70dda85aee35b48a005ce95a0d73a94f2221351ce62632", digest(1L, permissionsB))
+        assertEquals("830c6b3c70ba344b258eddbfde6e44ffba3d4956d346e7c240df8a10f257873b", digest(1L, permissionsB))
     }
 
     @Test
     fun vectorB_base() {
-        assertEquals("612b0831cbca241f4726678f3f8a17db5de2eb6838447f416514b635331b9ddd", digest(8453L, permissionsB))
+        assertEquals("e129263b87b27aaf5273ac967f0f67252107f89cb0774ef752950dc79efdcc18", digest(8453L, permissionsB))
     }
 
-    // ── Vector C — DCA SPONSORED (= B but permitERC4337Paymaster=true): the real Pimlico-sponsored enable ──
+    // ── Vector C — corrected DCA shape SPONSORED (= B but permitERC4337Paymaster=true) ──
     private val permissionsC = permissionsB.copy(permitERC4337Paymaster = true)
 
     @Test
     fun vectorC_paymasterTrue_chain1() {
-        assertEquals("3829dee4858a5943584350f109b100cd6e8a6c1a17bc94fcf45d0357bc0c4d39", digest(1L, permissionsC))
+        assertEquals("f6947f9e980925c4eb1fdd85a6d1a0ba92c3dc582bfc102cc971b763eebb2b27", digest(1L, permissionsC))
     }
 
     @Test
     fun vectorC_paymasterTrue_base() {
-        assertEquals("e85a3ea587b69870b1584e165e4b700d6e5c89fd0ddf2e56e56a4ecc31ebe320", digest(8453L, permissionsC))
+        assertEquals("1eb4a4a66ba6e71fc2013ec2ecec50777b593c50bd5ea660cfda31193bf42b39", digest(8453L, permissionsC))
     }
 
     @Test
     fun paymasterFlagChangesDigest() {
-        // Flipping permitERC4337Paymaster (B→C) must change the digest (it's a signed SignedPermissions field).
         assertEquals(false, digest(1L, permissionsB) == digest(1L, permissionsC))
     }
 
-    // ── Vector D — the REAL DCA pin: real OwnableValidator + GLOBAL_CONSTANTS policies + paymaster=true.
-    // This is the byte-exact target for Dev-1's app-built enable (A/B/C used placeholder validator/policies). ──
-
-    // EMITTED OwnableValidator (GLOBAL_CONSTANTS.OWNABLE_VALIDATOR_ADDRESS), NOT the legacy 0x2483DA… export.
+    // ── Vector D — the REAL DCA pin: real OwnableValidator + GLOBAL_CONSTANTS policies + paymaster=true ──
     private val validatorD = "0x000000000013fdB5234E4E3162a810F54d9f7E98"
-    // sessionValidatorInitData = abi.encode(uint256 threshold=1, address[] owners=[account]).
     private val validatorInitDataD = "0x" +
         "0000000000000000000000000000000000000000000000000000000000000001" + // threshold = 1
         "0000000000000000000000000000000000000000000000000000000000000040" + // offset to owners[]
         "0000000000000000000000000000000000000000000000000000000000000001" + // owners.length = 1
         "000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266"    // owners[0] = account
-    private val permissionsD = SignedPermissions(
-        permitERC4337Paymaster = true,
-        userOpPolicies = listOf(
-            PolicyData(
-                policy = "0x000000000033212e272655d8a22402db819477a6", // real SpendingLimits (GLOBAL_CONSTANTS)
-                initData = "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" +
-                    "00000000000000000000000000000000000000000000000000000000000f4240",
-            ),
-        ),
-        actions = listOf(
-            ActionData(
-                actionTargetSelector = "0x5ae401dc",
-                actionTarget = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
-                actionPolicies = listOf(
-                    PolicyData(
-                        policy = "0x0000000000D30f611fA3bf652ac6879428586930", // real TimeFrame (GLOBAL_CONSTANTS)
-                        initData = "0x00000000000000000000000000000000000000000000000000000000683f9e80" +
-                            "00000000000000000000000000000000000000000000000000000000687a4f00",
-                    ),
-                ),
-            ),
-        ),
+    private val permissionsD = dcaPermissions(
+        "0x000000000033212e272655d8a22402db819477a6", // real SpendingLimits (GLOBAL_CONSTANTS)
+        "0x0000000000D30f611fA3bf652ac6879428586930", // real TimeFrame (GLOBAL_CONSTANTS)
+        paymaster = true,
     )
 
     private fun digestD(chainId: Long): String = Hex.encode(
@@ -146,23 +125,21 @@ class SmartSessionEnableDigestTest {
 
     @Test
     fun vectorD_realDcaPin_chain1() {
-        // Also validates the abi.encode(1,[owner]) sessionValidatorInitData byte-exact (it feeds the digest).
-        assertEquals("ba3ebab8845eff4c0f5c2871bdccaecb934b9909049bd36d776386a0390a133a", digestD(1L))
+        assertEquals("8be4818ec1fb3068b671a68158eef275f922735658a18908069fe29225898c5c", digestD(1L))
     }
 
     @Test
     fun vectorD_realDcaPin_base() {
-        assertEquals("b45d0bc89f3abd41006eab254dccc8e5d9e206a3e3c180da16dfafb719191ca8", digestD(8453L))
+        assertEquals("dacaa17a34fbd97bb7764de7e9f4a79517f22f239d513f3d28753c7762df99f8", digestD(8453L))
     }
 
     @Test
     fun chainBindingChangesDigest() {
-        // chainId 1 vs 8453 must differ (binding lives in ChainSession.chainId, not the domain).
-        assertEquals(false, digest(1L, permissionsA) == digest(8453L, permissionsA))
+        assertEquals(false, digestD(1L) == digestD(8453L))
     }
 
     @Test
     fun unsupportedChainFailsClosed() {
-        assertFailsWith<IllegalArgumentException> { digest(10L, permissionsA) } // Optimism not in the AA stack
+        assertFailsWith<IllegalArgumentException> { digest(10L, permissionsA) }
     }
 }
