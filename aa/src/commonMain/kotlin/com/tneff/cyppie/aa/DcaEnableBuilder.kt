@@ -51,8 +51,9 @@ object DcaEnableBuilder {
     const val GET_NONCE_SELECTOR: String = "0x795f9269"
     val SMART_SESSION_ADDRESS: String get() = SmartSessionEnableDigest.SMART_SESSION_ADDRESS
 
-    /** `approve(address,uint256)` — the spend cap (SpendingLimits) sits on the TOKEN's approve action (KAN-150). */
-    const val APPROVE_SELECTOR: String = "0x095ea7b3"
+    /** `approve(address,uint256)` — the spend cap (SpendingLimits) sits on the TOKEN's approve action (KAN-150);
+     *  single-sourced from the verifier pin (drift-safe, like the policy/validator addresses). */
+    val APPROVE_SELECTOR: String get() = SmartSessionGrantVerifier.APPROVE_SELECTOR
 
     /** `OwnableValidator` initData = `abi.encode(uint256 threshold, address[] owners)`, single owner / threshold 1. */
     fun ownableInitData(owner: String): String {

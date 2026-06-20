@@ -1,8 +1,10 @@
 package com.tneff.cyppie.aa
 
+import com.tneff.cyppie.evm.SmartSessionGrantVerifier
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 /**
  * Byte-exact pin of the on-device-built DCA ENABLE against the backend's **real** reference **vector D**
@@ -115,5 +117,28 @@ class DcaEnableBuilderTest {
         assertEquals("0x82bc397553fc6577974c762cd42958d860cd838a55f55f245ee5f6debab698b0", b.permissionId)
         assertEquals(true, b.permissions.permitERC4337Paymaster)
         assertEquals(2, b.permissions.actions.size) // approve + swap (KAN-150 two-action shape)
+    }
+
+    /** The grant flow's self-check: the on-device-built enable must round-trip through verifyGrant (the new
+     *  two-action decode, KAN-150) → the disclosure renders the swap router + the cap/token/window. */
+    @Test
+    fun verifyGrant_roundTrips_theBuiltEnable() {
+        val b = built(1L)
+        val v = SmartSessionGrantVerifier.verifyGrant(
+            account = account,
+            chainId = 1L,
+            sessionValidator = b.sessionValidator,
+            sessionValidatorInitData = b.sessionValidatorInitData,
+            salt = b.salt,
+            nonce = b.nonce,
+            permissions = b.permissions,
+            digestToSign = b.digestToSign,
+        )
+        assertTrue(v.actionTarget.equals(router, ignoreCase = true))    // = the swap router (Dev-2 confirmed)
+        assertTrue(v.actionSelector.equals(swapSelector, ignoreCase = true))
+        assertTrue(v.spendToken.equals(usdc, ignoreCase = true))        // cap token from the approve action
+        assertEquals("1000000", v.capBaseUnits)
+        assertEquals(validAfter, v.windowStartEpochSeconds)
+        assertEquals(validUntil, v.windowEndEpochSeconds)
     }
 }
