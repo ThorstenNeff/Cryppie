@@ -43,6 +43,26 @@ object KernelExecuteBatch {
         return out
     }
 
+    /**
+     * Decodes a Kernel **single-call** `execute` (call-type `0x00`): `executionCalldata = encodePacked(address
+     * target, uint256 value, bytes callData)` (NOT an abi-encoded array — that is batch mode). Used by the revoke
+     * userOp (KAN-157), which is one `removeSession` call. Throws on a non-single / malformed encoding.
+     */
+    fun decodeSingle(callDataHex: String): Execution {
+        val data = bytes(callDataHex)
+        require(data.size >= 4 && hex4(data, 0) == "e9ae5c53") { "not an execute(bytes32,bytes) call" }
+        val args = 4
+        val mode = word(data, args)
+        require((mode[0].toInt() and 0xFF) == 0x00) { "not a single-call execute (call-type ${mode[0]})" }
+        val execOff = wordToInt(data, args + 32)
+        val execStart = args + execOff
+        val execLen = wordToInt(data, execStart)
+        val exec = data.copyOfRange(execStart + 32, execStart + 32 + execLen) // packed: target(20) ‖ value(32) ‖ callData
+        require(exec.size >= 52) { "single-call execution too short" }
+        val target = EvmAddress.fromBytes(exec.copyOfRange(0, 20)).value
+        return Execution(target, exec.copyOfRange(52, exec.size))
+    }
+
     /** The function selector (`0x…`) of an execution's callData. */
     fun selectorOf(execution: Execution): String = "0x" + Hex.encode(execution.callData.copyOfRange(0, 4))
 
