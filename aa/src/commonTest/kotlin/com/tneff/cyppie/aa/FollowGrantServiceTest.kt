@@ -131,10 +131,26 @@ class FollowGrantServiceTest {
         val api = FakeCopyApi(prepare, rogue, ArrayDeque())
         val svc = FollowGrantService(api)
         val preview = svc.prepareGrant(scope, owner)
+        val seedSource = RecordingSeed(seed)
         assertFailsWith<com.tneff.cyppie.evm.AuthorizationVerificationException> {
-            svc.authorizeGrant(preview, RecordingSeed(seed), maxPollAttempts = 1, pollDelayMs = 0)
+            svc.authorizeGrant(preview, seedSource, maxPollAttempts = 1, pollDelayMs = 0)
         }
         assertEquals(null, api.submittedSignature) // never signed/submitted a rogue delegation
+        // P1 (ADR-0009): the seed is zeroized even when verify7702 rejects BEFORE signing (verify-before-sign leak).
+        assertTrue(seedSource.closed, "seed must be zeroized even when a pre-sign verify throws")
+    }
+
+    @Test
+    fun authorizeGrant_zeroizesSeed_whenBuildNetcallFails() = runTest {
+        val api = object : CopyApi by FakeCopyApi(prepare, builtUserOp, ArrayDeque()) {
+            override suspend fun buildEnableUserOp(request: BuildEnableRequest): BuiltEnableUserOp =
+                throw IllegalStateException("network down")
+        }
+        val svc = FollowGrantService(api)
+        val preview = svc.prepareGrant(scope, owner)
+        val seedSource = RecordingSeed(seed)
+        assertFailsWith<IllegalStateException> { svc.authorizeGrant(preview, seedSource, maxPollAttempts = 1, pollDelayMs = 0) }
+        assertTrue(seedSource.closed, "seed must be zeroized even when the /build netcall fails before signing")
     }
 
     @Test

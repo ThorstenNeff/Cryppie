@@ -33,33 +33,45 @@ class EnableBroadcaster(private val aaSigner: AaSigner = AaSigner()) {
         pollDelayMs: Long = 2_000,
     ): EnableBroadcastResult {
         val owner = EvmAddress.parse(expected.account)
-        val built = api.buildEnableUserOp(buildRequest)
-        val packed = with(built.userOp) {
-            Erc4337UserOp.pack(
-                sender = sender, nonce = nonce, callData = callData,
-                callGasLimit = callGasLimit, verificationGasLimit = verificationGasLimit, preVerificationGas = preVerificationGas,
-                maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas,
-                factory = factory, factoryData = factoryData, paymaster = paymaster,
-                paymasterVerificationGasLimit = paymasterVerificationGasLimit,
-                paymasterPostOpGasLimit = paymasterPostOpGasLimit, paymasterData = paymasterData,
+        // 🔒 P1 (ADR-0009): the broadcaster OWNS the seed for the whole build→verify→sign window. The decrypting
+        // verify-before-sign work (the /build netcall + verifyEnableUserOp + verify7702) runs BEFORE signing and is
+        // attacker-triggerable to throw — so the seed MUST be zeroized on EVERY exit path, not just the sign path.
+        // `use` closes it on normal return AND on any throw; signDigests is told NOT to close (closeSeed=false), so
+        // there is exactly ONE close (here), no double-close, and the seed window is the minimum (closed right after
+        // signing — submit/poll below never touch it).
+        val closeable = seedSource as? AutoCloseable
+            ?: throw IllegalArgumentException("seedSource must be zeroizable (AutoCloseable) — refusing to risk a key leak")
+        val signed = closeable.use {
+            val built = api.buildEnableUserOp(buildRequest)
+            val packed = with(built.userOp) {
+                Erc4337UserOp.pack(
+                    sender = sender, nonce = nonce, callData = callData,
+                    callGasLimit = callGasLimit, verificationGasLimit = verificationGasLimit, preVerificationGas = preVerificationGas,
+                    maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas,
+                    factory = factory, factoryData = factoryData, paymaster = paymaster,
+                    paymasterVerificationGasLimit = paymasterVerificationGasLimit,
+                    paymasterPostOpGasLimit = paymasterPostOpGasLimit, paymasterData = paymasterData,
+                )
+            }
+            // P0 — bind the owner's (full-authority root) signature to an op that enables EXACTLY our session.
+            EnableUserOpVerifier.verify(
+                userOp = packed, digestToSign = built.digestToSign, chainId = expected.chainId, expectedAccount = owner.value,
+                sessionValidator = expected.sessionValidator, sessionValidatorInitData = expected.sessionValidatorInitData,
+                salt = expected.salt, permissions = expected.permissions,
             )
+            // P0 (KAN-160) — on the first enable, pin the 7702 delegate-target + chain before signing the delegation.
+            val auth = built.authorizationToSign
+            val authDigest = auth?.let { Eip7702Authorization.verify(it.chainId, it.address, it.nonce, expected.chainId) }
+            val userOpDigest = Hex.decodeOrNull(built.digestToSign.removePrefix("0x"))
+                ?: throw IllegalArgumentException("digestToSign not valid hex")
+            val digests = if (authDigest != null) listOf(authDigest, userOpDigest) else listOf(userOpDigest)
+            val signatures = aaSigner.signDigests(digests, owner, seedSource, closeSeed = false)
+            SignedEnable(built.userOpHash, auth, signatures)
         }
-        // P0 — bind the owner's (full-authority root) signature to an op that enables EXACTLY our session.
-        EnableUserOpVerifier.verify(
-            userOp = packed, digestToSign = built.digestToSign, chainId = expected.chainId, expectedAccount = owner.value,
-            sessionValidator = expected.sessionValidator, sessionValidatorInitData = expected.sessionValidatorInitData,
-            salt = expected.salt, permissions = expected.permissions,
-        )
-        // P0 (KAN-160) — on the first enable, pin the 7702 delegate-target + chain before signing the delegation.
-        val auth = built.authorizationToSign
-        val authDigest = auth?.let { Eip7702Authorization.verify(it.chainId, it.address, it.nonce, expected.chainId) }
-        val userOpDigest = Hex.decodeOrNull(built.digestToSign.removePrefix("0x"))
-            ?: throw IllegalArgumentException("digestToSign not valid hex")
-        val digests = if (authDigest != null) listOf(authDigest, userOpDigest) else listOf(userOpDigest)
-        val signatures = aaSigner.signDigests(digests, owner, seedSource)
-        val signedAuthorization = auth?.let { tuple -> signedAuthorization(tuple, signatures[0]) }
+        // seed is now zeroized; submit + poll use only the signatures.
+        val signedAuthorization = signed.auth?.let { tuple -> signedAuthorization(tuple, signed.signatures[0]) }
         val userOpHash = api.submitEnableUserOp(
-            SubmitEnableRequest(built.userOpHash, signatures.last(), signedAuthorization),
+            SubmitEnableRequest(signed.userOpHash, signed.signatures.last(), signedAuthorization),
         )
 
         repeat(maxPollAttempts) {
@@ -72,6 +84,8 @@ class EnableBroadcaster(private val aaSigner: AaSigner = AaSigner()) {
         }
         throw IllegalStateException("enable userOp not included after $maxPollAttempts polls: $userOpHash")
     }
+
+    private class SignedEnable(val userOpHash: String, val auth: AuthorizationTuple?, val signatures: List<String>)
 
     /** Splits a 65-byte `r‖s‖v` signature into the EIP-7702 [SignedAuthorization] (yParity = v − 27). */
     private fun signedAuthorization(tuple: AuthorizationTuple, signatureHex: String): SignedAuthorization {

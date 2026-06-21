@@ -28,17 +28,26 @@ class AaSigner(private val accountIndex: Int = UserOpSigner.OWNER_ACCOUNT_INDEX)
         signDigests(listOf(digest), expectedOwner, seedSource).first()
 
     /**
-     * Signs MULTIPLE 32-byte digests for [expectedOwner] in a SINGLE seed window, zeroizing once at the end. Used
-     * by the first-enable (KAN-160), which owner-signs both the EIP-7702 authorization digest and the enable
-     * userOp digest — without this, a second [signDigest] would need a second re-auth (the first zeroizes the seed).
-     * Each digest is independently owner-bound (no blind signing). Returns `0x`-prefixed 65-byte signatures, in order.
+     * Signs MULTIPLE 32-byte digests for [expectedOwner] in a SINGLE seed window. Used by the first-enable
+     * (KAN-160), which owner-signs both the EIP-7702 authorization digest and the enable userOp digest — without
+     * this, a second [signDigest] would need a second re-auth (the first zeroizes the seed). Each digest is
+     * independently owner-bound (no blind signing). Returns `0x`-prefixed 65-byte signatures, in order.
+     *
+     * [closeSeed] = false hands the seed-zeroize responsibility to the CALLER (e.g. [EnableBroadcaster], which owns
+     * the seed across the whole build→verify→sign→submit window and must zeroize even when a pre-sign step throws);
+     * the caller MUST then close the [seedSource] on all paths. Default true preserves the self-zeroizing contract.
      */
-    fun signDigests(digests: List<ByteArray>, expectedOwner: EvmAddress, seedSource: SeedSource): List<String> {
+    fun signDigests(
+        digests: List<ByteArray>,
+        expectedOwner: EvmAddress,
+        seedSource: SeedSource,
+        closeSeed: Boolean = true,
+    ): List<String> {
         return try {
             val signer = UserOpSigner(EvmKeyManager(seedSource))
             digests.map { "0x" + Hex.encode(signer.sign(it, expectedOwner, accountIndex)) }
         } finally {
-            zeroize(seedSource)
+            if (closeSeed) zeroize(seedSource)
         }
     }
 
