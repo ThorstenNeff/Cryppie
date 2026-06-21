@@ -83,6 +83,7 @@ fun WalletHomeScreen(
     onConnect: () -> Unit = {},
     onMarket: () -> Unit = {},
     onDca: () -> Unit = {},
+    onCopy: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -200,6 +201,15 @@ fun WalletHomeScreen(
                 onClick = onDca,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag("home_dca"),
+            )
+
+            // Copy-Trading / Follow-Trader entry (PRD-06, KAN-155) — full-width secondary. Label pre-i18n
+            // (home_copy = UX follow, like home_dca/home_market); the flow is native-only (web entry hidden).
+            CryptasaButton(
+                text = "Copy Trading",
+                onClick = onCopy,
+                style = CryptasaButtonStyle.Secondary,
+                modifier = Modifier.fillMaxWidth().testTag("home_copy"),
             )
 
             // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).

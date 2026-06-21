@@ -75,6 +75,8 @@ kotlin {
             // DI-s to KtorDcaApi(bearer=AuthSession::token) over the JWT User-Service. Native-only — fits
             // this module's android/ios/jvm targets.
             implementation(projects.feature.dca)
+            // Copy-Trading / Follow-Trader UI (KAN-155) — flow host + stub grant service (real = Dev-2 KAN-154).
+            implementation(projects.feature.copy)
             implementation(projects.aa)
             implementation(projects.auth)
             // shared HTTP plumbing (jsonHttpClient for the DCA/Keycloak clients) + base-url config.

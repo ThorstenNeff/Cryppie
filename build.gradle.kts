@@ -51,6 +51,11 @@ run {
             file("feature/dca/src/commonMain/composeResources"),
             listOf("dca_", "common_"), // common_retry / common_cancel reused in the DCA screens
         ),
+        Triple(
+            "feature:copy",
+            file("feature/copy/src/commonMain/composeResources"),
+            listOf("copy_", "common_"), // common_retry / common_cancel reused in the Copy screens (KAN-155)
+        ),
     )
     // Prefixes owned by modules not yet on develop — keys here are intentionally not synced (no module),
     // but must still be "covered" so the unmapped-key check below doesn't flag them as lost.

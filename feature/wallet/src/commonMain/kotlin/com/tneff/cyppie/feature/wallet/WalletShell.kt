@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.aa.AaSigner
 import com.tneff.cyppie.aa.DcaEnableBuilder
 import com.tneff.cyppie.aa.KtorDcaApi
+import com.tneff.cyppie.feature.copy.CopyRoot
+import com.tneff.cyppie.feature.copy.StubFollowGrantService
 import com.tneff.cyppie.evm.Hex
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
@@ -93,7 +95,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant, Copy }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -324,6 +326,7 @@ fun WalletShell(onLock: () -> Unit) {
             onConnect = { dest = WalletDest.WalletConnect },
             onMarket = { dest = WalletDest.Market },
             onDca = { dest = WalletDest.Dca },
+            onCopy = { dest = WalletDest.Copy },
             viewModel = viewModel,
         )
         WalletDest.Receive -> {
@@ -465,6 +468,19 @@ fun WalletShell(onLock: () -> Unit) {
                 )
             }
             GrantScreen(viewModel = grantVm, onDone = { dest = WalletDest.Dca }, onBack = { dest = WalletDest.Dca })
+        }
+        WalletDest.Copy -> {
+            // Copy / Follow-Trader flow (KAN-155). FLAG_SECURE over the whole flow (it includes the
+            // disclosure+signature context; spec asks for it on Confirm — superset is fine). Stub grant
+            // service until Dev-2's KAN-154 lands; owner = account#0 (self-copy guard); fresh re-auth source.
+            SecureScreenEffect()
+            CopyRoot(
+                service = StubFollowGrantService(),
+                owner = dcaOwner,
+                budgetTokenDecimals = 6, // USDC v1
+                reauth = dcaReauth,
+                onExit = { dest = WalletDest.Home },
+            )
         }
     }
 }
