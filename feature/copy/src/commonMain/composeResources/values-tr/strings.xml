@@ -43,4 +43,16 @@
   <string name="copy_window">Limit penceresi</string>
   <string name="copy_source">Kaynak</string>
   <string name="copy_allocation">Tahsis</string>
+  <string name="copy_used">Kullanılan</string>
+  <string name="copy_remaining">Kalan</string>
+  <string name="copy_status">Durum</string>
+  <string name="copy_status_active">Etkin</string>
+  <string name="copy_status_paused">Duraklatıldı</string>
+  <string name="copy_since">%1$s tarihinden beri takip ediliyor</string>
+  <string name="copy_revoke_title">Kopyalama sonlandırılsın mı?</string>
+  <string name="copy_revoke_body">Bu, oturumu zincir üstünde iptal eder — kopyalama hizmeti artık senin adına işlem yapamaz. Kalan bütçen cüzdanında kalır.</string>
+  <string name="copy_revoke_confirm">Kopyalamayı sonlandır</string>
+  <string name="copy_revoking">İptal ediliyor…</string>
+  <string name="copy_revoked">Kopyalama sonlandırıldı</string>
+  <string name="copy_err_revoke">İptal edilemedi — tekrar dene</string>
 </resources>

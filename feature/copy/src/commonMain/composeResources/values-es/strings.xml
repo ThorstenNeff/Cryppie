@@ -43,4 +43,16 @@
   <string name="copy_window">Ventana de límite</string>
   <string name="copy_source">Fuente</string>
   <string name="copy_allocation">Asignación</string>
+  <string name="copy_used">Usado</string>
+  <string name="copy_remaining">Restante</string>
+  <string name="copy_status">Estado</string>
+  <string name="copy_status_active">Activa</string>
+  <string name="copy_status_paused">Pausada</string>
+  <string name="copy_since">Copiando desde %1$s</string>
+  <string name="copy_revoke_title">¿Finalizar la copia?</string>
+  <string name="copy_revoke_body">Esto revoca la sesión en cadena — el servicio de copia ya no puede operar por ti. El presupuesto restante se queda en tu cartera.</string>
+  <string name="copy_revoke_confirm">Finalizar copia</string>
+  <string name="copy_revoking">Revocando…</string>
+  <string name="copy_revoked">Copia finalizada</string>
+  <string name="copy_err_revoke">No se pudo revocar — inténtalo de nuevo</string>
 </resources>

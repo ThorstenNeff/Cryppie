@@ -43,4 +43,16 @@
   <string name="copy_window">Окно лимита</string>
   <string name="copy_source">Источник</string>
   <string name="copy_allocation">Распределение</string>
+  <string name="copy_used">Использовано</string>
+  <string name="copy_remaining">Остаток</string>
+  <string name="copy_status">Статус</string>
+  <string name="copy_status_active">Активна</string>
+  <string name="copy_status_paused">Приостановлена</string>
+  <string name="copy_since">Копируете с %1$s</string>
+  <string name="copy_revoke_title">Завершить копирование?</string>
+  <string name="copy_revoke_body">Это отзовёт сессию on-chain — сервис копирования больше не сможет торговать за вас. Остаток бюджета останется в вашем кошельке.</string>
+  <string name="copy_revoke_confirm">Завершить копирование</string>
+  <string name="copy_revoking">Отзыв…</string>
+  <string name="copy_revoked">Копирование завершено</string>
+  <string name="copy_err_revoke">Не удалось отозвать — попробуйте ещё раз</string>
 </resources>

@@ -43,4 +43,16 @@
   <string name="copy_window">限额时间窗口</string>
   <string name="copy_source">来源</string>
   <string name="copy_allocation">分配</string>
+  <string name="copy_used">已用</string>
+  <string name="copy_remaining">剩余</string>
+  <string name="copy_status">状态</string>
+  <string name="copy_status_active">活跃</string>
+  <string name="copy_status_paused">已暂停</string>
+  <string name="copy_since">自 %1$s 起跟随</string>
+  <string name="copy_revoke_title">结束复制？</string>
+  <string name="copy_revoke_body">这会在链上撤销该会话 — 复制服务将无法再代你交易。你的剩余预算将留在你的钱包中。</string>
+  <string name="copy_revoke_confirm">结束复制</string>
+  <string name="copy_revoking">正在撤销…</string>
+  <string name="copy_revoked">复制已结束</string>
+  <string name="copy_err_revoke">无法撤销 — 请重试</string>
 </resources>

@@ -43,4 +43,16 @@
   <string name="copy_window">نافذة الحد</string>
   <string name="copy_source">المصدر</string>
   <string name="copy_allocation">التوزيع</string>
+  <string name="copy_used">المستخدَم</string>
+  <string name="copy_remaining">المتبقّي</string>
+  <string name="copy_status">الحالة</string>
+  <string name="copy_status_active">نشط</string>
+  <string name="copy_status_paused">متوقّف مؤقتًا</string>
+  <string name="copy_since">يتابع منذ %1$s</string>
+  <string name="copy_revoke_title">إنهاء النسخ؟</string>
+  <string name="copy_revoke_body">هذا يُبطل الجلسة على السلسلة — لم يعد بإمكان خدمة النسخ التداول نيابةً عنك. تبقى ميزانيتك المتبقّية في محفظتك.</string>
+  <string name="copy_revoke_confirm">إنهاء النسخ</string>
+  <string name="copy_revoking">جارٍ الإبطال…</string>
+  <string name="copy_revoked">انتهى النسخ</string>
+  <string name="copy_err_revoke">تعذّر الإبطال — حاول مرة أخرى</string>
 </resources>

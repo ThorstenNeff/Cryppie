@@ -43,4 +43,16 @@
   <string name="copy_window">Gränsfönster</string>
   <string name="copy_source">Källa</string>
   <string name="copy_allocation">Allokering</string>
+  <string name="copy_used">Använt</string>
+  <string name="copy_remaining">Återstår</string>
+  <string name="copy_status">Status</string>
+  <string name="copy_status_active">Aktiv</string>
+  <string name="copy_status_paused">Pausad</string>
+  <string name="copy_since">Följer sedan %1$s</string>
+  <string name="copy_revoke_title">Avsluta kopiering?</string>
+  <string name="copy_revoke_body">Detta återkallar sessionen on-chain — kopieringstjänsten kan inte längre handla för din räkning. Din återstående budget stannar i din plånbok.</string>
+  <string name="copy_revoke_confirm">Avsluta kopiering</string>
+  <string name="copy_revoking">Återkallar…</string>
+  <string name="copy_revoked">Kopiering avslutad</string>
+  <string name="copy_err_revoke">Det gick inte att återkalla — försök igen</string>
 </resources>

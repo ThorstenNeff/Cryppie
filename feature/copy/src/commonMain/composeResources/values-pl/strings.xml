@@ -43,4 +43,16 @@
   <string name="copy_window">Okno limitu</string>
   <string name="copy_source">Źródło</string>
   <string name="copy_allocation">Alokacja</string>
+  <string name="copy_used">Wykorzystano</string>
+  <string name="copy_remaining">Pozostało</string>
+  <string name="copy_status">Status</string>
+  <string name="copy_status_active">Aktywne</string>
+  <string name="copy_status_paused">Wstrzymane</string>
+  <string name="copy_since">Śledzi od %1$s</string>
+  <string name="copy_revoke_title">Zakończyć kopiowanie?</string>
+  <string name="copy_revoke_body">To odwołuje sesję on-chain — usługa kopiowania nie może już handlować w Twoim imieniu. Pozostały budżet zostaje w Twoim portfelu.</string>
+  <string name="copy_revoke_confirm">Zakończ kopiowanie</string>
+  <string name="copy_revoking">Odwoływanie…</string>
+  <string name="copy_revoked">Kopiowanie zakończone</string>
+  <string name="copy_err_revoke">Nie udało się odwołać — spróbuj ponownie</string>
 </resources>

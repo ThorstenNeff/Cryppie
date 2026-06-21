@@ -43,4 +43,16 @@
   <string name="copy_window">Janela de limite</string>
   <string name="copy_source">Origem</string>
   <string name="copy_allocation">Alocação</string>
+  <string name="copy_used">Usado</string>
+  <string name="copy_remaining">Restante</string>
+  <string name="copy_status">Status</string>
+  <string name="copy_status_active">Ativa</string>
+  <string name="copy_status_paused">Pausada</string>
+  <string name="copy_since">Seguindo desde %1$s</string>
+  <string name="copy_revoke_title">Encerrar cópia?</string>
+  <string name="copy_revoke_body">Isso revoga a sessão on-chain — o serviço de cópia não pode mais negociar por você. Seu orçamento restante permanece na sua carteira.</string>
+  <string name="copy_revoke_confirm">Encerrar cópia</string>
+  <string name="copy_revoking">Revogando…</string>
+  <string name="copy_revoked">Cópia encerrada</string>
+  <string name="copy_err_revoke">Não foi possível revogar — tente novamente</string>
 </resources>

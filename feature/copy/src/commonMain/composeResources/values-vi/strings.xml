@@ -43,4 +43,16 @@
   <string name="copy_window">Cửa sổ giới hạn</string>
   <string name="copy_source">Nguồn</string>
   <string name="copy_allocation">Phân bổ</string>
+  <string name="copy_used">Đã dùng</string>
+  <string name="copy_remaining">Còn lại</string>
+  <string name="copy_status">Trạng thái</string>
+  <string name="copy_status_active">Đang hoạt động</string>
+  <string name="copy_status_paused">Tạm dừng</string>
+  <string name="copy_since">Theo dõi từ %1$s</string>
+  <string name="copy_revoke_title">Kết thúc sao chép?</string>
+  <string name="copy_revoke_body">Thao tác này thu hồi phiên on-chain — dịch vụ sao chép không thể giao dịch thay bạn nữa. Ngân sách còn lại vẫn nằm trong ví của bạn.</string>
+  <string name="copy_revoke_confirm">Kết thúc sao chép</string>
+  <string name="copy_revoking">Đang thu hồi…</string>
+  <string name="copy_revoked">Đã kết thúc sao chép</string>
+  <string name="copy_err_revoke">Không thể thu hồi — thử lại</string>
 </resources>

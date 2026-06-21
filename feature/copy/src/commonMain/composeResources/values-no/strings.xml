@@ -43,4 +43,16 @@
   <string name="copy_window">Grensevindu</string>
   <string name="copy_source">Kilde</string>
   <string name="copy_allocation">Allokering</string>
+  <string name="copy_used">Brukt</string>
+  <string name="copy_remaining">Gjenværende</string>
+  <string name="copy_status">Status</string>
+  <string name="copy_status_active">Aktiv</string>
+  <string name="copy_status_paused">Pauset</string>
+  <string name="copy_since">Følger siden %1$s</string>
+  <string name="copy_revoke_title">Avslutt kopiering?</string>
+  <string name="copy_revoke_body">Dette tilbakekaller økten on-chain — kopitjenesten kan ikke lenger handle for deg. Det gjenværende budsjettet ditt blir værende i lommeboken din.</string>
+  <string name="copy_revoke_confirm">Avslutt kopiering</string>
+  <string name="copy_revoking">Tilbakekaller…</string>
+  <string name="copy_revoked">Kopiering avsluttet</string>
+  <string name="copy_err_revoke">Kunne ikke tilbakekalle — prøv igjen</string>
 </resources>

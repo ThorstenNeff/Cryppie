@@ -43,4 +43,16 @@
   <string name="copy_window">Grænsevindue</string>
   <string name="copy_source">Kilde</string>
   <string name="copy_allocation">Allokering</string>
+  <string name="copy_used">Brugt</string>
+  <string name="copy_remaining">Tilbage</string>
+  <string name="copy_status">Status</string>
+  <string name="copy_status_active">Aktiv</string>
+  <string name="copy_status_paused">På pause</string>
+  <string name="copy_since">Følger siden %1$s</string>
+  <string name="copy_revoke_title">Afslut kopiering?</string>
+  <string name="copy_revoke_body">Dette tilbagekalder sessionen on-chain — kopitjenesten kan ikke længere handle for dig. Dit resterende budget bliver i din wallet.</string>
+  <string name="copy_revoke_confirm">Afslut kopiering</string>
+  <string name="copy_revoking">Tilbagekalder…</string>
+  <string name="copy_revoked">Kopiering afsluttet</string>
+  <string name="copy_err_revoke">Kunne ikke tilbagekalde — prøv igen</string>
 </resources>

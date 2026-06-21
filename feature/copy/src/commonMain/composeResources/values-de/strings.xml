@@ -43,4 +43,16 @@
   <string name="copy_window">Limit-Fenster</string>
   <string name="copy_source">Quelle</string>
   <string name="copy_allocation">Allokation</string>
+  <string name="copy_used">Genutzt</string>
+  <string name="copy_remaining">Verbleibend</string>
+  <string name="copy_status">Status</string>
+  <string name="copy_status_active">Aktiv</string>
+  <string name="copy_status_paused">Pausiert</string>
+  <string name="copy_since">Folgt seit %1$s</string>
+  <string name="copy_revoke_title">Copy beenden?</string>
+  <string name="copy_revoke_body">Das widerruft die Session on-chain — der Copy-Service kann nicht mehr für dich handeln. Dein Restbudget bleibt in deiner Wallet.</string>
+  <string name="copy_revoke_confirm">Copy beenden</string>
+  <string name="copy_revoking">Widerrufe…</string>
+  <string name="copy_revoked">Copy beendet</string>
+  <string name="copy_err_revoke">Widerruf fehlgeschlagen — bitte erneut versuchen</string>
 </resources>
