@@ -138,6 +138,59 @@ class SmartSessionEnableDigestTest {
         assertEquals(false, digestD(1L) == digestD(8453L))
     }
 
+    // ── Copy-trading KAT (KAN-154): production 3-action UniversalRouter shape, owners=[backend sessionPubkey].
+    // Canonical inputs = aa-trigger/scripts/copy-vector.mjs (@909c12a); convergence targets confirmed byte-exact. ──
+    private val copyValidatorInitData = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "0000000000000000000000000000000000000000000000000000000000000040" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000489ccacac8836c71ad5b20bf61e0b885425b227e" // owners[0] = backend session pubkey
+    private val copySalt = "0x00000000000000000000000000000000000000000000000000000000000000aa"
+    private val copyFollower = account // follower SCA = 0xf39F…2266
+    private val copyTimeInitData = "0x000070dbd880000000000000" // validUntil 1893456000, validAfter 0
+    private val permit2 = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+    private fun copySpendInitData(usdcAddr: String) = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000040" +
+        "0000000000000000000000000000000000000000000000000000000000000080" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000${usdcAddr.removePrefix("0x").lowercase()}" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000000000000000000000000000000000003b9aca00" // cap = 1000 USDC
+
+    private fun copyPermissions(usdcAddr: String, ur: String) = SignedPermissions(
+        permitERC4337Paymaster = true,
+        userOpPolicies = listOf(PolicyData("0x0000000000D30f611fA3bf652ac6879428586930", copyTimeInitData)),
+        actions = listOf(
+            ActionData(approveSelector, usdcAddr, listOf(PolicyData("0x000000000033212e272655d8a22402db819477a6", copySpendInitData(usdcAddr)))),
+            ActionData("0x87517c45", permit2, listOf(PolicyData("0x0000000000D30f611fA3bf652ac6879428586930", copyTimeInitData))),
+            ActionData("0x3593564c", ur, listOf(PolicyData("0x0000000000D30f611fA3bf652ac6879428586930", copyTimeInitData))),
+        ),
+    )
+
+    private fun copyDigest(chainId: Long, usdcAddr: String, ur: String): String = Hex.encode(
+        SmartSessionEnableDigest.enableDigest(
+            account = copyFollower, chainId = chainId, sessionValidator = validatorD,
+            sessionValidatorInitData = copyValidatorInitData, salt = copySalt, nonce = nonce,
+            permissions = copyPermissions(usdcAddr, ur),
+        ),
+    )
+
+    @Test
+    fun copyVector_chain1() {
+        assertEquals(
+            "aa03c7623f8682f29eda13fd8fded094c796f499a34881c66d53e93ba2ae9a7c",
+            copyDigest(1L, "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af"),
+        )
+    }
+
+    @Test
+    fun copyVector_base() {
+        assertEquals(
+            "e4c4661d938e57710806fe4de29aee40a3a2f6b50bb1adf08d635cf71519954a",
+            copyDigest(8453L, "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "0x6fF5693b99212Da76ad316178A184AB56D299b43"),
+        )
+    }
+
     @Test
     fun unsupportedChainFailsClosed() {
         assertFailsWith<IllegalArgumentException> { digest(10L, permissionsA) }

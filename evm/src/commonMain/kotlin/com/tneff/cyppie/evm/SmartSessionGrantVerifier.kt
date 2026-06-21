@@ -53,10 +53,35 @@ object SmartSessionGrantVerifier {
     /** ERC-20 `approve(address,uint256)` — the action selector the spending-limit cap is attached to (KAN-150). */
     const val APPROVE_SELECTOR: String = "0x095ea7b3"
 
+    // ── Copy-trading (KAN-154) infra pins. Source = official Uniswap deployment docs (the trusted client anchor;
+    // the backend `actions` are checked AGAINST these, never the reverse). Permit2 is chain-uniform; the
+    // UniversalRouter is per-chain. The backend session-key's enabled action set = these targets/selectors. ──
+    /** Uniswap Permit2 — canonical CREATE2 address, identical on every chain (doc-confirmed). */
+    const val PERMIT2: String = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+    /** Permit2 `approve(address,address,uint160,uint48)`. */
+    const val PERMIT2_APPROVE_SELECTOR: String = "0x87517c45"
+    /** UniversalRouter `execute(bytes,bytes[],uint256)`. */
+    const val UNIVERSAL_ROUTER_EXECUTE_SELECTOR: String = "0x3593564c"
+
+    /** The Uniswap UniversalRouter (V4) per supported chain; null if the chain is unsupported. */
+    fun universalRouter(chainId: Long): String? = when (chainId) {
+        1L -> "0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af" // Ethereum (doc-confirmed)
+        8453L -> "0x6fF5693b99212Da76ad316178A184AB56D299b43" // Base (confirmed by the Copy-KAT digest reconcile)
+        else -> null
+    }
+
+    /** A pinned action: the contract [target] + the 4-byte [selector] the session is allowed to call. */
+    data class ActionPin(val target: String, val selector: String)
+
     /**
      * Verifies [digestToSign] against the disclosed grant material and returns the [VerifiedGrant] to render.
-     * Throws [GrantVerificationException] on ANY mismatch (digest, pinned address, shape, broad flags) — the
-     * caller must NOT sign on throw.
+     * Throws [GrantVerificationException] on ANY mismatch — the caller must NOT sign on throw.
+     *
+     * Generalized (KAN-154) to **"1 cap-action + 1 swap-action + N pinned infra-actions"**: every disclosed action
+     * MUST classify as the cap (token `approve` → SpendingLimits), the primary swap ([swapTarget]/[swapSelector]),
+     * or one of the pinned [infraActions] — an unknown target/selector or any extra action is **fail-closed**
+     * (stops a rogue backend smuggling an N+1th action on a malicious target). DCA = no infra ([infraActions] empty,
+     * 2 actions); Copy-UniversalRouter = [infraActions] = the Permit2 approve (3 actions).
      */
     fun verifyGrant(
         account: String,
@@ -67,6 +92,9 @@ object SmartSessionGrantVerifier {
         nonce: String,
         permissions: SignedPermissions,
         digestToSign: String,
+        swapTarget: String,
+        swapSelector: String,
+        infraActions: List<ActionPin> = emptyList(),
         spendingLimitPolicy: String = SPENDING_LIMIT_POLICY,
         timeFramePolicy: String = TIMEFRAME_POLICY,
         sessionValidatorPin: String = SESSION_VALIDATOR,
@@ -107,48 +135,75 @@ object SmartSessionGrantVerifier {
         }
         val (start, end) = decodeTimeFrame(windowPolicy.initData)
 
-        // 5. Exactly two actions: the spend cap (token approve) + the time-boxed swap (KAN-150 placement).
-        if (permissions.actions.size != 2) {
-            throw GrantVerificationException("expected exactly two actions (approve + swap), was ${permissions.actions.size}")
+        // 5. Classify EVERY action: exactly one cap (token approve → SpendingLimits), one swap (the pinned primary),
+        //    and one each of the pinned infra-actions. An unknown target/selector or any extra/duplicate action is
+        //    fail-closed (stops a rogue backend smuggling an N+1th action on a malicious target).
+        var capToken: String? = null
+        var capAmount: String? = null
+        var sawSwap = false
+        val seenInfra = HashSet<Int>()
+        for (action in permissions.actions) {
+            when {
+                action.actionTargetSelector.equals(APPROVE_SELECTOR, ignoreCase = true) -> {
+                    if (capToken != null) throw GrantVerificationException("more than one cap (approve) action")
+                    val capPolicy = action.actionPolicies.singleOrNull()
+                        ?: throw GrantVerificationException("expected exactly one spending-limit policy on the approve action")
+                    if (!capPolicy.policy.equals(spendingLimitPolicy, ignoreCase = true)) {
+                        throw GrantVerificationException("unexpected spending-limit policy address ${capPolicy.policy}")
+                    }
+                    val (token, cap) = decodeSpendingLimit(capPolicy.initData)
+                    // The cap is enforced on the ERC-20 the approve targets — they must be the same token.
+                    if (!action.actionTarget.equals(token, ignoreCase = true)) {
+                        throw GrantVerificationException("spending-limit token $token != approve target ${action.actionTarget}")
+                    }
+                    capToken = token
+                    capAmount = cap
+                }
+                action.actionTarget.equals(swapTarget, ignoreCase = true) &&
+                    action.actionTargetSelector.equals(swapSelector, ignoreCase = true) -> {
+                    if (sawSwap) throw GrantVerificationException("more than one swap action")
+                    requireWindowAction(action, timeFramePolicy, start, end)
+                    sawSwap = true
+                }
+                else -> {
+                    val idx = infraActions.indexOfFirst {
+                        action.actionTarget.equals(it.target, ignoreCase = true) &&
+                            action.actionTargetSelector.equals(it.selector, ignoreCase = true)
+                    }
+                    if (idx < 0) {
+                        throw GrantVerificationException("unknown action ${action.actionTargetSelector}@${action.actionTarget}")
+                    }
+                    if (!seenInfra.add(idx)) throw GrantVerificationException("duplicate infra action")
+                    requireWindowAction(action, timeFramePolicy, start, end)
+                }
+            }
         }
-        val approve = permissions.actions.singleOrNull { it.actionTargetSelector.equals(APPROVE_SELECTOR, ignoreCase = true) }
-            ?: throw GrantVerificationException("expected exactly one token-approve action carrying the cap")
-        val swap = permissions.actions.first { it !== approve }
-
-        // 5a. The approve action carries the spending-limit (cap) at the pinned policy → decode (token, cap).
-        val capPolicy = approve.actionPolicies.singleOrNull()
-            ?: throw GrantVerificationException("expected exactly one spending-limit policy on the approve action")
-        if (!capPolicy.policy.equals(spendingLimitPolicy, ignoreCase = true)) {
-            throw GrantVerificationException("unexpected spending-limit policy address ${capPolicy.policy}")
-        }
-        val (token, cap) = decodeSpendingLimit(capPolicy.initData)
-        // The cap is enforced on the ERC-20 the approve targets — they must be the same token.
-        if (!approve.actionTarget.equals(token, ignoreCase = true)) {
-            throw GrantVerificationException("spending-limit token $token != approve target ${approve.actionTarget}")
-        }
-
-        // 5b. The swap action is time-boxed at the pinned time-frame policy; its window must match the userOp window.
-        val swapTime = swap.actionPolicies.singleOrNull()
-            ?: throw GrantVerificationException("expected exactly one time-frame policy on the swap action")
-        if (!swapTime.policy.equals(timeFramePolicy, ignoreCase = true)) {
-            throw GrantVerificationException("unexpected time-frame policy address on swap ${swapTime.policy}")
-        }
-        val (swapStart, swapEnd) = decodeTimeFrame(swapTime.initData)
-        if (swapStart != start || swapEnd != end) {
-            throw GrantVerificationException("swap time-frame window does not match the userOp window")
-        }
+        if (capToken == null || capAmount == null) throw GrantVerificationException("missing cap (token approve) action")
+        if (!sawSwap) throw GrantVerificationException("missing swap action $swapSelector@$swapTarget")
+        if (seenInfra.size != infraActions.size) throw GrantVerificationException("missing pinned infra action(s)")
 
         // 6. The swap is the user-facing action (router + selector); the cap/token come from the approve action.
         return VerifiedGrant(
             account = account,
             chainId = chainId,
-            actionTarget = swap.actionTarget,
-            actionSelector = swap.actionTargetSelector,
-            spendToken = token,
-            capBaseUnits = cap,
+            actionTarget = swapTarget,
+            actionSelector = swapSelector,
+            spendToken = capToken,
+            capBaseUnits = capAmount,
             windowStartEpochSeconds = start,
             windowEndEpochSeconds = end,
         )
+    }
+
+    /** A window-policed action: exactly one TimeFrame policy at the pinned address, window == the userOp window. */
+    private fun requireWindowAction(action: SmartSessionEnableDigest.ActionData, timeFramePolicy: String, start: Long, end: Long) {
+        val tp = action.actionPolicies.singleOrNull()
+            ?: throw GrantVerificationException("expected exactly one time-frame policy on action ${action.actionTargetSelector}")
+        if (!tp.policy.equals(timeFramePolicy, ignoreCase = true)) {
+            throw GrantVerificationException("unexpected time-frame policy on action ${tp.policy}")
+        }
+        val (s, e) = decodeTimeFrame(tp.initData)
+        if (s != start || e != end) throw GrantVerificationException("action time-frame window != userOp window")
     }
 
     /**

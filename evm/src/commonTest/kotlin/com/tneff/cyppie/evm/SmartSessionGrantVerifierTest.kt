@@ -67,6 +67,7 @@ class SmartSessionGrantVerifierTest {
             account = account, chainId = 1L, sessionValidator = validator,
             sessionValidatorInitData = validatorInitData, salt = salt, nonce = nonce,
             permissions = permissions, digestToSign = digest,
+            swapTarget = router, swapSelector = swapSelector, // DCA: single swap action, no infra
         )
 
     // ── decoders (real audited layouts) ──
@@ -151,6 +152,7 @@ class SmartSessionGrantVerifierTest {
                 account = account, chainId = 1L, sessionValidator = placeholder,
                 sessionValidatorInitData = validatorInitData, salt = salt, nonce = nonce,
                 permissions = perms, digestToSign = digest, // default validator pin 0x…7E98 ≠ placeholder
+                swapTarget = router, swapSelector = swapSelector,
             )
         }
     }
@@ -161,5 +163,82 @@ class SmartSessionGrantVerifierTest {
         assertEquals("0x0000000000D30f611fA3bf652ac6879428586930", SmartSessionGrantVerifier.TIMEFRAME_POLICY)
         assertEquals("0x000000000013fdB5234E4E3162a810F54d9f7E98", SmartSessionGrantVerifier.SESSION_VALIDATOR)
         assertEquals("0x095ea7b3", SmartSessionGrantVerifier.APPROVE_SELECTOR)
+        assertEquals("0x000000000022D473030F116dDEE9F6B43aC78BA3", SmartSessionGrantVerifier.PERMIT2)
+        assertEquals("0x87517c45", SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR)
+        assertEquals("0x3593564c", SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR)
+        assertEquals("0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af", SmartSessionGrantVerifier.universalRouter(1L))
+        assertEquals("0x6fF5693b99212Da76ad316178A184AB56D299b43", SmartSessionGrantVerifier.universalRouter(8453L))
     }
+
+    // ── Copy-trading (KAN-154): the production 3-action UniversalRouter shape, against the backend Copy KAT ──
+    // Canonical inputs = aa-trigger/scripts/copy-vector.mjs (sessionPubkey 0x489c…227e, salt 0x…aa, follower 0xf39F…,
+    // window 0..1893456000, cap 1000 USDC). Reproduces the backend ETH enable digest 0xaa03c762….
+
+    private val copyAccount = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" // follower SCA
+    private val copySessionValidatorInitData = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "0000000000000000000000000000000000000000000000000000000000000040" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000489ccacac8836c71ad5b20bf61e0b885425b227e" // owners[0] = backend session pubkey
+    private val copySalt = "0x00000000000000000000000000000000000000000000000000000000000000aa"
+    private val copySpendInitDataEth = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000040" +
+        "0000000000000000000000000000000000000000000000000000000000000080" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000000000000000000000000000000000003b9aca00" // cap = 1_000_000_000 (1000 USDC)
+    private val copyTimeInitData = "0x000070dbd880000000000000" // validUntil 1893456000, validAfter 0
+    private val urEth = SmartSessionGrantVerifier.universalRouter(1L)!!
+    private val permit2 = SmartSessionGrantVerifier.PERMIT2
+
+    private fun copyPermissionsEth() = SignedPermissions(
+        permitERC4337Paymaster = true,
+        userOpPolicies = listOf(PolicyData(timePolicy, copyTimeInitData)),
+        actions = listOf(
+            ActionData(approveSelector, usdc, listOf(PolicyData(spendPolicy, copySpendInitDataEth))),
+            ActionData(SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR, permit2, listOf(PolicyData(timePolicy, copyTimeInitData))),
+            ActionData(SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR, urEth, listOf(PolicyData(timePolicy, copyTimeInitData))),
+        ),
+    )
+
+    private fun verifyCopy(permissions: SignedPermissions, digest: String) =
+        SmartSessionGrantVerifier.verifyGrant(
+            account = copyAccount, chainId = 1L, sessionValidator = validator,
+            sessionValidatorInitData = copySessionValidatorInitData, salt = copySalt, nonce = nonce,
+            permissions = permissions, digestToSign = digest,
+            swapTarget = urEth, swapSelector = SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR,
+            infraActions = listOf(SmartSessionGrantVerifier.ActionPin(permit2, SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR)),
+        )
+
+    @Test
+    fun verifiesCopyVectorEth_threeActionUniversalRouter() {
+        val perms = copyPermissionsEth()
+        val grant = verifyCopy(perms, "0xaa03c7623f8682f29eda13fd8fded094c796f499a34881c66d53e93ba2ae9a7c")
+        assertEquals(urEth, grant.actionTarget) // the UniversalRouter is the user-facing swap target
+        assertEquals("0x3593564c", grant.actionSelector)
+        assertEquals("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", grant.spendToken)
+        assertEquals("1000000000", grant.capBaseUnits) // 1000 USDC total budget
+        assertEquals(0L, grant.windowStartEpochSeconds)
+        assertEquals(1893456000L, grant.windowEndEpochSeconds)
+    }
+
+    @Test
+    fun copyFailsClosedOnRogueExtraAction() {
+        // A rogue backend appends a 4th action on a non-pinned router → unknown action → fail-closed.
+        val rogue = ActionData("0x3593564c", "0x000000000000000000000000000000000000bEEF", listOf(PolicyData(timePolicy, copyTimeInitData)))
+        val perms = copyPermissionsEth().let { it.copy(actions = it.actions + rogue) }
+        assertFailsWith<GrantVerificationException> { verifyCopy(perms, digestOfCopy(perms)) }
+    }
+
+    @Test
+    fun copyFailsClosedOnMissingInfraAction() {
+        // Drop the Permit2 leg → the pinned infra action is missing → fail-closed.
+        val perms = copyPermissionsEth().let { it.copy(actions = it.actions.filterNot { a -> a.actionTarget.equals(permit2, true) }) }
+        assertFailsWith<GrantVerificationException> { verifyCopy(perms, digestOfCopy(perms)) }
+    }
+
+    private fun digestOfCopy(permissions: SignedPermissions): String = "0x" + Hex.encode(
+        SmartSessionEnableDigest.enableDigest(copyAccount, 1L, validator, copySessionValidatorInitData, copySalt, nonce, permissions),
+    )
 }
