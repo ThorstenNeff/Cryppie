@@ -35,4 +35,12 @@
   <string name="copy_load_error">Không thể tải copy trading</string>
   <string name="copy_err_submit">Không thể gửi ủy quyền</string>
   <string name="copy_err_verify">Không thể xác minh ủy quyền — chưa ký</string>
+  <string name="copy_guaranteed">Được đảm bảo on-chain</string>
+  <string name="copy_guaranteed_note">Được thực thi bằng mật mã — dịch vụ không thể vượt quá mức này.</string>
+  <string name="copy_advisory">Tham khảo — không đảm bảo</string>
+  <string name="copy_advisory_note">Do dịch vụ hiển thị, không được thực thi on-chain. Tiền của bạn vẫn bị giới hạn bởi mức giới hạn ở trên.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Cửa sổ giới hạn</string>
+  <string name="copy_source">Nguồn</string>
+  <string name="copy_allocation">Phân bổ</string>
 </resources>

@@ -35,4 +35,12 @@
   <string name="copy_load_error">تعذّر تحميل تداول النسخ</string>
   <string name="copy_err_submit">تعذّر إرسال التفويض</string>
   <string name="copy_err_verify">تعذّر التحقق من التفويض — لم يُوقَّع</string>
+  <string name="copy_guaranteed">مضمون على السلسلة</string>
+  <string name="copy_guaranteed_note">مفروض تشفيريًّا — لا يمكن للخدمة تجاوز هذا الحد.</string>
+  <string name="copy_advisory">إرشادي — غير مضمون</string>
+  <string name="copy_advisory_note">تعرضه الخدمة، وهو غير مفروض على السلسلة. تبقى أموالك محدودة بالحد أعلاه.</string>
+  <string name="copy_token">العملة</string>
+  <string name="copy_window">نافذة الحد</string>
+  <string name="copy_source">المصدر</string>
+  <string name="copy_allocation">التوزيع</string>
 </resources>

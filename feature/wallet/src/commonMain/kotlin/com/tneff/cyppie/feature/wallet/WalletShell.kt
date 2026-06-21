@@ -475,7 +475,7 @@ fun WalletShell(onLock: () -> Unit) {
             // service until Dev-2's KAN-154 lands; owner = account#0 (self-copy guard); fresh re-auth source.
             SecureScreenEffect()
             CopyRoot(
-                service = StubFollowGrantService(),
+                service = StubFollowGrantService(::nowEpochSeconds),
                 owner = dcaOwner,
                 budgetTokenDecimals = 6, // USDC v1
                 reauth = dcaReauth,

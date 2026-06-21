@@ -35,4 +35,12 @@
   <string name="copy_load_error">Couldn't load copy trading</string>
   <string name="copy_err_submit">Couldn't submit the authorization</string>
   <string name="copy_err_verify">Couldn't verify the authorization — not signed</string>
+  <string name="copy_guaranteed">On-chain guaranteed</string>
+  <string name="copy_guaranteed_note">Cryptographically enforced — the service can't exceed this.</string>
+  <string name="copy_advisory">Advisory — not guaranteed</string>
+  <string name="copy_advisory_note">Shown by the service, not enforced on-chain. Your funds stay capped by the limit above.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Limit window</string>
+  <string name="copy_source">Source</string>
+  <string name="copy_allocation">Allocation</string>
 </resources>

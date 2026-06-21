@@ -35,4 +35,12 @@
   <string name="copy_load_error">Nie można załadować kopiowania transakcji</string>
   <string name="copy_err_submit">Nie można wysłać autoryzacji</string>
   <string name="copy_err_verify">Nie można zweryfikować autoryzacji — niepodpisana</string>
+  <string name="copy_guaranteed">Gwarantowane on-chain</string>
+  <string name="copy_guaranteed_note">Wymuszone kryptograficznie — usługa nie może tego przekroczyć.</string>
+  <string name="copy_advisory">Informacyjnie — bez gwarancji</string>
+  <string name="copy_advisory_note">Wyświetlane przez usługę, nie wymuszane on-chain. Twoje środki pozostają ograniczone limitem powyżej.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Okno limitu</string>
+  <string name="copy_source">Źródło</string>
+  <string name="copy_allocation">Alokacja</string>
 </resources>

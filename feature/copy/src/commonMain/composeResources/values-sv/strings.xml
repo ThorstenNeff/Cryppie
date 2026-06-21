@@ -35,4 +35,12 @@
   <string name="copy_load_error">Det gick inte att läsa in copy-trading</string>
   <string name="copy_err_submit">Det gick inte att skicka auktoriseringen</string>
   <string name="copy_err_verify">Det gick inte att verifiera auktoriseringen — inte signerad</string>
+  <string name="copy_guaranteed">On-chain-garanterat</string>
+  <string name="copy_guaranteed_note">Kryptografiskt framtvingat — tjänsten kan inte överskrida detta.</string>
+  <string name="copy_advisory">Vägledande — inte garanterat</string>
+  <string name="copy_advisory_note">Visas av tjänsten, inte framtvingat on-chain. Dina medel förblir begränsade av gränsen ovan.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Gränsfönster</string>
+  <string name="copy_source">Källa</string>
+  <string name="copy_allocation">Allokering</string>
 </resources>

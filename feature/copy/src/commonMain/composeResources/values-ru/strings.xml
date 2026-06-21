@@ -35,4 +35,12 @@
   <string name="copy_load_error">Не удалось загрузить копи-трейдинг</string>
   <string name="copy_err_submit">Не удалось отправить авторизацию</string>
   <string name="copy_err_verify">Не удалось проверить авторизацию — не подписано</string>
+  <string name="copy_guaranteed">Гарантировано on-chain</string>
+  <string name="copy_guaranteed_note">Криптографически закреплено — сервис не может это превысить.</string>
+  <string name="copy_advisory">Справочно — не гарантировано</string>
+  <string name="copy_advisory_note">Показано сервисом, не закреплено on-chain. Ваши средства остаются ограничены лимитом выше.</string>
+  <string name="copy_token">Токен</string>
+  <string name="copy_window">Окно лимита</string>
+  <string name="copy_source">Источник</string>
+  <string name="copy_allocation">Распределение</string>
 </resources>

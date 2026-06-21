@@ -32,7 +32,7 @@ class FollowViewModel(
     var preparing: Boolean by mutableStateOf(false); private set
     var submitting: Boolean by mutableStateOf(false); private set
     var error: CopyError? by mutableStateOf(null); private set
-    var prepared: PreparedFollow? by mutableStateOf(null); private set
+    var prepared: CopyGrantPreview? by mutableStateOf(null); private set
 
     fun enterTrader(value: String) { trader = value.trim(); error = null; prepared = null }
     fun enterBudget(value: String) { budget = value.filter { it.isDigit() }; error = null; prepared = null }

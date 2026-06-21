@@ -33,7 +33,7 @@ class FollowViewModelTest {
     @AfterTest fun tearDown() = Dispatchers.resetMain()
 
     private fun vm(
-        service: FollowGrantService = StubFollowGrantService(),
+        service: FollowGrantService = StubFollowGrantService { 1_000L },
         reauth: suspend (String) -> SeedSource? = { FakeSeed() },
     ) = FollowViewModel(service, OWNER, budgetTokenDecimals = 6, reauth = reauth)
 
@@ -45,8 +45,9 @@ class FollowViewModelTest {
         vm.enterBudget("100"); vm.review()
         assertEquals(FollowStep.Review, vm.step)
         assertNotNull(vm.prepared)
-        assertEquals("100", vm.capHuman(vm.prepared!!.capBaseUnits)) // 100 * 10^6 base units → "100"
-        assertTrue(vm.prepared!!.legs.isNotEmpty())
+        assertEquals("100", vm.capHuman(vm.prepared!!.verifiedGrant.capBaseUnits)) // 100 * 10^6 base units → "100"
+        assertEquals(VALID_TRADER, vm.prepared!!.source) // followed trader = advisory
+        assertEquals(10_000, vm.prepared!!.allocationBps)
         vm.confirm("pw")
         assertEquals(FollowStep.Done, vm.step)
         assertNull(vm.error)
@@ -71,8 +72,8 @@ class FollowViewModelTest {
     @Test
     fun verifyFailure_isFailClosed_noPreparedNoAdvance() = runTest {
         val failing = object : FollowGrantService {
-            override suspend fun prepare(trader: String, budgetBaseUnits: String): PreparedFollow = throw RuntimeException("mismatch")
-            override suspend fun activate(prepared: PreparedFollow, seedSource: SeedSource) {}
+            override suspend fun prepare(trader: String, budgetBaseUnits: String): CopyGrantPreview = throw RuntimeException("mismatch")
+            override suspend fun activate(preview: CopyGrantPreview, seedSource: SeedSource) {}
         }
         val vm = vm(service = failing)
         vm.enterTrader(VALID_TRADER); vm.toBudget(); vm.enterBudget("100"); vm.review()

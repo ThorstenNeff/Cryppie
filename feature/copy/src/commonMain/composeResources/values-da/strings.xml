@@ -35,4 +35,12 @@
   <string name="copy_load_error">Kopihandel kunne ikke indlæses</string>
   <string name="copy_err_submit">Autoriseringen kunne ikke sendes</string>
   <string name="copy_err_verify">Autoriseringen kunne ikke verificeres — ikke signeret</string>
+  <string name="copy_guaranteed">On-chain garanteret</string>
+  <string name="copy_guaranteed_note">Kryptografisk håndhævet — tjenesten kan ikke overskride dette.</string>
+  <string name="copy_advisory">Vejledende — ikke garanteret</string>
+  <string name="copy_advisory_note">Vist af tjenesten, ikke håndhævet on-chain. Dine midler forbliver begrænset af grænsen ovenfor.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Grænsevindue</string>
+  <string name="copy_source">Kilde</string>
+  <string name="copy_allocation">Allokering</string>
 </resources>

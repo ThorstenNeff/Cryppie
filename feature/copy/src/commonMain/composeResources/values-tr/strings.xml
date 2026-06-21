@@ -35,4 +35,12 @@
   <string name="copy_load_error">Kopyalama işlemleri yüklenemedi</string>
   <string name="copy_err_submit">Yetkilendirme gönderilemedi</string>
   <string name="copy_err_verify">Yetkilendirme doğrulanamadı — imzalanmadı</string>
+  <string name="copy_guaranteed">Zincir üstünde garanti</string>
+  <string name="copy_guaranteed_note">Kriptografik olarak zorunlu kılınır — hizmet bunu aşamaz.</string>
+  <string name="copy_advisory">Bilgilendirme — garanti değil</string>
+  <string name="copy_advisory_note">Hizmet tarafından gösterilir, zincir üstünde zorunlu kılınmaz. Paran yukarıdaki limitle sınırlı kalır.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Limit penceresi</string>
+  <string name="copy_source">Kaynak</string>
+  <string name="copy_allocation">Tahsis</string>
 </resources>

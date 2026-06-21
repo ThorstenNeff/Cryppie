@@ -35,4 +35,12 @@
   <string name="copy_load_error">Copy-Trading konnte nicht geladen werden</string>
   <string name="copy_err_submit">Autorisierung konnte nicht gesendet werden</string>
   <string name="copy_err_verify">Konnte die Autorisierung nicht verifizieren — nicht signiert</string>
+  <string name="copy_guaranteed">On-chain garantiert</string>
+  <string name="copy_guaranteed_note">Kryptografisch erzwungen — der Service kann das nicht überschreiten.</string>
+  <string name="copy_advisory">Hinweis — nicht garantiert</string>
+  <string name="copy_advisory_note">Vom Service angezeigt, nicht on-chain erzwungen. Dein Guthaben bleibt durch das Limit oben gedeckelt.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Limit-Fenster</string>
+  <string name="copy_source">Quelle</string>
+  <string name="copy_allocation">Allokation</string>
 </resources>

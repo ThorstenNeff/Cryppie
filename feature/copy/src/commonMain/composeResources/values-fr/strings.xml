@@ -35,4 +35,12 @@
   <string name="copy_load_error">Impossible de charger le copy trading</string>
   <string name="copy_err_submit">Impossible d'envoyer l'autorisation</string>
   <string name="copy_err_verify">Impossible de vérifier l'autorisation — non signée</string>
+  <string name="copy_guaranteed">Garanti on-chain</string>
+  <string name="copy_guaranteed_note">Appliqué cryptographiquement — le service ne peut pas le dépasser.</string>
+  <string name="copy_advisory">Indicatif — non garanti</string>
+  <string name="copy_advisory_note">Affiché par le service, non appliqué on-chain. Vos fonds restent plafonnés par la limite ci-dessus.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Fenêtre de limite</string>
+  <string name="copy_source">Source</string>
+  <string name="copy_allocation">Allocation</string>
 </resources>

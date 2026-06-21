@@ -36,8 +36,13 @@ import com.tneff.cyppie.feature.copy.generated.resources.Res
 import com.tneff.cyppie.feature.copy.generated.resources.copy_allowed
 import com.tneff.cyppie.feature.copy.generated.resources.copy_authorize
 import com.tneff.cyppie.feature.copy.generated.resources.copy_authorizing
+import com.tneff.cyppie.feature.copy.generated.resources.copy_advisory
+import com.tneff.cyppie.feature.copy.generated.resources.copy_advisory_note
+import com.tneff.cyppie.feature.copy.generated.resources.copy_allocation
 import com.tneff.cyppie.feature.copy.generated.resources.copy_cap
 import com.tneff.cyppie.feature.copy.generated.resources.copy_disclosure
+import com.tneff.cyppie.feature.copy.generated.resources.copy_guaranteed
+import com.tneff.cyppie.feature.copy.generated.resources.copy_guaranteed_note
 import com.tneff.cyppie.feature.copy.generated.resources.copy_password
 import com.tneff.cyppie.feature.copy.generated.resources.copy_review_title
 import com.tneff.cyppie.feature.copy.generated.resources.copy_router
@@ -46,21 +51,25 @@ import com.tneff.cyppie.feature.copy.generated.resources.copy_you_authorize
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Screen 3 (`Copy3-Confirm`, KAN-155) — the **no-blind disclosure** of the on-device-VERIFIED copy grant
- * (same DCA-grant pattern: signed == disclosed), then re-auth → sign. Every field (trader / cap / router /
- * allowed-function) comes from [FollowViewModel.prepared] (decoded from the signed bytes, KAN-154
- * verifyGrant) — never backend text; external strings sanitized (BidiSanitizer), addresses full + LTR. N
- * display-legs are rendered (router.execute display-targets); a verify mismatch never reaches here
- * ([prepared] null, fail-closed). FLAG_SECURE is applied by the app-shell host (signature context).
+ * Screen 3 (`Copy3-Confirm`, KAN-155) — the **no-blind disclosure** + re-auth/sign. Two clearly-separated
+ * trust sections (Dev-2 KAN-154 crypto-UX contract):
+ *  1. **On-chain guaranteed** — ONLY [CopyGrantPreview.verifiedGrant] (cap / router / allowed-function),
+ *     decoded from the signed bytes; same DCA-grant no-blind pattern; BidiSanitizer + full LTR addresses.
+ *  2. **Advisory / context** — the followed [source] + allocation; mirror-time metadata, NOT in the signed
+ *     enable → explicitly marked "not part of the on-chain guarantee" (Info banner), never as the guarantee.
+ * A verify mismatch never reaches here ([prepared] null, fail-closed). FLAG_SECURE applied by the host.
+ * (UX shipped the dedicated separation keys — copy_guaranteed / copy_advisory / copy_allocation; a richer
+ * separation pattern, if UX ships one, swaps in here.)
  */
 @Composable
 internal fun FollowReviewScreen(viewModel: FollowViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     var password by remember { mutableStateOf("") }
-    val prepared = viewModel.prepared
-    if (prepared == null) { onBack(); return } // defensive: no verified grant → back to budget
-    val capHuman = viewModel.capHuman(prepared.capBaseUnits)
+    val preview = viewModel.prepared
+    if (preview == null) { onBack(); return } // defensive: no verified grant → back to budget
+    val v = preview.verifiedGrant
+    val capHuman = viewModel.capHuman(v.capBaseUnits)
 
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 480.dp).fillMaxSize()) {
@@ -69,24 +78,36 @@ internal fun FollowReviewScreen(viewModel: FollowViewModel, onBack: () -> Unit, 
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.xl).testTag(CopyTestTags.REVIEW_SCREEN),
                 verticalArrangement = Arrangement.spacedBy(spacing.lg),
             ) {
-                // One-line plain-language summary: "…trade up to {cap} on router {router}…" (copy_disclosure).
+                Text(stringResource(Res.string.copy_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+                // Plain-language summary from the VERIFIED grant: "…trade up to {cap} on router {router}…".
                 Text(
-                    stringResource(Res.string.copy_disclosure, capHuman, BidiSanitizer.sanitize(prepared.primaryRouter)),
+                    stringResource(Res.string.copy_disclosure, capHuman, BidiSanitizer.sanitize(v.actionTarget)),
                     style = CryptasaTheme.typography.body,
                     color = colors.onSurfaceVariant,
                 )
+
+                // ── Section 1: ON-CHAIN GUARANTEED (only the verified grant) ──
                 Column(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag(CopyTestTags.DISCLOSURE),
                     verticalArrangement = Arrangement.spacedBy(spacing.xs),
                 ) {
-                    Text(stringResource(Res.string.copy_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
-                    DisclosureRow(stringResource(Res.string.copy_trader), BidiSanitizer.sanitize(prepared.trader), ltr = true, truncate = false)
+                    Text(stringResource(Res.string.copy_guaranteed), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+                    Text(stringResource(Res.string.copy_guaranteed_note), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
                     DisclosureRow(stringResource(Res.string.copy_cap), BidiSanitizer.sanitize(capHuman), ltr = true, valueTestTag = CopyTestTags.DISCLOSURE_CAP)
-                    // N display-legs: each authorized (router → allowed function) the grant encodes.
-                    prepared.legs.forEach { leg ->
-                        DisclosureRow(stringResource(Res.string.copy_router), BidiSanitizer.sanitize(leg.router), ltr = true, truncate = false)
-                        DisclosureRow(stringResource(Res.string.copy_allowed), BidiSanitizer.sanitize(leg.allowedFunction), ltr = true, truncate = false)
-                    }
+                    DisclosureRow(stringResource(Res.string.copy_router), BidiSanitizer.sanitize(v.actionTarget), ltr = true, truncate = false)
+                    DisclosureRow(stringResource(Res.string.copy_allowed), BidiSanitizer.sanitize(v.actionSelector), ltr = true, truncate = false)
+                }
+
+                // ── Section 2: ADVISORY / CONTEXT (not crypto-guaranteed) — visually separated (Dev-2 crypto-UX) ──
+                Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                    CryptasaBanner(
+                        title = stringResource(Res.string.copy_advisory),
+                        description = stringResource(Res.string.copy_advisory_note),
+                        tone = CryptasaBannerTone.Info,
+                        modifier = Modifier.testTag("copy_advisory"),
+                    )
+                    DisclosureRow(stringResource(Res.string.copy_trader), BidiSanitizer.sanitize(preview.source), ltr = true, truncate = false)
+                    DisclosureRow(stringResource(Res.string.copy_allocation), "${preview.allocationBps / 100}%", ltr = true)
                 }
 
                 viewModel.error?.let { CryptasaBanner(title = it.text(), tone = CryptasaBannerTone.Danger, modifier = Modifier.testTag(CopyTestTags.ERROR)) }

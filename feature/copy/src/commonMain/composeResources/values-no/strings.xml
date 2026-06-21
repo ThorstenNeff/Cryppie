@@ -35,4 +35,12 @@
   <string name="copy_load_error">Kunne ikke laste kopihandel</string>
   <string name="copy_err_submit">Kunne ikke sende autoriseringen</string>
   <string name="copy_err_verify">Kunne ikke verifisere autoriseringen — ikke signert</string>
+  <string name="copy_guaranteed">On-chain garantert</string>
+  <string name="copy_guaranteed_note">Kryptografisk håndhevet — tjenesten kan ikke overskride dette.</string>
+  <string name="copy_advisory">Veiledende — ikke garantert</string>
+  <string name="copy_advisory_note">Vist av tjenesten, ikke håndhevet on-chain. Midlene dine forblir begrenset av grensen ovenfor.</string>
+  <string name="copy_token">Token</string>
+  <string name="copy_window">Grensevindu</string>
+  <string name="copy_source">Kilde</string>
+  <string name="copy_allocation">Allokering</string>
 </resources>

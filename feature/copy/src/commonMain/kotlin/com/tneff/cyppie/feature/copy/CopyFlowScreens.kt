@@ -86,11 +86,10 @@ internal fun BudgetScreen(viewModel: FollowViewModel, onBack: () -> Unit, modifi
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.BUDGET_INPUT),
                 )
-                // Risk / expectation caveat (non-custodial, revocable). Spec asks for an Info tone; the DS has
-                // only Danger/Warning/Offline (no new DS components per spec) → Warning. Info-tone = UX/DS gap.
+                // Risk / expectation caveat (non-custodial, revocable) — neutral hint, Info tone (KAN-158).
                 CryptasaBanner(
                     title = stringResource(Res.string.copy_budget_caveat),
-                    tone = CryptasaBannerTone.Warning,
+                    tone = CryptasaBannerTone.Info,
                     modifier = Modifier.testTag(CopyTestTags.BUDGET_CAVEAT),
                 )
                 CryptasaButton(
