@@ -35,6 +35,12 @@ data class CryptasaColors(
     val warning: Color,
     val onWarning: Color,
     val warningSurface: Color,
+    // Info — neutral hint (KAN-158); brand-blue tonal container (NOT a solid fill — distinct from the
+    // primary CTA). [infoSurface] = ~10-12% (light) / ~16-20% (dark) brand-blue tint; [info] = accent
+    // (icon/text), lightened on dark for WCAG-AA on the tint.
+    val info: Color,
+    val onInfo: Color,
+    val infoSurface: Color,
     /** True for [CryptasaDark]; lets components pick mode-aware assets without re-checking the system. */
     val isDark: Boolean,
 )
@@ -60,6 +66,9 @@ val CryptasaLight: CryptasaColors = CryptasaColors(
     warning = Color(0xFFA87600),
     onWarning = Color(0xFF000000),
     warningSurface = Color(0xFFFFF6E0),
+    info = Color(0xFF0052FF),        // brand blue; ≈4.7:1 on infoSurface (WCAG-AA)
+    onInfo = Color(0xFFFFFFFF),
+    infoSurface = Color(0xFFE0EAFF), // brand blue @ ~12% tint on white
     isDark = false,
 )
 
@@ -84,5 +93,8 @@ val CryptasaDark: CryptasaColors = CryptasaColors(
     warning = Color(0xFFF4C952),
     onWarning = Color(0xFF000000),
     warningSurface = Color(0xFF2E2410),
+    info = Color(0xFF5B8DEF),        // brand blue lightened; ≈4.8:1 on infoSurface (WCAG-AA on dark)
+    onInfo = Color(0xFF001026),
+    infoSurface = Color(0xFF0E1F3D), // brand blue @ ~18% tint on black
     isDark = true,
 )

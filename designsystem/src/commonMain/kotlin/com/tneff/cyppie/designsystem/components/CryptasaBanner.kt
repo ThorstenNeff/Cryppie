@@ -26,7 +26,7 @@ import com.tneff.cyppie.designsystem.foundation.clickableIcon
 import com.tneff.cyppie.designsystem.icons.CryptasaIcons
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 
-enum class CryptasaBannerTone { Danger, Warning, Offline }
+enum class CryptasaBannerTone { Danger, Warning, Offline, Info }
 
 /**
  * Screen banner (HANDOFF §3 "Banner"). Leading icon · title (`labelSmall`) + description (`helper`)
@@ -57,6 +57,10 @@ fun CryptasaBanner(
         }
         CryptasaBannerTone.Offline -> {
             background = colors.surfaceVariant; accent = colors.primary; icon = CryptasaIcons.CloudOff
+        }
+        CryptasaBannerTone.Info -> {
+            // Neutral hint (KAN-158): brand-blue tonal container, NOT a solid fill (≠ the primary CTA).
+            background = colors.infoSurface; accent = colors.info; icon = CryptasaIcons.Info
         }
     }
 

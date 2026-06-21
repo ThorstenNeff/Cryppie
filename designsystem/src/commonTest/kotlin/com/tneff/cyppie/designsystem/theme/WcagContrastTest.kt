@@ -96,6 +96,7 @@ class WcagContrastTest {
         Pair("success/successSurface", { it.success }, { it.successSurface }, 4.5),
         Pair("warning/warningSurface", { it.warning }, { it.warningSurface }, 4.5),
         Pair("danger/dangerSurface", { it.danger }, { it.dangerSurface }, 4.5),
+        Pair("info/infoSurface", { it.info }, { it.infoSurface }, 4.5), // KAN-158 Info banner accent on its tint
     )
 
     // Status pairs that fall below the WCAG-AA *text* bar (4.5:1). This is a baseline, NOT an
