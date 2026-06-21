@@ -94,6 +94,11 @@ object EnableUserOpVerifier {
         if (!userOp.sender.equals(expectedAccount, ignoreCase = true)) {
             throw EnableVerificationException("userOp.sender != expectedAccount")
         }
+        // 2b. initCode is the only otherwise-unconstrained field hashed into the full-authority digest — pin it to
+        // the EIP-7702 same-address model (no factory). A non-empty factory would deploy/initialize unknown code.
+        if (userOp.initCode != "0x") {
+            throw EnableVerificationException("unexpected initCode/factory — only the 7702 same-address account is allowed")
+        }
         // 3. exactly two calls (install + enableSessions).
         val calls = try {
             KernelExecuteBatch.decodeBatch(userOp.callData)

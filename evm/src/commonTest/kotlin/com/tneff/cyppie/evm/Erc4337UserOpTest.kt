@@ -3,6 +3,7 @@ package com.tneff.cyppie.evm
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.ActionData
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.PolicyData
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions
+import com.tneff.cyppie.evm.abi.Abi
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -49,6 +50,23 @@ class Erc4337UserOpTest {
             "1af0767764637fc2ba38cae9b0a72a85951ac1d1a952ead6dd58f23e2105c415",
             Hex.encode(Erc4337UserOp.digestToSign(hash)),
         )
+    }
+
+    @Test
+    fun pack_fromUnpackedBuildFields_reproducesVector() {
+        // The runtime path: /v1/userop/build returns UNPACKED gas/paymaster → pack() must match the vector's packing.
+        val packed = Erc4337UserOp.pack(
+            sender = sender, nonce = "0x0", callData = CALLDATA_ETH,
+            callGasLimit = "600000", verificationGasLimit = "1500000", preVerificationGas = "200000",
+            maxFeePerGas = "1000000000", maxPriorityFeePerGas = "1000000000",
+            paymaster = "0x0000000000000039cd5e8aE05257CE51C473ddd1",
+            paymasterVerificationGasLimit = "400000", paymasterPostOpGasLimit = "100000", paymasterData = "0x",
+        )
+        assertEquals(accountGasLimits.lowercase(), packed.accountGasLimits.lowercase())
+        assertEquals(gasFees.lowercase(), packed.gasFees.lowercase())
+        assertEquals(paymasterAndData.lowercase(), packed.paymasterAndData.lowercase())
+        assertEquals("0x", packed.initCode)
+        assertEquals("c4d1510e7efadce1ca010db75fe501d2ae685f14b8c27c4fe364ed1d0170dfe9", Hex.encode(Erc4337UserOp.userOpHash(packed, 1L)))
     }
 
     @Test
@@ -167,6 +185,41 @@ class Erc4337UserOpTest {
                 op(CALLDATA_ETH), "0xdead0000000000000000000000000000000000000000000000000000000000ff",
                 1L, sender, sessionValidator, copySessionValidatorInitData, copySalt, copyPermissionsEth(),
             )
+        }
+    }
+
+    @Test
+    fun verify_failsClosed_onNonEmptyInitCode() {
+        // P1-C: a self-consistent op (its own digest) that carries a factory must STILL fail — initCode is the
+        // only field not otherwise constrained, and a factory deploys/initializes unknown code under full authority.
+        val withFactory = op(CALLDATA_ETH).copy(initCode = "0x00000000000000000000000000000000deadbeef1234")
+        val selfDigest = "0x" + Hex.encode(Erc4337UserOp.digestToSign(Erc4337UserOp.userOpHash(withFactory, 1L)))
+        assertFailsWith<EnableVerificationException> {
+            EnableUserOpVerifier.verify(withFactory, selfDigest, 1L, sender, sessionValidator, copySessionValidatorInitData, copySalt, copyPermissionsEth())
+        }
+    }
+
+    @Test
+    fun verify_failsClosed_onWrongExpectedAccount() {
+        assertFailsWith<EnableVerificationException> {
+            EnableUserOpVerifier.verify(
+                op(CALLDATA_ETH), chain1Digest, 1L, "0x000000000000000000000000000000000000dEaD",
+                sessionValidator, copySessionValidatorInitData, copySalt, copyPermissionsEth(),
+            )
+        }
+    }
+
+    @Test
+    fun verify_failsClosed_onExtraCall() {
+        // A batch with THREE calls (install + enableSessions + a rogue third) must fail the exactly-2 structure check.
+        val exec = Abi.tuple(listOf(Abi.address(sender), Abi.uint(Quantity.of(0)), Abi.bytes("0x")))
+        val execArray = Abi.encode(Abi.array(listOf(exec, exec, exec)))
+        val batchMode = "0x0100000000000000000000000000000000000000000000000000000000000000"
+        val cd = "0x" + Hex.encode(Abi.encodeWithSelector("0xe9ae5c53", Abi.bytes32(batchMode), Abi.bytes("0x" + Hex.encode(execArray))))
+        val tampered = op(cd)
+        val selfDigest = "0x" + Hex.encode(Erc4337UserOp.digestToSign(Erc4337UserOp.userOpHash(tampered, 1L)))
+        assertFailsWith<EnableVerificationException> {
+            EnableUserOpVerifier.verify(tampered, selfDigest, 1L, sender, sessionValidator, copySessionValidatorInitData, copySalt, copyPermissionsEth())
         }
     }
 

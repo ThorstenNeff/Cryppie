@@ -34,6 +34,41 @@ object Erc4337UserOp {
         val paymasterAndData: String,
     )
 
+    /**
+     * Packs the **unpacked** v0.7 fields as `/v1/userop/build` returns them (the contract serializes gas/paymaster
+     * unpacked) into a [PackedUserOp] for [userOpHash]. [factory]/[paymaster] empty/null ⇒ no initCode / no
+     * paymasterAndData (the EIP-7702 case). All numeric args are hex (`0x…`) or decimal strings.
+     */
+    fun pack(
+        sender: String,
+        nonce: String,
+        callData: String,
+        callGasLimit: String,
+        verificationGasLimit: String,
+        preVerificationGas: String,
+        maxFeePerGas: String,
+        maxPriorityFeePerGas: String,
+        factory: String? = null,
+        factoryData: String? = null,
+        paymaster: String? = null,
+        paymasterVerificationGasLimit: String? = null,
+        paymasterPostOpGasLimit: String? = null,
+        paymasterData: String? = null,
+    ): PackedUserOp {
+        val initCode = if (factory.isNullOrBlank() || factory == "0x") "0x"
+        else "0x" + strip(factory) + strip(factoryData ?: "0x")
+        val paymasterAndData = if (paymaster.isNullOrBlank() || paymaster == "0x") "0x"
+        else "0x" + strip(paymaster) + Hex.encode(pad16(paymasterVerificationGasLimit ?: "0x0")) +
+            Hex.encode(pad16(paymasterPostOpGasLimit ?: "0x0")) + strip(paymasterData ?: "0x")
+        return PackedUserOp(
+            sender = sender, nonce = nonce, initCode = initCode, callData = callData,
+            accountGasLimits = "0x" + Hex.encode(pad16(verificationGasLimit) + pad16(callGasLimit)),
+            preVerificationGas = preVerificationGas,
+            gasFees = "0x" + Hex.encode(pad16(maxPriorityFeePerGas) + pad16(maxFeePerGas)),
+            paymasterAndData = paymasterAndData,
+        )
+    }
+
     /** The 32-byte `userOpHash` for [op] at [entryPoint] on [chainId] (the value the owner authorizes). */
     fun userOpHash(op: PackedUserOp, chainId: Long, entryPoint: String = ENTRY_POINT_V07): ByteArray {
         val packed = addr32(op.sender) +
@@ -73,6 +108,11 @@ object Erc4337UserOp {
         if (value.startsWith("0x") || value.startsWith("0X")) Quantity.ofHex(value).toBytes32() else BigUint.ofDecimal(value).toBytes32()
 
     private fun uint256(q: Quantity): ByteArray = q.toBytes32()
+
+    private fun strip(hex: String): String = hex.removePrefix("0x").removePrefix("0X")
+
+    /** Low 16 bytes (uint128) of [value] — the per-field width inside accountGasLimits / gasFees / paymasterAndData. */
+    private fun pad16(value: String): ByteArray = uint256(value).copyOfRange(16, 32)
 }
 
 /** Minimal helper to lift a Long/decimal into a [Quantity] for 32-byte encoding without a hex round-trip. */
