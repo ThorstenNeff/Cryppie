@@ -26,13 +26,29 @@ class EnableBroadcaster(private val aaSigner: AaSigner = AaSigner()) {
 
     suspend fun broadcast(
         api: EnableBroadcastApi,
-        buildRequest: BuildEnableRequest,
         expected: ExpectedEnable,
         seedSource: SeedSource,
         maxPollAttempts: Int = 30,
         pollDelayMs: Long = 2_000,
     ): EnableBroadcastResult {
         val owner = EvmAddress.parse(expected.account)
+        // The app builds the enable calls on-device (install + enableSessions(OUR session)) and sends them to the
+        // generic keyless /build; verifyEnableUserOp below re-confirms the wrapped op byte-exact (no trust in /build).
+        val buildRequest = BuildEnableRequest(
+            chainId = expected.chainId,
+            owner = expected.account,
+            calls = listOf(
+                EnableCall(to = expected.account, value = "0", data = EnableUserOpVerifier.INSTALL_MODULE_CALLDATA),
+                EnableCall(
+                    to = EnableUserOpVerifier.SMART_SESSIONS_ADDRESS, value = "0",
+                    data = "0x" + Hex.encode(
+                        EnableUserOpVerifier.enableSessionsCallData(
+                            expected.sessionValidator, expected.sessionValidatorInitData, expected.salt, expected.permissions,
+                        ),
+                    ),
+                ),
+            ),
+        )
         // 🔒 P1 (ADR-0009): the broadcaster OWNS the seed for the whole build→verify→sign window. The decrypting
         // verify-before-sign work (the /build netcall + verifyEnableUserOp + verify7702) runs BEFORE signing and is
         // attacker-triggerable to throw — so the seed MUST be zeroized on EVERY exit path, not just the sign path.

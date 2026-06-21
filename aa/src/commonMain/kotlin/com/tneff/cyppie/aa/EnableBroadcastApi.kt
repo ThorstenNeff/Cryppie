@@ -35,8 +35,21 @@ data class ExpectedEnable(
     val permissions: SignedPermissions,
 )
 
+/**
+ * The generic, keyless `/v1/userop/build` request (backend `c6e9ad0`): the backend wraps the **app-built** [calls]
+ * into a sponsored userOp for [owner] via a watch-only owner — it never signs and never interprets the calls. The
+ * app builds the enable calls on-device (install + enableSessions) so `/build` stays generic across Copy + DCA.
+ */
 @Serializable
-data class BuildEnableRequest(val permissionId: String)
+data class BuildEnableRequest(
+    val chainId: Long,
+    val owner: String,
+    val calls: List<EnableCall>,
+)
+
+/** One call in the enable batch: `(to, value, data)`. */
+@Serializable
+data class EnableCall(val to: String, val value: String, val data: String)
 
 /**
  * The `/v1/userop/build` response: the final (gas-estimated, paymaster-applied) op + the hash + the EIP-191 digest.

@@ -70,7 +70,6 @@ class FollowGrantService(
         val enable = preview.enable
         val result = broadcaster.broadcast(
             api = api,
-            buildRequest = BuildEnableRequest(enable.permissionId),
             expected = ExpectedEnable(
                 chainId = enable.chainId, account = enable.account, permissionId = enable.permissionId,
                 sessionValidator = enable.sessionValidator, sessionValidatorInitData = enable.sessionValidatorInitData,
