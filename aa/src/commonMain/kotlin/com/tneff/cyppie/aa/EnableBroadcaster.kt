@@ -59,16 +59,7 @@ class EnableBroadcaster(private val aaSigner: AaSigner = AaSigner()) {
             ?: throw IllegalArgumentException("seedSource must be zeroizable (AutoCloseable) — refusing to risk a key leak")
         val signed = closeable.use {
             val built = api.buildEnableUserOp(buildRequest)
-            val packed = with(built.userOp) {
-                Erc4337UserOp.pack(
-                    sender = sender, nonce = nonce, callData = callData,
-                    callGasLimit = callGasLimit, verificationGasLimit = verificationGasLimit, preVerificationGas = preVerificationGas,
-                    maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas,
-                    factory = factory, factoryData = factoryData, paymaster = paymaster,
-                    paymasterVerificationGasLimit = paymasterVerificationGasLimit,
-                    paymasterPostOpGasLimit = paymasterPostOpGasLimit, paymasterData = paymasterData,
-                )
-            }
+            val packed = built.userOp.toPackedUserOp()
             // P0 — bind the owner's (full-authority root) signature to an op that enables EXACTLY our session.
             EnableUserOpVerifier.verify(
                 userOp = packed, digestToSign = built.digestToSign, chainId = expected.chainId, expectedAccount = owner.value,

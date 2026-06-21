@@ -1,5 +1,6 @@
 package com.tneff.cyppie.aa
 
+import com.tneff.cyppie.evm.Erc4337UserOp
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions
 import kotlinx.serialization.Serializable
 
@@ -107,3 +108,13 @@ data class SubmitEnableRequest(
 
 @Serializable
 data class SubmittedUserOp(val userOpHash: String)
+
+/** Packs the unpacked `/build` fields into the `:evm` [Erc4337UserOp.PackedUserOp] for userOpHash recompute. */
+internal fun UnpackedUserOp.toPackedUserOp(): Erc4337UserOp.PackedUserOp = Erc4337UserOp.pack(
+    sender = sender, nonce = nonce, callData = callData,
+    callGasLimit = callGasLimit, verificationGasLimit = verificationGasLimit, preVerificationGas = preVerificationGas,
+    maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas,
+    factory = factory, factoryData = factoryData, paymaster = paymaster,
+    paymasterVerificationGasLimit = paymasterVerificationGasLimit,
+    paymasterPostOpGasLimit = paymasterPostOpGasLimit, paymasterData = paymasterData,
+)
