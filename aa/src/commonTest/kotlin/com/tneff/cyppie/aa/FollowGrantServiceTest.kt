@@ -43,18 +43,21 @@ class FollowGrantServiceTest {
     private val owner = EvmAddress.parse("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266") // follower SCA = Hardhat acct0
 
     private val prepare = CopyPrepare(
-        followId = "follow-1", chainId = 1L, follower = owner.value,
+        permissionId = "0x1c3f76fac3f146c12a665114ff61d6d257653434d854ecb3570c6b2c32e96b55",
+        chainId = 1L, follower = owner.value,
         sessionPublicKey = "0x489ccacAC8836C71Ad5B20Bf61e0b885425b227e",
-        spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", capBaseUnits = "1000000000",
+        token = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", capTotalBudget = "1000000000",
         windowStart = 0L, windowEnd = 1893456000L,
         salt = "0x00000000000000000000000000000000000000000000000000000000000000aa",
         nonce = 0L, source = "0x1111111111111111111111111111111111111111", allocationBps = 1000,
     )
 
     private val scope = CopyScopeRequest(
-        follower = owner.value, source = "0x1111111111111111111111111111111111111111", chainId = 1L,
-        spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", capBaseUnits = "1000000000",
-        windowStart = 0L, windowEnd = 1893456000L, allocationBps = 1000,
+        chainId = 1L, source = "0x1111111111111111111111111111111111111111",
+        capTotalBudget = "1000000000", token = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", follower = owner.value,
+        router = "0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af", selector = "0x3593564c",
+        windowStart = 0L, windowEnd = 1893456000L,
+        tokenOut = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", feeTier = 500, allocationBps = 1000,
     )
 
     private val builtUserOp = BuiltEnableUserOp(

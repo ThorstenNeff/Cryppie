@@ -45,9 +45,13 @@ class FollowGrantService(
             ?: throw IllegalArgumentException("unsupported chainId ${p.chainId}")
         val enable = CopyEnableBuilder.build(
             chainId = p.chainId, follower = owner.value, sessionPublicKey = p.sessionPublicKey,
-            spendToken = p.spendToken, capBaseUnits = p.capBaseUnits,
+            spendToken = p.token, capBaseUnits = p.capTotalBudget,
             windowStart = p.windowStart, windowEnd = p.windowEnd, salt = p.salt, nonce = p.nonce,
         )
+        // no-blind: the backend's permissionId must equal the session WE built from the disclosed scope.
+        require(enable.permissionId.equals(p.permissionId, ignoreCase = true)) {
+            "prepare.permissionId (${p.permissionId}) != on-device session (${enable.permissionId}) — refusing"
+        }
         val verified = SmartSessionGrantVerifier.verifyGrant(
             account = owner.value, chainId = p.chainId,
             sessionValidator = enable.sessionValidator, sessionValidatorInitData = enable.sessionValidatorInitData,
@@ -55,7 +59,7 @@ class FollowGrantService(
             swapTarget = ur, swapSelector = CopyEnableBuilder.UNIVERSAL_ROUTER_EXECUTE_SELECTOR,
             infraActions = listOf(SmartSessionGrantVerifier.ActionPin(CopyEnableBuilder.PERMIT2, CopyEnableBuilder.PERMIT2_APPROVE_SELECTOR)),
         )
-        return CopyGrantPreview(verified, p.source, p.allocationBps, enable, p.followId)
+        return CopyGrantPreview(verified, p.source, p.allocationBps ?: 0, enable)
     }
 
     /**
@@ -71,7 +75,7 @@ class FollowGrantService(
     ): CopyGrantResult {
         val enable = preview.enable
         val owner = EvmAddress.parse(enable.account) // = the device owner validated in prepareGrant
-        val built = api.buildEnableUserOp(BuildEnableRequest(preview.followId, enable.permissionId))
+        val built = api.buildEnableUserOp(BuildEnableRequest(enable.permissionId))
         val packed = with(built.userOp) {
             Erc4337UserOp.pack(
                 sender = sender, nonce = nonce, callData = callData,
@@ -105,7 +109,7 @@ class FollowGrantService(
             val status = api.opStatus(enable.chainId, userOpHash)
             when (status.status) {
                 "included" -> {
-                    api.grantSession(CopyGrantRequest(enable.permissionId, preview.followId))
+                    api.grantSession(CopyGrantRequest(enable.permissionId))
                     return CopyGrantResult(enable.permissionId, userOpHash, status.txHash)
                 }
                 "failed" -> throw IllegalStateException("enable userOp reverted on-chain: $userOpHash")
@@ -140,7 +144,6 @@ data class CopyGrantPreview(
     val source: String,
     val allocationBps: Int,
     val enable: BuiltCopyEnable,
-    val followId: String,
 )
 
 data class CopyGrantResult(val permissionId: String, val userOpHash: String, val txHash: String?)
