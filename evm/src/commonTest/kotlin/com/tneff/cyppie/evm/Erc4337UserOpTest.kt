@@ -1,7 +1,11 @@
 package com.tneff.cyppie.evm
 
+import com.tneff.cyppie.evm.SmartSessionEnableDigest.ActionData
+import com.tneff.cyppie.evm.SmartSessionEnableDigest.PolicyData
+import com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * KAN-154/KAN-159 — byte-exact pin of the EntryPoint v0.7 userOpHash recompute against the backend's
@@ -61,6 +65,109 @@ class Erc4337UserOpTest {
         assertEquals("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", execs[0].target) // install on the follower SCA (self)
         assertEquals("0x9517e29f", KernelExecuteBatch.selectorOf(execs[0]))         // installModule(uint256,address,bytes)
         assertEquals("0x00000000008bDABA73cD9815d79069c247Eb4bDA", execs[1].target) // enableSessions on the SmartSessions module
+    }
+
+    // ── enableSessions (b) rebuild + full verify — canonical Copy ETH session (= copy-vector.mjs inputs) ──
+    private val sessionValidator = "0x000000000013fdB5234E4E3162a810F54d9f7E98"
+    private val copySessionValidatorInitData = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "0000000000000000000000000000000000000000000000000000000000000040" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000489ccacac8836c71ad5b20bf61e0b885425b227e"
+    private val copySalt = "0x00000000000000000000000000000000000000000000000000000000000000aa"
+    private val copyTimeInitData = "0x000070dbd880000000000000"
+    private val usdcEth = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    private val copySpendInitDataEth = "0x" +
+        "0000000000000000000000000000000000000000000000000000000000000040" +
+        "0000000000000000000000000000000000000000000000000000000000000080" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" +
+        "0000000000000000000000000000000000000000000000000000000000000001" +
+        "000000000000000000000000000000000000000000000000000000003b9aca00"
+    private val urEth = SmartSessionGrantVerifier.universalRouter(1L)!!
+    private val permit2 = SmartSessionGrantVerifier.PERMIT2
+    private val chain1Digest = "0xe7d07e62aba236625113c51e2c9b24b7cda6ff8d23157f3ae9f9d793e1e4e118"
+
+    private fun copyPermissionsEth() = SignedPermissions(
+        permitERC4337Paymaster = true,
+        userOpPolicies = listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, copyTimeInitData)),
+        actions = listOf(
+            ActionData("0x095ea7b3", usdcEth, listOf(PolicyData(SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY, copySpendInitDataEth))),
+            ActionData(SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR, permit2, listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, copyTimeInitData))),
+            ActionData(SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR, urEth, listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, copyTimeInitData))),
+        ),
+    )
+
+    @Test
+    fun enableSessionsCallData_rebuildsVectorExec1ByteExact() {
+        val expected = KernelExecuteBatch.decodeBatch(CALLDATA_ETH)[1].callData
+        val built = EnableUserOpVerifier.enableSessionsCallData(sessionValidator, copySessionValidatorInitData, copySalt, copyPermissionsEth())
+        assertEquals(Hex.encode(expected), Hex.encode(built))
+    }
+
+    @Test
+    fun installCallData_pinnedConstantMatchesVectorExec0() {
+        val expected = KernelExecuteBatch.decodeBatch(CALLDATA_ETH)[0].callData
+        assertEquals(EnableUserOpVerifier.INSTALL_MODULE_CALLDATA.removePrefix("0x"), Hex.encode(expected))
+    }
+
+    @Test
+    fun verify_chain1_roundTrips() {
+        val v = EnableUserOpVerifier.verify(
+            op(CALLDATA_ETH), chain1Digest, chainId = 1L, expectedAccount = sender,
+            sessionValidator = sessionValidator, sessionValidatorInitData = copySessionValidatorInitData,
+            salt = copySalt, permissions = copyPermissionsEth(),
+        )
+        assertEquals(sender, v.account)
+        assertEquals(1L, v.chainId)
+    }
+
+    @Test
+    fun verify_failsClosed_onTamperedExpectedCap() {
+        // Expected cap differs from the op's enableSessions bytes → rebuild-compare catches it (drain guard).
+        val tampered = copyPermissionsEth().let { p ->
+            p.copy(actions = p.actions.mapIndexed { i, a -> if (i == 0) a.copy(actionPolicies = listOf(PolicyData(SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY, copySpendInitDataEth.dropLast(2) + "ff"))) else a })
+        }
+        assertFailsWith<EnableVerificationException> {
+            EnableUserOpVerifier.verify(op(CALLDATA_ETH), chain1Digest, 1L, sender, sessionValidator, copySessionValidatorInitData, copySalt, tampered)
+        }
+    }
+
+    @Test
+    fun verify_base_roundTrips() {
+        val usdcBase = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        val spendBase = "0x" +
+            "0000000000000000000000000000000000000000000000000000000000000040" +
+            "0000000000000000000000000000000000000000000000000000000000000080" +
+            "0000000000000000000000000000000000000000000000000000000000000001" +
+            "000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda02913" +
+            "0000000000000000000000000000000000000000000000000000000000000001" +
+            "000000000000000000000000000000000000000000000000000000003b9aca00"
+        val permsBase = SignedPermissions(
+            permitERC4337Paymaster = true,
+            userOpPolicies = listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, copyTimeInitData)),
+            actions = listOf(
+                ActionData("0x095ea7b3", usdcBase, listOf(PolicyData(SmartSessionGrantVerifier.SPENDING_LIMIT_POLICY, spendBase))),
+                ActionData(SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR, permit2, listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, copyTimeInitData))),
+                ActionData(SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR, SmartSessionGrantVerifier.universalRouter(8453L)!!, listOf(PolicyData(SmartSessionGrantVerifier.TIMEFRAME_POLICY, copyTimeInitData))),
+            ),
+        )
+        val v = EnableUserOpVerifier.verify(
+            op(CALLDATA_BASE), "0x1af0767764637fc2ba38cae9b0a72a85951ac1d1a952ead6dd58f23e2105c415",
+            chainId = 8453L, expectedAccount = sender, sessionValidator = sessionValidator,
+            sessionValidatorInitData = copySessionValidatorInitData, salt = copySalt, permissions = permsBase,
+        )
+        assertEquals(8453L, v.chainId)
+    }
+
+    @Test
+    fun verify_failsClosed_onUnboundDigest() {
+        assertFailsWith<EnableVerificationException> {
+            EnableUserOpVerifier.verify(
+                op(CALLDATA_ETH), "0xdead0000000000000000000000000000000000000000000000000000000000ff",
+                1L, sender, sessionValidator, copySessionValidatorInitData, copySalt, copyPermissionsEth(),
+            )
+        }
     }
 
     private companion object {
