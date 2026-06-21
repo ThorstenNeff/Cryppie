@@ -241,4 +241,75 @@ class SmartSessionGrantVerifierTest {
     private fun digestOfCopy(permissions: SignedPermissions): String = "0x" + Hex.encode(
         SmartSessionEnableDigest.enableDigest(copyAccount, 1L, validator, copySessionValidatorInitData, copySalt, nonce, permissions),
     )
+
+    // ── P2 hardening: every fail-closed path explicitly pinned ──
+
+    @Test
+    fun copyFailsClosedOnDuplicateInfraAction() {
+        // Two Permit2 legs → the same infra pin matched twice → duplicate → fail-closed.
+        val dupPermit2 = ActionData(SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR, permit2, listOf(PolicyData(timePolicy, copyTimeInitData)))
+        val perms = copyPermissionsEth().let { it.copy(actions = it.actions + dupPermit2) }
+        assertFailsWith<GrantVerificationException> { verifyCopy(perms, digestOfCopy(perms)) }
+    }
+
+    @Test
+    fun copyFailsClosedOnExtraPolicyOnAction() {
+        // The swap action carries TWO policies → singleOrNull is null → fail-closed.
+        val perms = copyPermissionsEth()
+        val tampered = perms.copy(
+            actions = perms.actions.map { a ->
+                if (a.actionTarget.equals(urEth, true)) {
+                    a.copy(actionPolicies = a.actionPolicies + PolicyData(timePolicy, copyTimeInitData))
+                } else {
+                    a
+                }
+            },
+        )
+        assertFailsWith<GrantVerificationException> { verifyCopy(tampered, digestOfCopy(tampered)) }
+    }
+
+    @Test
+    fun copyFailsClosedOnInfraWindowMismatch() {
+        // The Permit2 leg's time-frame window differs from the userOp window → fail-closed.
+        val otherWindow = "0x000070dbd880000000000001" // validAfter = 1 (≠ userOp window's 0)
+        val perms = copyPermissionsEth()
+        val tampered = perms.copy(
+            actions = perms.actions.map { a ->
+                if (a.actionTarget.equals(permit2, true)) a.copy(actionPolicies = listOf(PolicyData(timePolicy, otherWindow))) else a
+            },
+        )
+        assertFailsWith<GrantVerificationException> { verifyCopy(tampered, digestOfCopy(tampered)) }
+    }
+
+    @Test
+    fun verifiesCopyVectorBase_fullRoundTrip() {
+        val usdcBase = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        val urBase = SmartSessionGrantVerifier.universalRouter(8453L)!!
+        val spendBase = "0x" +
+            "0000000000000000000000000000000000000000000000000000000000000040" +
+            "0000000000000000000000000000000000000000000000000000000000000080" +
+            "0000000000000000000000000000000000000000000000000000000000000001" +
+            "000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda02913" +
+            "0000000000000000000000000000000000000000000000000000000000000001" +
+            "000000000000000000000000000000000000000000000000000000003b9aca00"
+        val perms = SignedPermissions(
+            permitERC4337Paymaster = true,
+            userOpPolicies = listOf(PolicyData(timePolicy, copyTimeInitData)),
+            actions = listOf(
+                ActionData(approveSelector, usdcBase, listOf(PolicyData(spendPolicy, spendBase))),
+                ActionData(SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR, permit2, listOf(PolicyData(timePolicy, copyTimeInitData))),
+                ActionData(SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR, urBase, listOf(PolicyData(timePolicy, copyTimeInitData))),
+            ),
+        )
+        val grant = SmartSessionGrantVerifier.verifyGrant(
+            account = copyAccount, chainId = 8453L, sessionValidator = validator,
+            sessionValidatorInitData = copySessionValidatorInitData, salt = copySalt, nonce = nonce,
+            permissions = perms, digestToSign = "0xe4c4661d938e57710806fe4de29aee40a3a2f6b50bb1adf08d635cf71519954a",
+            swapTarget = urBase, swapSelector = SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR,
+            infraActions = listOf(SmartSessionGrantVerifier.ActionPin(permit2, SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR)),
+        )
+        assertEquals(urBase, grant.actionTarget)
+        assertEquals("1000000000", grant.capBaseUnits)
+        assertEquals(1893456000L, grant.windowEndEpochSeconds)
+    }
 }
