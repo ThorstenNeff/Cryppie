@@ -52,6 +52,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_degraded
 import com.tneff.cyppie.feature.wallet.generated.resources.home_empty
 import com.tneff.cyppie.feature.wallet.generated.resources.home_error
 import com.tneff.cyppie.feature.wallet.generated.resources.home_nfts
+import com.tneff.cyppie.feature.wallet.generated.resources.home_copy
 import com.tneff.cyppie.feature.wallet.generated.resources.home_dca
 import com.tneff.cyppie.feature.wallet.generated.resources.home_market
 import com.tneff.cyppie.feature.wallet.generated.resources.home_portfolio
@@ -203,10 +204,9 @@ fun WalletHomeScreen(
                 modifier = Modifier.fillMaxWidth().testTag("home_dca"),
             )
 
-            // Copy-Trading / Follow-Trader entry (PRD-06, KAN-155) — full-width secondary. Label pre-i18n
-            // (home_copy = UX follow, like home_dca/home_market); the flow is native-only (web entry hidden).
+            // Copy-Trading / Follow-Trader entry (PRD-06, KAN-155) — full-width secondary; native-only (web entry hidden).
             CryptasaButton(
-                text = "Copy Trading",
+                text = stringResource(Res.string.home_copy),
                 onClick = onCopy,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag("home_copy"),

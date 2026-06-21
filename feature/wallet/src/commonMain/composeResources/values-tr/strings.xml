@@ -140,4 +140,5 @@
   <string name="wc_send_amount_label">Tutar</string>
   <string name="home_market">Piyasalar</string>
   <string name="home_dca">Otomatik Yatırım</string>
+  <string name="home_copy">Kopya İşlem</string>
 </resources>

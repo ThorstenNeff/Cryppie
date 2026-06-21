@@ -140,4 +140,5 @@
   <string name="wc_send_amount_label">Kwota</string>
   <string name="home_market">Rynki</string>
   <string name="home_dca">Auto-Inwestycja</string>
+  <string name="home_copy">Copy trading</string>
 </resources>

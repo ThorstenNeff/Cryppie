@@ -140,4 +140,5 @@
   <string name="wc_send_amount_label">Сумма</string>
   <string name="home_market">Рынки</string>
   <string name="home_dca">Авто-инвест</string>
+  <string name="home_copy">Копи-трейдинг</string>
 </resources>

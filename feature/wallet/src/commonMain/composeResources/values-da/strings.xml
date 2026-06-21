@@ -140,4 +140,5 @@
   <string name="wc_send_amount_label">Beløb</string>
   <string name="home_market">Markeder</string>
   <string name="home_dca">Auto-Invest</string>
+  <string name="home_copy">Copy Trading</string>
 </resources>

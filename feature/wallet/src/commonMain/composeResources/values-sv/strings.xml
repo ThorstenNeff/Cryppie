@@ -140,4 +140,5 @@
   <string name="wc_send_amount_label">Belopp</string>
   <string name="home_market">Marknader</string>
   <string name="home_dca">Auto-Invest</string>
+  <string name="home_copy">Copy trading</string>
 </resources>
