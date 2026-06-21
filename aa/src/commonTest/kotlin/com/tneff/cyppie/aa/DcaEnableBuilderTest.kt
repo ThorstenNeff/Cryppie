@@ -133,6 +133,7 @@ class DcaEnableBuilderTest {
             nonce = b.nonce,
             permissions = b.permissions,
             digestToSign = b.digestToSign,
+            swapTarget = router, swapSelector = swapSelector, // DCA: single swap action, no infra (KAN-154)
         )
         assertTrue(v.actionTarget.equals(router, ignoreCase = true))    // = the swap router (Dev-2 confirmed)
         assertTrue(v.actionSelector.equals(swapSelector, ignoreCase = true))

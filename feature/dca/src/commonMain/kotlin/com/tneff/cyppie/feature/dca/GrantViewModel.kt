@@ -178,6 +178,7 @@ class GrantViewModel(
                     nonce = enable.nonce,
                     permissions = enable.permissions, // already the :evm SignedPermissions
                     digestToSign = enable.digestToSign,
+                    swapTarget = params.router, swapSelector = params.swapSelector, // DCA: 1 swap, no infra (KAN-154)
                 ) // throws GrantVerificationException on ANY mismatch → we must NOT sign
                 pendingEnable = enable
                 pendingConfig = config
