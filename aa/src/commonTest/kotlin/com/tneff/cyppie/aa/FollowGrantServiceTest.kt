@@ -25,7 +25,7 @@ private class FakeCopyApi(
     var submittedSignature: String? = null
     var submittedAuthorization: SignedAuthorization? = null
     var grantedPermissionId: String? = null
-    override suspend fun prepare(followId: String) = prepare
+    override suspend fun prepare(request: CopyScopeRequest) = prepare
     override suspend fun buildEnableUserOp(request: BuildEnableRequest) = built
     override suspend fun submitEnableUserOp(request: SubmitEnableRequest): String {
         submittedSignature = request.signature
@@ -43,11 +43,18 @@ class FollowGrantServiceTest {
     private val owner = EvmAddress.parse("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266") // follower SCA = Hardhat acct0
 
     private val prepare = CopyPrepare(
-        chainId = 1L, follower = owner.value, sessionPublicKey = "0x489ccacAC8836C71Ad5B20Bf61e0b885425b227e",
+        followId = "follow-1", chainId = 1L, follower = owner.value,
+        sessionPublicKey = "0x489ccacAC8836C71Ad5B20Bf61e0b885425b227e",
         spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", capBaseUnits = "1000000000",
         windowStart = 0L, windowEnd = 1893456000L,
         salt = "0x00000000000000000000000000000000000000000000000000000000000000aa",
         nonce = 0L, source = "0x1111111111111111111111111111111111111111", allocationBps = 1000,
+    )
+
+    private val scope = CopyScopeRequest(
+        follower = owner.value, source = "0x1111111111111111111111111111111111111111", chainId = 1L,
+        spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", capBaseUnits = "1000000000",
+        windowStart = 0L, windowEnd = 1893456000L, allocationBps = 1000,
     )
 
     private val builtUserOp = BuiltEnableUserOp(
@@ -67,7 +74,7 @@ class FollowGrantServiceTest {
     @Test
     fun prepareGrant_disclosesVerifiedScope_andAdvisoryContext() = runTest {
         val svc = FollowGrantService(FakeCopyApi(prepare, builtUserOp, ArrayDeque()))
-        val preview = svc.prepareGrant("follow-1", owner)
+        val preview = svc.prepareGrant(scope, owner)
         // crypto-verified scope (rendered as the authorization):
         assertEquals("0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af", preview.verifiedGrant.actionTarget) // UR ETH
         assertEquals("1000000000", preview.verifiedGrant.capBaseUnits)
@@ -82,7 +89,7 @@ class FollowGrantServiceTest {
     fun authorizeGrant_verifies_signs_submits_polls_grants() = runTest {
         val api = FakeCopyApi(prepare, builtUserOp, ArrayDeque(listOf(OpStatus("pending"), OpStatus("included", "0xtx"))))
         val svc = FollowGrantService(api)
-        val preview = svc.prepareGrant("follow-1", owner)
+        val preview = svc.prepareGrant(scope, owner)
         val seedSource = RecordingSeed(seed)
 
         val result = svc.authorizeGrant(preview, seedSource, maxPollAttempts = 5, pollDelayMs = 0)
@@ -101,7 +108,7 @@ class FollowGrantServiceTest {
         )
         val api = FakeCopyApi(prepare, firstEnable, ArrayDeque(listOf(OpStatus("included", "0xtx"))))
         val svc = FollowGrantService(api)
-        val preview = svc.prepareGrant("follow-1", owner)
+        val preview = svc.prepareGrant(scope, owner)
 
         val result = svc.authorizeGrant(preview, RecordingSeed(seed), maxPollAttempts = 2, pollDelayMs = 0)
 
@@ -120,7 +127,7 @@ class FollowGrantServiceTest {
         )
         val api = FakeCopyApi(prepare, rogue, ArrayDeque())
         val svc = FollowGrantService(api)
-        val preview = svc.prepareGrant("follow-1", owner)
+        val preview = svc.prepareGrant(scope, owner)
         assertFailsWith<com.tneff.cyppie.evm.AuthorizationVerificationException> {
             svc.authorizeGrant(preview, RecordingSeed(seed), maxPollAttempts = 1, pollDelayMs = 0)
         }
@@ -131,14 +138,14 @@ class FollowGrantServiceTest {
     fun prepareGrant_refusesBackendFollowerMismatch() = runTest {
         val rogue = prepare.copy(follower = "0x000000000000000000000000000000000000dEaD")
         val svc = FollowGrantService(FakeCopyApi(rogue, builtUserOp, ArrayDeque()))
-        assertFailsWith<IllegalArgumentException> { svc.prepareGrant("follow-1", owner) }
+        assertFailsWith<IllegalArgumentException> { svc.prepareGrant(scope, owner) }
     }
 
     @Test
     fun authorizeGrant_throwsOnRevert() = runTest {
         val api = FakeCopyApi(prepare, builtUserOp, ArrayDeque(listOf(OpStatus("failed"))))
         val svc = FollowGrantService(api)
-        val preview = svc.prepareGrant("follow-1", owner)
+        val preview = svc.prepareGrant(scope, owner)
         assertFailsWith<IllegalStateException> { svc.authorizeGrant(preview, RecordingSeed(seed), maxPollAttempts = 3, pollDelayMs = 0) }
         assertEquals(null, api.grantedPermissionId) // never granted on a revert
     }

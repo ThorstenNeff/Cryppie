@@ -11,8 +11,13 @@ import kotlinx.serialization.Serializable
  */
 interface CopyApi {
 
-    /** Scope for a follow relationship — the session the app will enable (`/v1/copy/session/prepare`). */
-    suspend fun prepare(followId: String): CopyPrepare
+    /**
+     * Create/prepare the session for a follow relationship from the app-supplied [CopyScopeRequest] (trader +
+     * budget + chain from the UI's pick-trader/set-budget steps); the backend assigns the session key, salt and
+     * nonce and returns the full [CopyPrepare]. There is no separate create-follow step — `prepare` is it
+     * (`POST /v1/copy/session/prepare`).
+     */
+    suspend fun prepare(request: CopyScopeRequest): CopyPrepare
 
     /** Backend builds the `installModule(SmartSessions)+enableSessions` enable userOp (`/v1/userop/build`). */
     suspend fun buildEnableUserOp(request: BuildEnableRequest): BuiltEnableUserOp
@@ -28,12 +33,31 @@ interface CopyApi {
 }
 
 /**
- * The session the app will enable. [follower] is the SCA (= device owner EOA, 7702 same-address) — the app
- * MUST cross-check it against the device-derived owner and refuse if it differs (never trust a backend address).
- * [source]/[allocationBps] are advisory disclosure context (NOT in the signed enable — not crypto-verifiable).
+ * The app-built scope for a follow (from the UI's pick-trader + set-budget steps). [follower] is the app's OWN
+ * device-derived owner (the app supplies it, never reads it from the backend); [source] is the followed trader.
+ */
+@Serializable
+data class CopyScopeRequest(
+    val follower: String,
+    val source: String,
+    val chainId: Long,
+    val spendToken: String,
+    val capBaseUnits: String,
+    val windowStart: Long,
+    val windowEnd: Long,
+    val allocationBps: Int,
+)
+
+/**
+ * The prepared session the app will enable. [follower] is the SCA (= device owner EOA, 7702 same-address) — the
+ * app MUST cross-check it against the device-derived owner and refuse if it differs (never trust a backend
+ * address). [followId] is the backend handle for management (revoke). [source]/[allocationBps] are advisory
+ * disclosure context (NOT in the signed enable — not crypto-verifiable). [sessionPublicKey]/[salt]/[nonce] are
+ * the backend-assigned session params.
  */
 @Serializable
 data class CopyPrepare(
+    val followId: String,
     val chainId: Long,
     val follower: String,
     val sessionPublicKey: String,
@@ -103,6 +127,9 @@ data class SubmitEnableRequest(
     val signature: String,
     val signedAuthorization: SignedAuthorization? = null,
 )
+
+@Serializable
+data class SubmittedUserOp(val userOpHash: String)
 
 @Serializable
 data class CopyGrantRequest(val permissionId: String, val followId: String)

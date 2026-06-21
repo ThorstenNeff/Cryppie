@@ -33,8 +33,11 @@ class FollowGrantService(
      * device-derived owner EOA; we refuse if the backend's `follower` does not match it (no backend-account trust).
      * Returns the preview for the no-blind UI; performs NO signing.
      */
-    suspend fun prepareGrant(followId: String, owner: EvmAddress): CopyGrantPreview {
-        val p = api.prepare(followId)
+    suspend fun prepareGrant(request: CopyScopeRequest, owner: EvmAddress): CopyGrantPreview {
+        require(request.follower.equals(owner.value, ignoreCase = true)) {
+            "scope.follower (${request.follower}) != device owner (${owner.value}) — refusing"
+        }
+        val p = api.prepare(request)
         require(p.follower.equals(owner.value, ignoreCase = true)) {
             "prepare.follower (${p.follower}) != device owner (${owner.value}) — refusing"
         }
@@ -52,7 +55,7 @@ class FollowGrantService(
             swapTarget = ur, swapSelector = CopyEnableBuilder.UNIVERSAL_ROUTER_EXECUTE_SELECTOR,
             infraActions = listOf(SmartSessionGrantVerifier.ActionPin(CopyEnableBuilder.PERMIT2, CopyEnableBuilder.PERMIT2_APPROVE_SELECTOR)),
         )
-        return CopyGrantPreview(verified, p.source, p.allocationBps, enable, followId)
+        return CopyGrantPreview(verified, p.source, p.allocationBps, enable, p.followId)
     }
 
     /**
