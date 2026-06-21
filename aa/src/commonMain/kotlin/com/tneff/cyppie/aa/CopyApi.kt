@@ -50,12 +50,32 @@ data class CopyPrepare(
 @Serializable
 data class BuildEnableRequest(val followId: String, val permissionId: String)
 
-/** The `/v1/userop/build` response: the final (gas-estimated, paymaster-applied) op + the hash + the EIP-191 digest. */
+/**
+ * The `/v1/userop/build` response: the final (gas-estimated, paymaster-applied) op + the hash + the EIP-191 digest.
+ * [authorizationToSign] is present ONLY on the FIRST op of a fresh follower (the EIP-7702 delegation); the app
+ * must pin its delegate-target ([Eip7702Authorization]) and owner-sign it too (KAN-160). Absent on later ops.
+ */
 @Serializable
 data class BuiltEnableUserOp(
     val userOp: UnpackedUserOp,
     val userOpHash: String,
     val digestToSign: String,
+    val authorizationToSign: AuthorizationTuple? = null,
+)
+
+/** The unsigned EIP-7702 authorization tuple (delegate the EOA's code to [address] = the Kernel implementation). */
+@Serializable
+data class AuthorizationTuple(val chainId: Long, val address: String, val nonce: Long)
+
+/** The app-signed 7702 authorization, passed back to [CopyApi.submitEnableUserOp]. */
+@Serializable
+data class SignedAuthorization(
+    val chainId: Long,
+    val address: String,
+    val nonce: Long,
+    val r: String,
+    val s: String,
+    val yParity: Int,
 )
 
 /** A v0.7 user operation with UNPACKED gas/paymaster fields (as the build endpoint serializes them). */
@@ -78,7 +98,11 @@ data class UnpackedUserOp(
 )
 
 @Serializable
-data class SubmitEnableRequest(val userOpHash: String, val signature: String)
+data class SubmitEnableRequest(
+    val userOpHash: String,
+    val signature: String,
+    val signedAuthorization: SignedAuthorization? = null,
+)
 
 @Serializable
 data class CopyGrantRequest(val permissionId: String, val followId: String)

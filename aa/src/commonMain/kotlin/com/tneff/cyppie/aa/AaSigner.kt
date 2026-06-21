@@ -24,13 +24,22 @@ class AaSigner(private val accountIndex: Int = UserOpSigner.OWNER_ACCOUNT_INDEX)
      * delegate verifies the signing account derives to [expectedOwner] (no blind signing). Returns the
      * `0x`-prefixed 65-byte signature. [seedSource] is zeroized after signing.
      */
-    fun signDigest(digest: ByteArray, expectedOwner: EvmAddress, seedSource: SeedSource): String {
-        val bytes = try {
-            UserOpSigner(EvmKeyManager(seedSource)).sign(digest, expectedOwner, accountIndex)
+    fun signDigest(digest: ByteArray, expectedOwner: EvmAddress, seedSource: SeedSource): String =
+        signDigests(listOf(digest), expectedOwner, seedSource).first()
+
+    /**
+     * Signs MULTIPLE 32-byte digests for [expectedOwner] in a SINGLE seed window, zeroizing once at the end. Used
+     * by the first-enable (KAN-160), which owner-signs both the EIP-7702 authorization digest and the enable
+     * userOp digest — without this, a second [signDigest] would need a second re-auth (the first zeroizes the seed).
+     * Each digest is independently owner-bound (no blind signing). Returns `0x`-prefixed 65-byte signatures, in order.
+     */
+    fun signDigests(digests: List<ByteArray>, expectedOwner: EvmAddress, seedSource: SeedSource): List<String> {
+        return try {
+            val signer = UserOpSigner(EvmKeyManager(seedSource))
+            digests.map { "0x" + Hex.encode(signer.sign(it, expectedOwner, accountIndex)) }
         } finally {
             zeroize(seedSource)
         }
-        return "0x" + Hex.encode(bytes)
     }
 
     /** Convenience: decode a `0x`-prefixed hex [digestHex] (e.g. [PendingDca.userOpHash]) then sign. */

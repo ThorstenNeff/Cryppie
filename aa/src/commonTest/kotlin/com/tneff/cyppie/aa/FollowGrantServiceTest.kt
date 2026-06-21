@@ -23,11 +23,13 @@ private class FakeCopyApi(
     private val statuses: ArrayDeque<OpStatus>,
 ) : CopyApi {
     var submittedSignature: String? = null
+    var submittedAuthorization: SignedAuthorization? = null
     var grantedPermissionId: String? = null
     override suspend fun prepare(followId: String) = prepare
     override suspend fun buildEnableUserOp(request: BuildEnableRequest) = built
     override suspend fun submitEnableUserOp(request: SubmitEnableRequest): String {
         submittedSignature = request.signature
+        submittedAuthorization = request.signedAuthorization
         return request.userOpHash
     }
     override suspend fun opStatus(chainId: Long, userOpHash: String) = statuses.removeFirst()
@@ -90,6 +92,39 @@ class FollowGrantServiceTest {
         assertEquals(permissionId, api.grantedPermissionId) // session marked active only after inclusion
         assertTrue(api.submittedSignature!!.startsWith("0x") && api.submittedSignature!!.length == 132) // 65-byte owner sig
         assertTrue(seedSource.closed, "seed zeroized after signing")
+    }
+
+    @Test
+    fun authorizeGrant_firstEnable_verifiesAndSignsThe7702Authorization() = runTest {
+        val firstEnable = builtUserOp.copy(
+            authorizationToSign = AuthorizationTuple(chainId = 1L, address = "0xd6CEDDe84be40893d153Be9d467CD6aD37875b28", nonce = 0L),
+        )
+        val api = FakeCopyApi(prepare, firstEnable, ArrayDeque(listOf(OpStatus("included", "0xtx"))))
+        val svc = FollowGrantService(api)
+        val preview = svc.prepareGrant("follow-1", owner)
+
+        val result = svc.authorizeGrant(preview, RecordingSeed(seed), maxPollAttempts = 2, pollDelayMs = 0)
+
+        assertEquals(permissionId, result.permissionId)
+        val auth = api.submittedAuthorization!!
+        assertEquals("0xd6CEDDe84be40893d153Be9d467CD6aD37875b28", auth.address)
+        assertEquals(1L, auth.chainId)
+        assertTrue(auth.yParity == 0 || auth.yParity == 1)
+        assertEquals(66, auth.r.length) // 0x + 32 bytes
+    }
+
+    @Test
+    fun authorizeGrant_firstEnable_refusesRogueDelegateTarget() = runTest {
+        val rogue = builtUserOp.copy(
+            authorizationToSign = AuthorizationTuple(1L, "0x000000000000000000000000000000000000dEaD", 0L),
+        )
+        val api = FakeCopyApi(prepare, rogue, ArrayDeque())
+        val svc = FollowGrantService(api)
+        val preview = svc.prepareGrant("follow-1", owner)
+        assertFailsWith<com.tneff.cyppie.evm.AuthorizationVerificationException> {
+            svc.authorizeGrant(preview, RecordingSeed(seed), maxPollAttempts = 1, pollDelayMs = 0)
+        }
+        assertEquals(null, api.submittedSignature) // never signed/submitted a rogue delegation
     }
 
     @Test

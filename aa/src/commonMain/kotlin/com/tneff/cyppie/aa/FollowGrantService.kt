@@ -1,8 +1,10 @@
 package com.tneff.cyppie.aa
 
+import com.tneff.cyppie.evm.Eip7702Authorization
 import com.tneff.cyppie.evm.EnableUserOpVerifier
 import com.tneff.cyppie.evm.Erc4337UserOp
 import com.tneff.cyppie.evm.EvmAddress
+import com.tneff.cyppie.evm.Hex
 import com.tneff.cyppie.evm.SmartSessionGrantVerifier
 import com.tneff.cyppie.evm.VerifiedGrant
 import com.tneff.cyppie.wallet.SeedSource
@@ -83,8 +85,18 @@ class FollowGrantService(
             sessionValidator = enable.sessionValidator, sessionValidatorInitData = enable.sessionValidatorInitData,
             salt = enable.salt, permissions = enable.permissions,
         )
-        val signature = aaSigner.signDigest(built.digestToSign, owner, seedSource)
-        val userOpHash = api.submitEnableUserOp(SubmitEnableRequest(built.userOpHash, signature))
+        // P0 (KAN-160) — on the first enable, the op also carries a 7702 authorization (a SEPARATE full-authority
+        // delegation). Pin its delegate-target + chain BEFORE signing; sign both digests in one seed window.
+        val auth = built.authorizationToSign
+        val authDigest = auth?.let { Eip7702Authorization.verify(it.chainId, it.address, it.nonce, enable.chainId) }
+        val userOpDigest = Hex.decodeOrNull(built.digestToSign.removePrefix("0x"))
+            ?: throw IllegalArgumentException("digestToSign not valid hex")
+        val digests = if (authDigest != null) listOf(authDigest, userOpDigest) else listOf(userOpDigest)
+        val signatures = aaSigner.signDigests(digests, owner, seedSource)
+        val signedAuthorization = auth?.let { tuple -> signedAuthorization(tuple, signatures[0]) }
+        val userOpHash = api.submitEnableUserOp(
+            SubmitEnableRequest(built.userOpHash, signatures.last(), signedAuthorization),
+        )
 
         repeat(maxPollAttempts) {
             val status = api.opStatus(enable.chainId, userOpHash)
@@ -98,6 +110,20 @@ class FollowGrantService(
             delay(pollDelayMs)
         }
         throw IllegalStateException("enable userOp not included after $maxPollAttempts polls: $userOpHash")
+    }
+
+    /** Splits a 65-byte `r‖s‖v` signature into the EIP-7702 [SignedAuthorization] (yParity = v − 27). */
+    private fun signedAuthorization(tuple: AuthorizationTuple, signatureHex: String): SignedAuthorization {
+        val sig = Hex.decodeOrNull(signatureHex.removePrefix("0x"))
+            ?: throw IllegalStateException("authorization signature not valid hex")
+        require(sig.size == 65) { "expected a 65-byte signature, got ${sig.size}" }
+        val v = sig[64].toInt() and 0xFF
+        return SignedAuthorization(
+            chainId = tuple.chainId, address = tuple.address, nonce = tuple.nonce,
+            r = "0x" + Hex.encode(sig.copyOfRange(0, 32)),
+            s = "0x" + Hex.encode(sig.copyOfRange(32, 64)),
+            yParity = v - 27,
+        )
     }
 }
 
