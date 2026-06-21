@@ -55,4 +55,16 @@
   <string name="copy_revoking">Отзыв…</string>
   <string name="copy_revoked">Копирование завершено</string>
   <string name="copy_err_revoke">Не удалось отозвать — попробуйте ещё раз</string>
+  <string name="copy_mode_title">Режим зеркалирования</string>
+  <string name="copy_mode_fixed">Фиксированный токен</string>
+  <string name="copy_mode_fixed_desc">Покупает один выбранный вами токен, когда этот трейдер покупает. Вы всегда знаете, что получите.</string>
+  <string name="copy_mode_dynamic">Динамический — зеркалировать все покупки</string>
+  <string name="copy_mode_dynamic_desc">Зеркалирует покупки этого трейдера в отобранных токенах. Больше охват, умеренный риск.</string>
+  <string name="copy_token_pick">Токен для копирования</string>
+  <string name="copy_token_any">Любой токен из списка — задаётся для каждой сделки</string>
+  <string name="copy_dyn_risk_title">Вы зеркалируете покупки этого трейдера в токенах из списка</string>
+  <string name="copy_dyn_risk_body">Вы зеркалируете покупки этого трейдера — только отобранные, устоявшиеся токены — покупки вне списка пропускаются. Риск ниже, но не нулевой: вы всё ещё можете получить волатильные токены.</string>
+  <string name="copy_dyn_risk_ack">Я понимаю, что буду зеркалировать покупки этого трейдера в токенах из списка.</string>
+  <string name="copy_spend_token">Токен расхода</string>
+  <string name="copy_receives">Получаете</string>
 </resources>

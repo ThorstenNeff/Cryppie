@@ -55,4 +55,16 @@
   <string name="copy_revoking">Tilbakekaller…</string>
   <string name="copy_revoked">Kopiering avsluttet</string>
   <string name="copy_err_revoke">Kunne ikke tilbakekalle — prøv igjen</string>
+  <string name="copy_mode_title">Speilmodus</string>
+  <string name="copy_mode_fixed">Fast token</string>
+  <string name="copy_mode_fixed_desc">Kjøp én token du velger hver gang denne traderen kjøper. Du vet alltid hva du får.</string>
+  <string name="copy_mode_dynamic">Dynamisk — speil alle kjøp</string>
+  <string name="copy_mode_dynamic_desc">Speil denne traderens kjøp i kuraterte tokens. Mer rekkevidde, moderat risiko.</string>
+  <string name="copy_token_pick">Token å kopiere</string>
+  <string name="copy_token_any">Hvilken som helst notert token — angis per handel</string>
+  <string name="copy_dyn_risk_title">Du speiler denne traderens kjøp i noterte tokens</string>
+  <string name="copy_dyn_risk_body">Du speiler denne traderens kjøp, begrenset til kuraterte, etablerte tokens — kjøp utenfor listen hoppes over. Lavere risiko, men ikke null — du kan fortsatt motta volatile tokens.</string>
+  <string name="copy_dyn_risk_ack">Jeg forstår at jeg vil speile denne traderens kjøp i noterte tokens.</string>
+  <string name="copy_spend_token">Brukstoken</string>
+  <string name="copy_receives">Mottar</string>
 </resources>

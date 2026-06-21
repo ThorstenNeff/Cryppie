@@ -55,4 +55,16 @@
   <string name="copy_revoking">İptal ediliyor…</string>
   <string name="copy_revoked">Kopyalama sonlandırıldı</string>
   <string name="copy_err_revoke">İptal edilemedi — tekrar dene</string>
+  <string name="copy_mode_title">Mirror modu</string>
+  <string name="copy_mode_fixed">Sabit token</string>
+  <string name="copy_mode_fixed_desc">Bu trader her alım yaptığında, senin seçtiğin tek bir token'ı alır. Ne alacağını her zaman bilirsin.</string>
+  <string name="copy_mode_dynamic">Dinamik — tüm alımları yansıt</string>
+  <string name="copy_mode_dynamic_desc">Bu trader'ın kuratörlü token alımlarını yansıtır. Daha geniş kapsam, orta düzey risk.</string>
+  <string name="copy_token_pick">Kopyalanacak token</string>
+  <string name="copy_token_any">Listedeki herhangi bir token — işlem başına belirlenir</string>
+  <string name="copy_dyn_risk_title">Bu trader'ın listedeki token alımlarını yansıtırsın</string>
+  <string name="copy_dyn_risk_body">Bu trader'ın alımlarını yansıtırsın — yalnızca kuratörlü, köklü token'larla sınırlı; listede olmayan alımlar atlanır. Daha düşük risk, ama sıfır değil — yine de oynaklığı yüksek token'lar alabilirsin.</string>
+  <string name="copy_dyn_risk_ack">Bu trader'ın listedeki token alımlarını yansıtacağımı anlıyorum.</string>
+  <string name="copy_spend_token">Harcama token'ı</string>
+  <string name="copy_receives">Alınan</string>
 </resources>

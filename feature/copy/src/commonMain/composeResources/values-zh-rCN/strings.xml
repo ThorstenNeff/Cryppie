@@ -55,4 +55,16 @@
   <string name="copy_revoking">正在撤销…</string>
   <string name="copy_revoked">复制已结束</string>
   <string name="copy_err_revoke">无法撤销 — 请重试</string>
+  <string name="copy_mode_title">镜像模式</string>
+  <string name="copy_mode_fixed">固定代币</string>
+  <string name="copy_mode_fixed_desc">每当该交易者买入时，买入你选定的一种代币。你始终清楚自己会得到什么。</string>
+  <string name="copy_mode_dynamic">动态 — 镜像全部买入</string>
+  <string name="copy_mode_dynamic_desc">镜像该交易者买入的精选代币。覆盖更广，风险适中。</string>
+  <string name="copy_token_pick">要复制的代币</string>
+  <string name="copy_token_any">任意已上架代币 — 按每笔交易决定</string>
+  <string name="copy_dyn_risk_title">你将镜像该交易者买入的已上架代币</string>
+  <string name="copy_dyn_risk_body">你将镜像该交易者的买入，仅限精选的成熟代币 — 不在名单内的买入将被跳过。风险更低，但并非为零 — 你仍可能收到波动较大的代币。</string>
+  <string name="copy_dyn_risk_ack">我明白我将镜像该交易者买入的已上架代币。</string>
+  <string name="copy_spend_token">支出代币</string>
+  <string name="copy_receives">收到</string>
 </resources>

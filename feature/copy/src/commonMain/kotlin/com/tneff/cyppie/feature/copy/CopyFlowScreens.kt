@@ -20,15 +20,26 @@ import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
+import com.tneff.cyppie.designsystem.components.CryptasaCheckbox
 import com.tneff.cyppie.designsystem.components.CryptasaTextField
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
+import com.tneff.cyppie.designsystem.components.SelectionCard
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.copy.generated.resources.Res
 import com.tneff.cyppie.feature.copy.generated.resources.copy_budget_caveat
 import com.tneff.cyppie.feature.copy.generated.resources.copy_budget_label
 import com.tneff.cyppie.feature.copy.generated.resources.copy_budget_title
 import com.tneff.cyppie.feature.copy.generated.resources.copy_continue
+import com.tneff.cyppie.feature.copy.generated.resources.copy_dyn_risk_ack
+import com.tneff.cyppie.feature.copy.generated.resources.copy_dyn_risk_body
+import com.tneff.cyppie.feature.copy.generated.resources.copy_dyn_risk_title
+import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_dynamic
+import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_dynamic_desc
+import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_fixed
+import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_fixed_desc
+import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_title
 import com.tneff.cyppie.feature.copy.generated.resources.copy_select_title
+import com.tneff.cyppie.feature.copy.generated.resources.copy_token_pick
 import com.tneff.cyppie.feature.copy.generated.resources.copy_trader_label
 import com.tneff.cyppie.feature.copy.generated.resources.copy_trader_placeholder
 import org.jetbrains.compose.resources.stringResource
@@ -57,7 +68,7 @@ internal fun FollowTraderScreen(viewModel: FollowViewModel, onBack: () -> Unit, 
                 )
                 CryptasaButton(
                     text = stringResource(Res.string.copy_continue),
-                    onClick = viewModel::toBudget,
+                    onClick = viewModel::toMode,
                     enabled = viewModel.trader.isNotBlank(),
                     modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.CONTINUE),
                 )
@@ -66,7 +77,80 @@ internal fun FollowTraderScreen(viewModel: FollowViewModel, onBack: () -> Unit, 
     }
 }
 
-/** Screen 2 (`Copy2-Budget`) — set the total budget (= the on-chain cap; v1 fixed budget cap) + risk caveat. */
+/**
+ * Screen 2 (`Copy2-ModeSelect`, KAN-161) — pick the mirror mode. Two [SelectionCard]s: **Fixed** (copy the
+ * trader into ONE token you choose → a token field) vs **Dynamic** (mirror all the trader's listed-token buys
+ * → a prominent danger consent with a MANDATORY acknowledgement checkbox). The mode only sets the mirror-time
+ * `tokenOut` (NOT the signed enable), so the on-chain guarantee is identical either way. Continue is gated on
+ * [FollowViewModel.modeReady]. (v1 fixed-token entry is an address field; a curated token picker is a UX
+ * follow-up — the testTag/key contract `copy_token_pick` is stable across that change.)
+ */
+@Composable
+internal fun ModeSelectScreen(viewModel: FollowViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+    Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
+        Column(Modifier.widthIn(max = 480.dp).fillMaxSize()) {
+            CryptasaTopAppBar(title = stringResource(Res.string.copy_mode_title), onBack = onBack)
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.xl).testTag(CopyTestTags.MODE_SCREEN),
+                verticalArrangement = Arrangement.spacedBy(spacing.lg),
+            ) {
+                SelectionCard(
+                    title = stringResource(Res.string.copy_mode_fixed),
+                    description = stringResource(Res.string.copy_mode_fixed_desc),
+                    selected = viewModel.mode == CopyMode.FIXED,
+                    onClick = { viewModel.selectMode(CopyMode.FIXED) },
+                    modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.MODE_FIXED),
+                )
+                SelectionCard(
+                    title = stringResource(Res.string.copy_mode_dynamic),
+                    description = stringResource(Res.string.copy_mode_dynamic_desc),
+                    selected = viewModel.mode == CopyMode.DYNAMIC,
+                    onClick = { viewModel.selectMode(CopyMode.DYNAMIC) },
+                    modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.MODE_DYNAMIC),
+                )
+
+                // Mode-specific gate: fixed → the receive token; dynamic → the mandatory risk acknowledgement.
+                when (viewModel.mode) {
+                    CopyMode.FIXED -> CryptasaTextField(
+                        value = viewModel.tokenOut,
+                        onValueChange = viewModel::enterTokenOut,
+                        label = stringResource(Res.string.copy_token_pick),
+                        placeholder = stringResource(Res.string.copy_trader_placeholder),
+                        errorText = viewModel.error?.takeIf { it == CopyError.INVALID_ADDRESS }?.text(),
+                        keyboardType = KeyboardType.Text,
+                        modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.TOKEN_PICK),
+                    )
+                    CopyMode.DYNAMIC -> {
+                        CryptasaBanner(
+                            title = stringResource(Res.string.copy_dyn_risk_title),
+                            description = stringResource(Res.string.copy_dyn_risk_body),
+                            tone = CryptasaBannerTone.Danger,
+                            modifier = Modifier.testTag(CopyTestTags.DYN_RISK),
+                        )
+                        CryptasaCheckbox(
+                            checked = viewModel.dynRiskAck,
+                            onCheckedChange = viewModel::acknowledgeRisk,
+                            label = stringResource(Res.string.copy_dyn_risk_ack),
+                            modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.DYN_RISK_ACK),
+                        )
+                    }
+                    null -> Unit
+                }
+
+                CryptasaButton(
+                    text = stringResource(Res.string.copy_continue),
+                    onClick = viewModel::toBudget,
+                    enabled = viewModel.modeReady,
+                    modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.CONTINUE),
+                )
+            }
+        }
+    }
+}
+
+/** Screen 3 (`Copy3-Budget`) — set the total budget (= the on-chain cap; v1 fixed budget cap) + risk caveat. */
 @Composable
 internal fun BudgetScreen(viewModel: FollowViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val colors = CryptasaTheme.colors

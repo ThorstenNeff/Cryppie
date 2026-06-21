@@ -55,4 +55,16 @@
   <string name="copy_revoking">Återkallar…</string>
   <string name="copy_revoked">Kopiering avslutad</string>
   <string name="copy_err_revoke">Det gick inte att återkalla — försök igen</string>
+  <string name="copy_mode_title">Spegelläge</string>
+  <string name="copy_mode_fixed">Fast token</string>
+  <string name="copy_mode_fixed_desc">Köp en token du väljer varje gång den här tradern köper. Du vet alltid vad du får.</string>
+  <string name="copy_mode_dynamic">Dynamiskt — spegla alla köp</string>
+  <string name="copy_mode_dynamic_desc">Spegla den här traderns köp i kurerade tokens. Mer räckvidd, måttlig risk.</string>
+  <string name="copy_token_pick">Token att kopiera</string>
+  <string name="copy_token_any">Vilken listad token som helst — anges per affär</string>
+  <string name="copy_dyn_risk_title">Du speglar den här traderns köp i listade tokens</string>
+  <string name="copy_dyn_risk_body">Du speglar den här traderns köp, begränsat till kurerade, etablerade tokens — köp utanför listan hoppas över. Lägre risk, men inte noll — du kan fortfarande få volatila tokens.</string>
+  <string name="copy_dyn_risk_ack">Jag förstår att jag speglar den här traderns köp i listade tokens.</string>
+  <string name="copy_spend_token">Utgiftstoken</string>
+  <string name="copy_receives">Mottar</string>
 </resources>

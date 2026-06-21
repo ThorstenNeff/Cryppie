@@ -55,4 +55,16 @@
   <string name="copy_revoking">Revoking…</string>
   <string name="copy_revoked">Copy ended</string>
   <string name="copy_err_revoke">Couldn't revoke — try again</string>
+  <string name="copy_mode_title">Mirror mode</string>
+  <string name="copy_mode_fixed">Fixed token</string>
+  <string name="copy_mode_fixed_desc">Buy one token you choose whenever this trader buys. You always know what you get.</string>
+  <string name="copy_mode_dynamic">Dynamic — mirror all buys</string>
+  <string name="copy_mode_dynamic_desc">Mirror this trader's buys in curated tokens. More reach, moderate risk.</string>
+  <string name="copy_token_pick">Token to copy</string>
+  <string name="copy_token_any">Any listed token — set per trade</string>
+  <string name="copy_dyn_risk_title">You mirror this trader's buys in listed tokens</string>
+  <string name="copy_dyn_risk_body">You mirror this trader's buys, limited to curated, established tokens — off-list buys are skipped. Lower risk, but not zero — you can still receive volatile tokens.</string>
+  <string name="copy_dyn_risk_ack">I understand I'll mirror this trader's buys in listed tokens.</string>
+  <string name="copy_spend_token">Spend token</string>
+  <string name="copy_receives">Receives</string>
 </resources>

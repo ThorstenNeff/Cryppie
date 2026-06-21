@@ -55,4 +55,16 @@
   <string name="copy_revoking">جارٍ الإبطال…</string>
   <string name="copy_revoked">انتهى النسخ</string>
   <string name="copy_err_revoke">تعذّر الإبطال — حاول مرة أخرى</string>
+  <string name="copy_mode_title">وضع النسخ</string>
+  <string name="copy_mode_fixed">رمز ثابت</string>
+  <string name="copy_mode_fixed_desc">يشتري رمزًا واحدًا تختاره أنت كلما اشترى هذا المتداول. تعرف دائمًا ما الذي تحصل عليه.</string>
+  <string name="copy_mode_dynamic">ديناميكي — نسخ جميع عمليات الشراء</string>
+  <string name="copy_mode_dynamic_desc">انسخ مشتريات هذا المتداول من الرموز المُنتقاة. وصول أوسع، ومخاطر معتدلة.</string>
+  <string name="copy_token_pick">الرمز المراد نسخه</string>
+  <string name="copy_token_any">أي رمز مُدرَج — يُحدَّد لكل عملية تداول</string>
+  <string name="copy_dyn_risk_title">أنت تنسخ مشتريات هذا المتداول من الرموز المُدرَجة</string>
+  <string name="copy_dyn_risk_body">أنت تنسخ مشتريات هذا المتداول، مقتصرةً على الرموز المُنتقاة والراسخة — تُتجاهَل المشتريات خارج القائمة. مخاطر أقل، لكنها ليست منعدمة — فقد تتلقّى رموزًا متقلّبة.</string>
+  <string name="copy_dyn_risk_ack">أفهم أنني سأنسخ مشتريات هذا المتداول من الرموز المُدرَجة.</string>
+  <string name="copy_spend_token">رمز الإنفاق</string>
+  <string name="copy_receives">يستلم</string>
 </resources>

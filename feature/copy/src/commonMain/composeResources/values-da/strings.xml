@@ -55,4 +55,16 @@
   <string name="copy_revoking">Tilbagekalder…</string>
   <string name="copy_revoked">Kopiering afsluttet</string>
   <string name="copy_err_revoke">Kunne ikke tilbagekalde — prøv igen</string>
+  <string name="copy_mode_title">Spejlingstilstand</string>
+  <string name="copy_mode_fixed">Fast token</string>
+  <string name="copy_mode_fixed_desc">Køb én token, du selv vælger, hver gang denne trader køber. Du ved altid, hvad du får.</string>
+  <string name="copy_mode_dynamic">Dynamisk — spejl alle køb</string>
+  <string name="copy_mode_dynamic_desc">Spejl denne traders køb i kuraterede tokens. Mere rækkevidde, moderat risiko.</string>
+  <string name="copy_token_pick">Token, der skal kopieres</string>
+  <string name="copy_token_any">Enhver listet token — angives pr. handel</string>
+  <string name="copy_dyn_risk_title">Du spejler denne traders køb i listede tokens</string>
+  <string name="copy_dyn_risk_body">Du spejler denne traders køb, begrænset til kuraterede, etablerede tokens — køb uden for listen springes over. Lavere risiko, men ikke nul — du kan stadig modtage volatile tokens.</string>
+  <string name="copy_dyn_risk_ack">Jeg forstår, at jeg spejler denne traders køb i listede tokens.</string>
+  <string name="copy_spend_token">Forbrugstoken</string>
+  <string name="copy_receives">Modtager</string>
 </resources>

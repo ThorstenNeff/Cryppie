@@ -55,4 +55,16 @@
   <string name="copy_revoking">Revocando…</string>
   <string name="copy_revoked">Copia finalizada</string>
   <string name="copy_err_revoke">No se pudo revocar — inténtalo de nuevo</string>
+  <string name="copy_mode_title">Modo de réplica</string>
+  <string name="copy_mode_fixed">Token fijo</string>
+  <string name="copy_mode_fixed_desc">Compra un token que tú elijas cada vez que este trader compra. Siempre sabes qué recibes.</string>
+  <string name="copy_mode_dynamic">Dinámico — replicar todas las compras</string>
+  <string name="copy_mode_dynamic_desc">Replica las compras de este trader en tokens seleccionados. Más alcance, riesgo moderado.</string>
+  <string name="copy_token_pick">Token a copiar</string>
+  <string name="copy_token_any">Cualquier token listado — se define por operación</string>
+  <string name="copy_dyn_risk_title">Replicas las compras de este trader en tokens listados</string>
+  <string name="copy_dyn_risk_body">Replicas las compras de este trader, limitadas a tokens seleccionados y establecidos — las compras fuera de la lista se omiten. Menor riesgo, pero no nulo — aún puedes recibir tokens volátiles.</string>
+  <string name="copy_dyn_risk_ack">Entiendo que replicaré las compras de este trader en tokens listados.</string>
+  <string name="copy_spend_token">Token de gasto</string>
+  <string name="copy_receives">Recibes</string>
 </resources>

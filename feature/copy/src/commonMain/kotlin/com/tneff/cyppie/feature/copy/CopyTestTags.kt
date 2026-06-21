@@ -8,9 +8,18 @@ object CopyTestTags {
     // Screen 1 — choose trader
     const val SELECT_SCREEN = "copy_select_title"
     const val TRADER_INPUT = "copy_trader_label"
-    const val CONTINUE = "copy_continue" // the primary "Continue" action (screens 1 & 2; one visible at a time)
+    const val CONTINUE = "copy_continue" // the primary "Continue" action (one visible per step at a time)
 
-    // Screen 2 — budget / cap
+    // Mode select (KAN-161) — fixed vs dynamic mirror mode
+    const val MODE_SCREEN = "copy_mode_title"
+    const val MODE_FIXED = "copy_mode_fixed"
+    const val MODE_DYNAMIC = "copy_mode_dynamic"
+    const val TOKEN_PICK = "copy_token_pick"     // fixed mode: the receive-token INPUT field (ModeSelect)
+    const val RECEIVES = "copy_receives"         // disclosure advisory: the mirror/receive token value
+    const val DYN_RISK = "copy_dyn_risk_title"   // dynamic mode: the danger consent banner
+    const val DYN_RISK_ACK = "copy_dyn_risk_ack" // dynamic mode: the mandatory acknowledgement checkbox
+
+    // Budget / cap
     const val BUDGET_SCREEN = "copy_budget_title"
     const val BUDGET_INPUT = "copy_budget_label"
     const val BUDGET_CAVEAT = "copy_budget_caveat"

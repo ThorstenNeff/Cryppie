@@ -16,10 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.aa.AaSigner
+import com.tneff.cyppie.aa.CopyEnableBuilder
+import com.tneff.cyppie.aa.CopyScopeRequest
 import com.tneff.cyppie.aa.DcaEnableBuilder
+import com.tneff.cyppie.aa.FollowGrantService
+import com.tneff.cyppie.aa.KtorCopyApi
 import com.tneff.cyppie.aa.KtorDcaApi
 import com.tneff.cyppie.feature.copy.CopyRoot
-import com.tneff.cyppie.feature.copy.StubFollowGrantService
 import com.tneff.cyppie.evm.Hex
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
@@ -180,6 +183,11 @@ private val dcaGrantParams: DcaGrantParams by lazy {
     )
 }
 
+// Copy-trading grant defaults (KAN-155/161): the session validity window (the on-chain time-frame the cap
+// lives in) and the Uniswap pool fee tier sent for FIXED mode (0.3% — dynamic omits it; backend derives).
+private const val COPY_WINDOW_SECONDS = 90L * 86_400 // 90 days
+private const val COPY_DEFAULT_FEE_TIER = 3000       // 0.3%
+
 /** RFC3339 UTC (…Z) — AuthSession pins SIWE `issuedAt` to UTC (P1-9); the stdlib Instant renders as `…Z`. */
 @OptIn(kotlin.time.ExperimentalTime::class)
 private fun iso8601Utc(epochSeconds: Long): String = kotlin.time.Instant.fromEpochSeconds(epochSeconds).toString()
@@ -310,6 +318,10 @@ fun WalletShell(onLock: () -> Unit) {
     // The User-Service client: bearer = the session JWT (fail-closed — KtorDcaApi.bearer() throws on blank).
     val dcaApi = remember(seedSource) { KtorDcaApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
     val aaSigner = remember { AaSigner() }
+    // Copy-trading (PRD-06, KAN-154/155): same JWT User-Service + Dev-2's on-device verify→sign→submit grant
+    // service (prepareGrant runs verifyGrant; authorizeGrant runs verifyEnableUserOp before owner-signing).
+    val copyApi = remember(seedSource) { KtorCopyApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
+    val followService = remember(copyApi) { FollowGrantService(copyApi) }
     // AA-op signing uses a FRESH per-op re-auth source (explicit consent per funds-moving signature), like
     // Send/WC — distinct from the light post-unlock SIWE consent (ambient session, identity only).
     val dcaReauth: suspend (String) -> SeedSource? = remember {
@@ -470,14 +482,40 @@ fun WalletShell(onLock: () -> Unit) {
             GrantScreen(viewModel = grantVm, onDone = { dest = WalletDest.Dca }, onBack = { dest = WalletDest.Dca })
         }
         WalletDest.Copy -> {
-            // Copy / Follow-Trader flow (KAN-155). FLAG_SECURE over the whole flow (it includes the
-            // disclosure+signature context; spec asks for it on Confirm — superset is fine). Stub grant
-            // service until Dev-2's KAN-154 lands; owner = account#0 (self-copy guard); fresh re-auth source.
+            // Copy / Follow-Trader flow (KAN-155/161). FLAG_SECURE over the whole flow (disclosure + signature
+            // context; spec asks for it on Confirm — superset is fine). owner = account#0 (self-copy guard);
+            // fresh per-op re-auth source. The two crypto/network seams bind to Dev-2's FollowGrantService;
+            // prepareGrant assembles the full CopyScopeRequest around (trader, budget, tokenOut): chain/token
+            // single-sourced from dcaGrantParams; router/selector client-pinned from CopyEnableBuilder; window
+            // = now + COPY_WINDOW_SECONDS; tokenOut set (fixed) or null (dynamic, webhook-derived).
             SecureScreenEffect()
             CopyRoot(
-                service = StubFollowGrantService(::nowEpochSeconds),
                 owner = dcaOwner,
-                budgetTokenDecimals = 6, // USDC v1
+                budgetTokenDecimals = dcaGrantParams.spendTokenDecimals,
+                prepareGrant = { trader, budgetBaseUnits, tokenOut ->
+                    val chainId = dcaGrantParams.chainId
+                    val ur = CopyEnableBuilder.universalRouter(chainId)
+                        ?: throw IllegalStateException("unsupported chainId $chainId")
+                    val now = nowEpochSeconds()
+                    followService.prepareGrant(
+                        CopyScopeRequest(
+                            chainId = chainId,
+                            source = trader,
+                            capTotalBudget = budgetBaseUnits,
+                            token = dcaGrantParams.spendToken,
+                            follower = dcaOwner.value,
+                            router = ur,
+                            selector = CopyEnableBuilder.UNIVERSAL_ROUTER_EXECUTE_SELECTOR,
+                            windowStart = now,
+                            windowEnd = now + COPY_WINDOW_SECONDS,
+                            tokenOut = tokenOut,
+                            feeTier = tokenOut?.let { COPY_DEFAULT_FEE_TIER }, // fixed → pool fee; dynamic → null
+                            allocationBps = 10_000, // v1 = 100%
+                        ),
+                        dcaOwner,
+                    )
+                },
+                authorizeGrant = { preview, seed -> followService.authorizeGrant(preview, seed) },
                 reauth = dcaReauth,
                 onExit = { dest = WalletDest.Home },
             )

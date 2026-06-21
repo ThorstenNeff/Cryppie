@@ -55,4 +55,16 @@
   <string name="copy_revoking">Đang thu hồi…</string>
   <string name="copy_revoked">Đã kết thúc sao chép</string>
   <string name="copy_err_revoke">Không thể thu hồi — thử lại</string>
+  <string name="copy_mode_title">Chế độ sao chép</string>
+  <string name="copy_mode_fixed">Token cố định</string>
+  <string name="copy_mode_fixed_desc">Mua một token bạn chọn mỗi khi trader này mua. Bạn luôn biết mình nhận được gì.</string>
+  <string name="copy_mode_dynamic">Linh hoạt — sao chép mọi lệnh mua</string>
+  <string name="copy_mode_dynamic_desc">Sao chép các lệnh mua của trader này trong những token được tuyển chọn. Phạm vi rộng hơn, rủi ro vừa phải.</string>
+  <string name="copy_token_pick">Token cần sao chép</string>
+  <string name="copy_token_any">Token bất kỳ trong danh sách — đặt theo từng lệnh</string>
+  <string name="copy_dyn_risk_title">Bạn sao chép các lệnh mua của trader này trong những token có trong danh sách</string>
+  <string name="copy_dyn_risk_body">Bạn sao chép các lệnh mua của trader này, giới hạn ở những token được tuyển chọn và đã thiết lập — các lệnh mua ngoài danh sách sẽ bị bỏ qua. Rủi ro thấp hơn, nhưng không phải bằng không — bạn vẫn có thể nhận được token biến động mạnh.</string>
+  <string name="copy_dyn_risk_ack">Tôi hiểu rằng tôi sẽ sao chép các lệnh mua của trader này trong những token có trong danh sách.</string>
+  <string name="copy_spend_token">Token chi tiêu</string>
+  <string name="copy_receives">Nhận về</string>
 </resources>

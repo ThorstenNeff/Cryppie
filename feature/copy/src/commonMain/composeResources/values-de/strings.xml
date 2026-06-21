@@ -55,4 +55,16 @@
   <string name="copy_revoking">Widerrufe…</string>
   <string name="copy_revoked">Copy beendet</string>
   <string name="copy_err_revoke">Widerruf fehlgeschlagen — bitte erneut versuchen</string>
+  <string name="copy_mode_title">Mirror-Modus</string>
+  <string name="copy_mode_fixed">Fester Token</string>
+  <string name="copy_mode_fixed_desc">Kauft einen von dir gewählten Token, wenn dieser Trader kauft. Du weißt immer, was du bekommst.</string>
+  <string name="copy_mode_dynamic">Dynamisch — alle Käufe spiegeln</string>
+  <string name="copy_mode_dynamic_desc">Spiegelt die Käufe dieses Traders in kuratierten Token. Mehr Reichweite, moderates Risiko.</string>
+  <string name="copy_token_pick">Mitzukaufender Token</string>
+  <string name="copy_token_any">Gelisteter Token — pro Trade</string>
+  <string name="copy_dyn_risk_title">Du spiegelst die Käufe dieses Traders in gelisteten Token</string>
+  <string name="copy_dyn_risk_body">Du spiegelst die Käufe dieses Traders — beschränkt auf kuratierte, etablierte Token; Käufe außerhalb der Liste werden übersprungen. Geringeres Risiko, aber nicht null — du kannst weiterhin volatile Token erhalten.</string>
+  <string name="copy_dyn_risk_ack">Mir ist klar, dass ich die Käufe dieses Traders in gelisteten Token spiegle.</string>
+  <string name="copy_spend_token">Ausgabe-Token</string>
+  <string name="copy_receives">Erhält</string>
 </resources>

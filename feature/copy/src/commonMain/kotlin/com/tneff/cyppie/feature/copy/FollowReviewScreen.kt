@@ -46,8 +46,10 @@ import com.tneff.cyppie.feature.copy.generated.resources.copy_guaranteed_note
 import com.tneff.cyppie.feature.copy.generated.resources.copy_password
 import com.tneff.cyppie.feature.copy.generated.resources.copy_review_title
 import com.tneff.cyppie.feature.copy.generated.resources.copy_router
+import com.tneff.cyppie.feature.copy.generated.resources.copy_receives
 import com.tneff.cyppie.feature.copy.generated.resources.copy_source
-import com.tneff.cyppie.feature.copy.generated.resources.copy_token
+import com.tneff.cyppie.feature.copy.generated.resources.copy_spend_token
+import com.tneff.cyppie.feature.copy.generated.resources.copy_token_any
 import com.tneff.cyppie.feature.copy.generated.resources.copy_window
 import com.tneff.cyppie.feature.copy.generated.resources.copy_you_authorize
 import org.jetbrains.compose.resources.stringResource
@@ -96,7 +98,7 @@ internal fun FollowReviewScreen(viewModel: FollowViewModel, onBack: () -> Unit, 
                     Text(stringResource(Res.string.copy_guaranteed), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
                     Text(stringResource(Res.string.copy_guaranteed_note), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
                     DisclosureRow(stringResource(Res.string.copy_cap), BidiSanitizer.sanitize(capHuman), ltr = true, valueTestTag = CopyTestTags.DISCLOSURE_CAP)
-                    DisclosureRow(stringResource(Res.string.copy_token), BidiSanitizer.sanitize(v.spendToken), ltr = true, truncate = false)
+                    DisclosureRow(stringResource(Res.string.copy_spend_token), BidiSanitizer.sanitize(v.spendToken), ltr = true, truncate = false)
                     DisclosureRow(stringResource(Res.string.copy_router), BidiSanitizer.sanitize(v.actionTarget), ltr = true, truncate = false)
                     DisclosureRow(stringResource(Res.string.copy_allowed), BidiSanitizer.sanitize(v.actionSelector), ltr = true, truncate = false)
                     // Limit window [start, end] (epoch s; readable-date is the KAN-148 follow, shared with DCA).
@@ -112,6 +114,11 @@ internal fun FollowReviewScreen(viewModel: FollowViewModel, onBack: () -> Unit, 
                         modifier = Modifier.testTag("copy_advisory"),
                     )
                     DisclosureRow(stringResource(Res.string.copy_source), BidiSanitizer.sanitize(preview.source), ltr = true, truncate = false)
+                    // Mirror token (KAN-161) — advisory, NOT in the signed enable: fixed → the exact receive
+                    // token; dynamic → "any listed token" (the webhook derives + allowlist-gates it per trade).
+                    val mirrorToken = if (viewModel.mode == CopyMode.FIXED)
+                        BidiSanitizer.sanitize(viewModel.tokenOut) else stringResource(Res.string.copy_token_any)
+                    DisclosureRow(stringResource(Res.string.copy_receives), mirrorToken, ltr = true, truncate = false, valueTestTag = CopyTestTags.RECEIVES)
                     DisclosureRow(stringResource(Res.string.copy_allocation), "${preview.allocationBps / 100}%", ltr = true)
                 }
 
