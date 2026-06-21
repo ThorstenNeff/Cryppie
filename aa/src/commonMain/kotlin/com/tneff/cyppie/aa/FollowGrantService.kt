@@ -1,31 +1,25 @@
 package com.tneff.cyppie.aa
 
-import com.tneff.cyppie.evm.Eip7702Authorization
-import com.tneff.cyppie.evm.EnableUserOpVerifier
-import com.tneff.cyppie.evm.Erc4337UserOp
 import com.tneff.cyppie.evm.EvmAddress
-import com.tneff.cyppie.evm.Hex
 import com.tneff.cyppie.evm.SmartSessionGrantVerifier
 import com.tneff.cyppie.evm.VerifiedGrant
 import com.tneff.cyppie.wallet.SeedSource
-import kotlinx.coroutines.delay
 
 /**
  * Orchestrates the Copy-trading grant (PRD-06, KAN-154) end-to-end on the app side: prepare the scope, build +
- * **defensively verify** the session disclosure on-device, then — at the user's authorization — build the enable
- * userOp via the backend, **re-verify it byte-exact** ([EnableUserOpVerifier]), owner-sign the bound digest, and
- * submit it for the backend to broadcast (GAP-B / Approach B). The same enable-broadcast path is reused for DCA
- * (KAN-159) via [EnableUserOpVerifier]; here it is wrapped in the Copy scope.
+ * **defensively verify** the session disclosure on-device, then — at the user's authorization — run the shared
+ * [EnableBroadcaster] (build → verifyEnableUserOp → 7702-pin → owner-sign → submit → poll) and mark the session
+ * granted. The broadcaster is reused verbatim for DCA (KAN-159); here it is wrapped in the Copy scope.
  *
  * 🔒 Two independent no-blind gates: (1) [prepareGrant] runs [SmartSessionGrantVerifier.verifyGrant] so the
- * disclosure ([CopyGrantPreview.verifiedGrant]) is derived from the signed-session bytes; (2) [authorizeGrant]
- * runs [EnableUserOpVerifier.verify] so the owner's ROOT-validator signature is bound to an op that enables
- * EXACTLY that session — a tampered cap/router/window/owner (or an unrelated op) fails closed before signing.
- * The account is the **device-derived owner** (caller-supplied), never the backend's `prepare.follower`.
+ * disclosure ([CopyGrantPreview.verifiedGrant]) is derived from the signed-session bytes; (2) [authorizeGrant] →
+ * [EnableBroadcaster] runs [com.tneff.cyppie.evm.EnableUserOpVerifier] so the owner's ROOT-validator signature is
+ * bound to an op that enables EXACTLY that session — a tampered cap/router/window/owner (or an unrelated op) fails
+ * closed before signing. The account is the **device-derived owner** (caller-supplied), never `prepare.follower`.
  */
 class FollowGrantService(
     private val api: CopyApi,
-    private val aaSigner: AaSigner = AaSigner(),
+    private val broadcaster: EnableBroadcaster = EnableBroadcaster(),
 ) {
 
     /**
@@ -74,63 +68,18 @@ class FollowGrantService(
         pollDelayMs: Long = 2_000,
     ): CopyGrantResult {
         val enable = preview.enable
-        val owner = EvmAddress.parse(enable.account) // = the device owner validated in prepareGrant
-        val built = api.buildEnableUserOp(BuildEnableRequest(enable.permissionId))
-        val packed = with(built.userOp) {
-            Erc4337UserOp.pack(
-                sender = sender, nonce = nonce, callData = callData,
-                callGasLimit = callGasLimit, verificationGasLimit = verificationGasLimit, preVerificationGas = preVerificationGas,
-                maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas,
-                factory = factory, factoryData = factoryData, paymaster = paymaster,
-                paymasterVerificationGasLimit = paymasterVerificationGasLimit,
-                paymasterPostOpGasLimit = paymasterPostOpGasLimit, paymasterData = paymasterData,
-            )
-        }
-        // P0 — bind the owner's (full-authority root) signature to an op that enables EXACTLY our session.
-        EnableUserOpVerifier.verify(
-            userOp = packed, digestToSign = built.digestToSign, chainId = enable.chainId, expectedAccount = owner.value,
-            sessionValidator = enable.sessionValidator, sessionValidatorInitData = enable.sessionValidatorInitData,
-            salt = enable.salt, permissions = enable.permissions,
+        val result = broadcaster.broadcast(
+            api = api,
+            buildRequest = BuildEnableRequest(enable.permissionId),
+            expected = ExpectedEnable(
+                chainId = enable.chainId, account = enable.account, permissionId = enable.permissionId,
+                sessionValidator = enable.sessionValidator, sessionValidatorInitData = enable.sessionValidatorInitData,
+                salt = enable.salt, permissions = enable.permissions,
+            ),
+            seedSource = seedSource, maxPollAttempts = maxPollAttempts, pollDelayMs = pollDelayMs,
         )
-        // P0 (KAN-160) — on the first enable, the op also carries a 7702 authorization (a SEPARATE full-authority
-        // delegation). Pin its delegate-target + chain BEFORE signing; sign both digests in one seed window.
-        val auth = built.authorizationToSign
-        val authDigest = auth?.let { Eip7702Authorization.verify(it.chainId, it.address, it.nonce, enable.chainId) }
-        val userOpDigest = Hex.decodeOrNull(built.digestToSign.removePrefix("0x"))
-            ?: throw IllegalArgumentException("digestToSign not valid hex")
-        val digests = if (authDigest != null) listOf(authDigest, userOpDigest) else listOf(userOpDigest)
-        val signatures = aaSigner.signDigests(digests, owner, seedSource)
-        val signedAuthorization = auth?.let { tuple -> signedAuthorization(tuple, signatures[0]) }
-        val userOpHash = api.submitEnableUserOp(
-            SubmitEnableRequest(built.userOpHash, signatures.last(), signedAuthorization),
-        )
-
-        repeat(maxPollAttempts) {
-            val status = api.opStatus(enable.chainId, userOpHash)
-            when (status.status) {
-                "included" -> {
-                    api.grantSession(CopyGrantRequest(enable.permissionId))
-                    return CopyGrantResult(enable.permissionId, userOpHash, status.txHash)
-                }
-                "failed" -> throw IllegalStateException("enable userOp reverted on-chain: $userOpHash")
-            }
-            delay(pollDelayMs)
-        }
-        throw IllegalStateException("enable userOp not included after $maxPollAttempts polls: $userOpHash")
-    }
-
-    /** Splits a 65-byte `r‖s‖v` signature into the EIP-7702 [SignedAuthorization] (yParity = v − 27). */
-    private fun signedAuthorization(tuple: AuthorizationTuple, signatureHex: String): SignedAuthorization {
-        val sig = Hex.decodeOrNull(signatureHex.removePrefix("0x"))
-            ?: throw IllegalStateException("authorization signature not valid hex")
-        require(sig.size == 65) { "expected a 65-byte signature, got ${sig.size}" }
-        val v = sig[64].toInt() and 0xFF
-        return SignedAuthorization(
-            chainId = tuple.chainId, address = tuple.address, nonce = tuple.nonce,
-            r = "0x" + Hex.encode(sig.copyOfRange(0, 32)),
-            s = "0x" + Hex.encode(sig.copyOfRange(32, 64)),
-            yParity = v - 27,
-        )
+        api.grantSession(CopyGrantRequest(enable.permissionId)) // mark active only after a successful enable receipt
+        return CopyGrantResult(enable.permissionId, result.userOpHash, result.txHash)
     }
 }
 

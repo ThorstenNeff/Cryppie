@@ -3,13 +3,14 @@ package com.tneff.cyppie.aa
 import kotlinx.serialization.Serializable
 
 /**
- * The app-facing Copy-trading API (PRD-06, KAN-154) — the app talks ONLY to the JWT User-Service. Unlike DCA
- * (the enable digest is built fully on-device), Copy's enable is an **owner-signed enable userOp** the backend
- * builds + submits via Pimlico (GAP-B / Approach B): the app `prepare`s the scope, rebuilds + verifies the op
- * on-device ([EnableUserOpVerifier]), owner-signs the `digestToSign`, and the backend submits. Paths/shapes
- * mirror `docs/copy-trading-enable-submit-contract.md` and are reconciled with the backend surface.
+ * The app-facing Copy-trading API (PRD-06, KAN-154) — the app talks ONLY to the JWT User-Service. Copy's enable
+ * is an **owner-signed enable userOp** the backend builds + submits via Pimlico (GAP-B / Approach B): the app
+ * `prepare`s the scope, rebuilds + verifies the op on-device ([com.tneff.cyppie.evm.EnableUserOpVerifier]),
+ * owner-signs the `digestToSign`, and the backend submits. The build/submit/poll surface is the shared
+ * [EnableBroadcastApi] (reused by DCA, KAN-159); this interface adds the Copy-specific prepare + grant. Paths
+ * mirror `docs/copy-trading-enable-submit-contract.md` and reconcile with the backend surface.
  */
-interface CopyApi {
+interface CopyApi : EnableBroadcastApi {
 
     /**
      * Create/prepare the session for a follow relationship from the app-supplied [CopyScopeRequest] (trader +
@@ -18,15 +19,6 @@ interface CopyApi {
      * (`POST /v1/copy/session/prepare`).
      */
     suspend fun prepare(request: CopyScopeRequest): CopyPrepare
-
-    /** Backend builds the `installModule(SmartSessions)+enableSessions` enable userOp (`/v1/userop/build`). */
-    suspend fun buildEnableUserOp(request: BuildEnableRequest): BuiltEnableUserOp
-
-    /** Submit the owner-signed enable userOp; the backend submits via Pimlico (`/v1/userop/submit`). Returns the userOpHash. */
-    suspend fun submitEnableUserOp(request: SubmitEnableRequest): String
-
-    /** Op status / receipt (`/v1/userop/{chainId}/{hash}`), surfaced via the User-Service. */
-    suspend fun opStatus(chainId: Long, userOpHash: String): OpStatus
 
     /** Mark the session active after a successful enable receipt (`/v1/copy/session/grant`). */
     suspend fun grantSession(request: CopyGrantRequest)
@@ -39,9 +31,9 @@ interface CopyApi {
  * are **mirror-time** params (NOT in the enable digest → permissionId unchanged). There is no separate follow id —
  * the prepared session's [CopyPrepare.permissionId] IS the follow handle.
  *
- * NB [tokenOut]/[feeTier] are nullable pending the fixed-vs-dynamic mirror-token product decision: "fixed" → the
- * user pre-selects them (sent); "dynamic" → the webhook derives tokenOut from the detected trade (omitted). Either
- * way they do NOT affect the enable digest / permissionId, so the crypto path + KAT are unchanged.
+ * NB [tokenOut]/[feeTier] are nullable for the user-selectable mirror-token mode (KAN-161): "fixed" → the user
+ * pre-selects them (sent); "dynamic" → the webhook derives tokenOut from the detected trade (omitted). Either way
+ * they do NOT affect the enable digest / permissionId, so the crypto path + KAT are unchanged.
  */
 @Serializable
 data class CopyScopeRequest(
@@ -81,66 +73,6 @@ data class CopyPrepare(
     val source: String,
     val allocationBps: Int? = null,
 )
-
-@Serializable
-data class BuildEnableRequest(val permissionId: String)
-
-/**
- * The `/v1/userop/build` response: the final (gas-estimated, paymaster-applied) op + the hash + the EIP-191 digest.
- * [authorizationToSign] is present ONLY on the FIRST op of a fresh follower (the EIP-7702 delegation); the app
- * must pin its delegate-target ([Eip7702Authorization]) and owner-sign it too (KAN-160). Absent on later ops.
- */
-@Serializable
-data class BuiltEnableUserOp(
-    val userOp: UnpackedUserOp,
-    val userOpHash: String,
-    val digestToSign: String,
-    val authorizationToSign: AuthorizationTuple? = null,
-)
-
-/** The unsigned EIP-7702 authorization tuple (delegate the EOA's code to [address] = the Kernel implementation). */
-@Serializable
-data class AuthorizationTuple(val chainId: Long, val address: String, val nonce: Long)
-
-/** The app-signed 7702 authorization, passed back to [CopyApi.submitEnableUserOp]. */
-@Serializable
-data class SignedAuthorization(
-    val chainId: Long,
-    val address: String,
-    val nonce: Long,
-    val r: String,
-    val s: String,
-    val yParity: Int,
-)
-
-/** A v0.7 user operation with UNPACKED gas/paymaster fields (as the build endpoint serializes them). */
-@Serializable
-data class UnpackedUserOp(
-    val sender: String,
-    val nonce: String,
-    val callData: String,
-    val callGasLimit: String,
-    val verificationGasLimit: String,
-    val preVerificationGas: String,
-    val maxFeePerGas: String,
-    val maxPriorityFeePerGas: String,
-    val factory: String? = null,
-    val factoryData: String? = null,
-    val paymaster: String? = null,
-    val paymasterVerificationGasLimit: String? = null,
-    val paymasterPostOpGasLimit: String? = null,
-    val paymasterData: String? = null,
-)
-
-@Serializable
-data class SubmitEnableRequest(
-    val userOpHash: String,
-    val signature: String,
-    val signedAuthorization: SignedAuthorization? = null,
-)
-
-@Serializable
-data class SubmittedUserOp(val userOpHash: String)
 
 @Serializable
 data class CopyGrantRequest(val permissionId: String)

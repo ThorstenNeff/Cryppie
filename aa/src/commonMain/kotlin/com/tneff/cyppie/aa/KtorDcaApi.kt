@@ -69,6 +69,16 @@ class KtorDcaApi(
         }
     }
 
+    override suspend fun buildEnableUserOp(request: BuildEnableRequest): BuiltEnableUserOp =
+        httpClient.post("$base/v1/userop/build") {
+            expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json); setBody(request)
+        }.body()
+
+    override suspend fun submitEnableUserOp(request: SubmitEnableRequest): String =
+        httpClient.post("$base/v1/userop/submit") {
+            expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json); setBody(request)
+        }.body<SubmittedUserOp>().userOpHash
+
     override suspend fun opStatus(chainId: Long, userOpHash: String): OpStatus =
         httpClient.get("$base/v1/userop/$chainId/$userOpHash") { expectSuccess = true; bearerAuth(bearer()) }.body()
 

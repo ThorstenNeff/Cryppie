@@ -8,10 +8,11 @@ import kotlinx.serialization.Serializable
  * shapes are owned by the backend (Ph1) — these mirror §4/§5 and are reconciled once the backend
  * publishes the User-Service surface. All amounts are base-unit decimal Strings (FR-6).
  */
-interface DcaApi {
-    // NB: there is no buildSessionEnable — the enable digest is built ENTIRELY on-device ([DcaEnableBuilder],
-    // pure offline EIP-712 over client-pinned constants; the only runtime input is the RPC-read nonce). The
-    // app verifies ([SmartSessionGrantVerifier]) + signs it, then registers the enabled session below.
+interface DcaApi : EnableBroadcastApi {
+    // The session-config is built ENTIRELY on-device ([DcaEnableBuilder]); the enable userOp itself is built +
+    // submitted via the SHARED generic [EnableBroadcastApi] endpoints (`/v1/userop/build` + `/submit`, KAN-159) —
+    // the same Kernel install+enableSessions batch as Copy, only the enableSessions(session) calldata differs.
+    // The app verifies (verifyEnableUserOp + verify7702Authorization) + owner-signs, then registers below.
 
     /** Register an on-device-enabled Smart Session (grant UX → §2 config + the enable signature). */
     suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult
@@ -28,8 +29,7 @@ interface DcaApi {
     /** Submit the on-device signature for a pending DCA op (§4 step 3 → `/v1/me/dca/{id}/signature`). */
     suspend fun submitSignature(dcaId: String, signature: String)
 
-    /** Op status / receipt (§3 `GET /v1/userop/{chainId}/{hash}`, surfaced via the User-Service). */
-    suspend fun opStatus(chainId: Long, userOpHash: String): OpStatus
+    // opStatus is inherited from EnableBroadcastApi (`GET /v1/userop/{chainId}/{hash}`).
 
     /** Global kill-switch state (backend pause flag); when paused, no op can be signed/submitted. */
     suspend fun aaStatus(): AaStatus
