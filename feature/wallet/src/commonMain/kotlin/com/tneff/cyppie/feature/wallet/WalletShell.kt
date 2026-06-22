@@ -25,6 +25,7 @@ import com.tneff.cyppie.aa.FollowGrantService
 import com.tneff.cyppie.aa.RevokeBroadcaster
 import com.tneff.cyppie.aa.KtorCopyApi
 import com.tneff.cyppie.aa.KtorDcaApi
+import com.tneff.cyppie.aa.verifyDcaBuy
 import com.tneff.cyppie.feature.copy.CopyActiveScreen
 import com.tneff.cyppie.feature.copy.CopyRoot
 import com.tneff.cyppie.feature.copy.CopySessionsViewModel
@@ -476,7 +477,16 @@ fun WalletShell(onLock: () -> Unit) {
             // DCA overview over the JWT User-Service. AA-op signing inside uses fresh re-auth.
             DcaGate(authSession = authSession, ambient = seedSource, onLock = onLock) {
                 val dcaVm: DcaViewModel = viewModel(key = "dca_overview") {
-                    DcaViewModel(api = dcaApi, signer = aaSigner, owner = dcaOwner, reauth = dcaReauth)
+                    DcaViewModel(
+                        api = dcaApi, signer = aaSigner, owner = dcaOwner, reauth = dcaReauth,
+                        // KAN-163 (b) no-blind: recompute+bind+scope-check each buy vs the enabled session
+                        // (spend-token/router/selector pinned from dcaGrantParams) before signing — fail-closed.
+                        verifyBuy = { pending ->
+                            // expectedTokenOut = the user-consented DCA target (KAN-168 D2 buyToken), NOT a
+                            // backend-supplied value — binds each buy's output token to what the user authorized.
+                            verifyDcaBuy(pending, dcaOwner.value, dcaGrantParams.spendToken, dcaGrantParams.buyToken, dcaGrantParams.router, dcaGrantParams.swapSelector)
+                        },
+                    )
                 }
                 DcaOverviewScreen(
                     viewModel = dcaVm,

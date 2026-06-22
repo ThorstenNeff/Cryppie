@@ -1,5 +1,6 @@
 package com.tneff.cyppie.aa
 
+import com.tneff.cyppie.evm.BuyUserOpVerifier
 import kotlinx.serialization.Serializable
 
 /**
@@ -65,7 +66,39 @@ data class PendingDca(
     val amountIn: String,          // base units, decimal String (advisory)
     val userOpHash: String,        // 0x.. — the 32-byte hash the backend built
     val digestToSign: String,      // == userOpHash (RAW); fail-closed if it differs (C3 raw-lock)
+    // KAN-163 (b): the full built v0.7 userOp (backend `307ed12`) — the app RECOMPUTES the userOpHash from
+    // this + binds it to digestToSign + scope-checks the calls ([verifyDcaBuy]) before signing (true no-blind).
+    val userOp: UnpackedUserOp,
 )
+
+/**
+ * KAN-163 (b) NO-BLIND: recompute the buy userOpHash from the parked [PendingDca.userOp], bind it to
+ * [PendingDca.digestToSign], and scope-check the calls — EXACTLY approve([spendToken]→[router]) + a swap on
+ * [router]/[swapSelector], sender==[expectedAccount], initCode==0x ([BuyUserOpVerifier], byte-pinned vs the
+ * backend buy vector). Throws [com.tneff.cyppie.evm.BuyVerificationException] on ANY mismatch — the app must
+ * NOT sign (fail-closed). The C3 RAW-lock (raw userOpHash, never EIP-191) is enforced inside the verifier.
+ */
+fun verifyDcaBuy(
+    pending: PendingDca,
+    expectedAccount: String,
+    spendToken: String,
+    expectedTokenOut: String,
+    router: String,
+    swapSelector: String,
+) {
+    BuyUserOpVerifier.verify(
+        userOp = pending.userOp.toPackedUserOp(),
+        digestToSign = pending.digestToSign,
+        chainId = pending.chainId,
+        expectedAccount = expectedAccount,
+        spendToken = spendToken,
+        // 🔒 Bind the swap OUTPUT to the token the USER consented at grant (dcaGrantParams.buyToken), never a
+        // backend-supplied pending value (that would be circular). Decodes the inner swap; asserts ==. Fail-closed.
+        tokenOut = expectedTokenOut,
+        router = router,
+        swapSelector = swapSelector,
+    )
+}
 
 /**
  * One-time DCA schedule setup (KAN-163, `POST /v1/me/dca/schedules`) under an enabled session

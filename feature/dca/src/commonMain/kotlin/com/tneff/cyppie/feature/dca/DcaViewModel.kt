@@ -35,6 +35,10 @@ class DcaViewModel(
     private val signer: AaSigner,
     private val owner: EvmAddress,
     private val reauth: suspend (password: String) -> SeedSource?,
+    // KAN-163 (b) NO-BLIND: recompute the buy userOpHash + bind digestToSign + scope-check the calls vs the
+    // enabled session BEFORE signing (throws on mismatch → fail-closed). The app shell binds it to
+    // `verifyDcaBuy(pending, owner, spendToken, router, swapSelector)`.
+    private val verifyBuy: (PendingDca) -> Unit = {},
 ) : ViewModel() {
 
     var uiState: DcaUiState by mutableStateOf(DcaUiState.Loading); private set
@@ -80,11 +84,11 @@ class DcaViewModel(
             val paused = runCatching { api.aaStatus().paused }.getOrDefault(true)
             if (paused) { load(); return@launch } // refresh → the screen shows the paused banner; nothing signed
             // Minimal seed window (HIGH-1 pattern): reauth → sign → zeroize, submit only after.
+            // KAN-163 (b) NO-BLIND, fail-closed BEFORE any seed is in scope: recompute the userOpHash from the
+            // built userOp → bind it to digestToSign → scope-check the calls (approve(spendToken→router)+swap on
+            // the pinned router; C3 RAW-lock inside). A mismatch → never sign. (Subsumes the interim raw-lock.)
+            if (runCatching { verifyBuy(dca) }.isFailure) { signError = DcaError.VERIFY_FAILED; signingInFlight = false; load(); return@launch }
             val outcome = runCatching {
-                // C3 USE-lock (KAN-163): the buy digest MUST be the RAW userOpHash — never an EIP-191/hashMessage
-                // form. Refuse anything else (the only check the app can do without the opaque userOp; the on-chain
-                // Smart-Session policy is the hard scope bound). Fail-closed.
-                if (!dca.digestToSign.equals(dca.userOpHash, ignoreCase = true)) return@runCatching DcaError.VERIFY_FAILED
                 val source = reauth(password) ?: return@runCatching DcaError.WRONG_PASSWORD
                 val signature = try {
                     signer.signDigest(dca.digestToSign, owner, source) // RAW sign of the userOpHash; zeroizes the source
