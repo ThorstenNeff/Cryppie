@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Entiendo que replicaré las compras de este trader en tokens listados.</string>
   <string name="copy_spend_token">Token de gasto</string>
   <string name="copy_receives">Recibes</string>
+  <string name="copy_budget_caveat_title">Para tener en cuenta</string>
+  <string name="copy_token_search">Buscar tokens</string>
+  <string name="copy_token_none">No se encontraron tokens</string>
 </resources>

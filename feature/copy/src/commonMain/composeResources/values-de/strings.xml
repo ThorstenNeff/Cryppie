@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Mir ist klar, dass ich die Käufe dieses Traders in gelisteten Token spiegle.</string>
   <string name="copy_spend_token">Ausgabe-Token</string>
   <string name="copy_receives">Erhält</string>
+  <string name="copy_budget_caveat_title">Gut zu wissen</string>
+  <string name="copy_token_search">Token suchen</string>
+  <string name="copy_token_none">Keine Token gefunden</string>
 </resources>

@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">我明白我将镜像该交易者买入的已上架代币。</string>
   <string name="copy_spend_token">支出代币</string>
   <string name="copy_receives">收到</string>
+  <string name="copy_budget_caveat_title">温馨提示</string>
+  <string name="copy_token_search">搜索代币</string>
+  <string name="copy_token_none">未找到代币</string>
 </resources>

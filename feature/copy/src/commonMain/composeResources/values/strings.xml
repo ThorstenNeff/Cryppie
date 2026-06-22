@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">I understand I'll mirror this trader's buys in listed tokens.</string>
   <string name="copy_spend_token">Spend token</string>
   <string name="copy_receives">Receives</string>
+  <string name="copy_budget_caveat_title">Good to know</string>
+  <string name="copy_token_search">Search tokens</string>
+  <string name="copy_token_none">No tokens found</string>
 </resources>

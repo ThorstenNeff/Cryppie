@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Jag förstår att jag speglar den här traderns köp i listade tokens.</string>
   <string name="copy_spend_token">Utgiftstoken</string>
   <string name="copy_receives">Mottar</string>
+  <string name="copy_budget_caveat_title">Bra att veta</string>
+  <string name="copy_token_search">Sök tokens</string>
+  <string name="copy_token_none">Inga tokens hittades</string>
 </resources>

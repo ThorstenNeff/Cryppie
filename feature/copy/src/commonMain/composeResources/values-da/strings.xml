@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Jeg forstår, at jeg spejler denne traders køb i listede tokens.</string>
   <string name="copy_spend_token">Forbrugstoken</string>
   <string name="copy_receives">Modtager</string>
+  <string name="copy_budget_caveat_title">Godt at vide</string>
+  <string name="copy_token_search">Søg tokens</string>
+  <string name="copy_token_none">Ingen tokens fundet</string>
 </resources>

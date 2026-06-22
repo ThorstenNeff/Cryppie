@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Jeg forstår at jeg vil speile denne traderens kjøp i noterte tokens.</string>
   <string name="copy_spend_token">Brukstoken</string>
   <string name="copy_receives">Mottar</string>
+  <string name="copy_budget_caveat_title">Godt å vite</string>
+  <string name="copy_token_search">Søk etter token</string>
+  <string name="copy_token_none">Ingen tokener funnet</string>
 </resources>

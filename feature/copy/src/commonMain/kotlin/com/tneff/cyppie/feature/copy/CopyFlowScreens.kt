@@ -27,6 +27,7 @@ import com.tneff.cyppie.designsystem.components.SelectionCard
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.copy.generated.resources.Res
 import com.tneff.cyppie.feature.copy.generated.resources.copy_budget_caveat
+import com.tneff.cyppie.feature.copy.generated.resources.copy_budget_caveat_title
 import com.tneff.cyppie.feature.copy.generated.resources.copy_budget_label
 import com.tneff.cyppie.feature.copy.generated.resources.copy_budget_title
 import com.tneff.cyppie.feature.copy.generated.resources.copy_continue
@@ -171,8 +172,10 @@ internal fun BudgetScreen(viewModel: FollowViewModel, onBack: () -> Unit, modifi
                     modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.BUDGET_INPUT),
                 )
                 // Risk / expectation caveat (non-custodial, revocable) — neutral hint, Info tone (KAN-158).
+                // KAN-168 F2: short title + the sentence as description (helper) → correct banner hierarchy.
                 CryptasaBanner(
-                    title = stringResource(Res.string.copy_budget_caveat),
+                    title = stringResource(Res.string.copy_budget_caveat_title),
+                    description = stringResource(Res.string.copy_budget_caveat),
                     tone = CryptasaBannerTone.Info,
                     modifier = Modifier.testTag(CopyTestTags.BUDGET_CAVEAT),
                 )

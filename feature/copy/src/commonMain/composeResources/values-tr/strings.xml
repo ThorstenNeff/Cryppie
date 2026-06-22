@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Bu trader'ın listedeki token alımlarını yansıtacağımı anlıyorum.</string>
   <string name="copy_spend_token">Harcama token'ı</string>
   <string name="copy_receives">Alınan</string>
+  <string name="copy_budget_caveat_title">Bilmekte fayda var</string>
+  <string name="copy_token_search">Token ara</string>
+  <string name="copy_token_none">Token bulunamadı</string>
 </resources>

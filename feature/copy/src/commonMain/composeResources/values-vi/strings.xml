@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Tôi hiểu rằng tôi sẽ sao chép các lệnh mua của trader này trong những token có trong danh sách.</string>
   <string name="copy_spend_token">Token chi tiêu</string>
   <string name="copy_receives">Nhận về</string>
+  <string name="copy_budget_caveat_title">Cần biết</string>
+  <string name="copy_token_search">Tìm token</string>
+  <string name="copy_token_none">Không tìm thấy token</string>
 </resources>

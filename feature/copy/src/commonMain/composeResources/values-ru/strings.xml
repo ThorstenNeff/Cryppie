@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">Я понимаю, что буду зеркалировать покупки этого трейдера в токенах из списка.</string>
   <string name="copy_spend_token">Токен расхода</string>
   <string name="copy_receives">Получаете</string>
+  <string name="copy_budget_caveat_title">Полезно знать</string>
+  <string name="copy_token_search">Поиск токенов</string>
+  <string name="copy_token_none">Токены не найдены</string>
 </resources>

@@ -67,4 +67,7 @@
   <string name="copy_dyn_risk_ack">أفهم أنني سأنسخ مشتريات هذا المتداول من الرموز المُدرَجة.</string>
   <string name="copy_spend_token">رمز الإنفاق</string>
   <string name="copy_receives">يستلم</string>
+  <string name="copy_budget_caveat_title">معلومة مفيدة</string>
+  <string name="copy_token_search">البحث عن الرموز</string>
+  <string name="copy_token_none">لم يتم العثور على رموز</string>
 </resources>
