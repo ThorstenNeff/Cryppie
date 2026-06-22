@@ -48,4 +48,8 @@
   <string name="dca_review">Granska</string>
   <string name="dca_window_start">Fönstrets början</string>
   <string name="dca_err_verify">Det gick inte att verifiera sessionen — inte signerad</string>
+  <string name="dca_guaranteed">On-chain-garanterat</string>
+  <string name="dca_guaranteed_note">Kryptografiskt framtvingat — tjänsten kan inte överskrida detta.</string>
+  <string name="dca_advisory">Vägledande — inte garanterat</string>
+  <string name="dca_advisory_note">Den köpta token visas som kontext — inte en del av det signerade tillståndet. Endast taket, routern och fönstret ovan är framtvingade on-chain.</string>
 </resources>

@@ -48,4 +48,8 @@
   <string name="dca_review">Проверить</string>
   <string name="dca_window_start">Начало окна</string>
   <string name="dca_err_verify">Не удалось проверить сессию — не подписано</string>
+  <string name="dca_guaranteed">Гарантировано on-chain</string>
+  <string name="dca_guaranteed_note">Криптографически закреплено — сервис не может это превысить.</string>
+  <string name="dca_advisory">Справочно — не гарантировано</string>
+  <string name="dca_advisory_note">Покупаемый токен показан для контекста — он не входит в подписанный грант. Закреплены только лимит, роутер и окно выше.</string>
 </resources>

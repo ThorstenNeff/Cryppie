@@ -48,4 +48,8 @@
   <string name="dca_review">Gözden geçir</string>
   <string name="dca_window_start">Pencere başlangıcı</string>
   <string name="dca_err_verify">Oturum doğrulanamadı — imzalanmadı</string>
+  <string name="dca_guaranteed">Zincir üstünde garanti</string>
+  <string name="dca_guaranteed_note">Kriptografik olarak zorunlu kılınır — hizmet bunu aşamaz.</string>
+  <string name="dca_advisory">Bilgilendirme — garanti değil</string>
+  <string name="dca_advisory_note">Satın alınan token yalnızca bilgi amaçlı gösterilir — imzalanan grant'ın parçası değildir. Yalnızca yukarıdaki üst sınır, router ve pencere zincir üstünde zorunlu kılınır.</string>
 </resources>

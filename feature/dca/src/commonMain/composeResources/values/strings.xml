@@ -48,4 +48,8 @@
   <string name="dca_review">Review</string>
   <string name="dca_window_start">Window start</string>
   <string name="dca_err_verify">Couldn't verify the session — not signed</string>
+  <string name="dca_guaranteed">On-chain guaranteed</string>
+  <string name="dca_guaranteed_note">Cryptographically enforced — the service can't exceed this.</string>
+  <string name="dca_advisory">Advisory — not guaranteed</string>
+  <string name="dca_advisory_note">The bought token is shown for context — not part of the signed grant. Only the cap, router and window above are enforced.</string>
 </resources>

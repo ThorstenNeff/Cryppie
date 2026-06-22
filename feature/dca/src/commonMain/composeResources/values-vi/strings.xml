@@ -48,4 +48,8 @@
   <string name="dca_review">Xem lại</string>
   <string name="dca_window_start">Bắt đầu cửa sổ</string>
   <string name="dca_err_verify">Không thể xác minh phiên — chưa ký</string>
+  <string name="dca_guaranteed">Được đảm bảo on-chain</string>
+  <string name="dca_guaranteed_note">Được thực thi bằng mật mã — dịch vụ không thể vượt quá mức này.</string>
+  <string name="dca_advisory">Tham khảo — không đảm bảo</string>
+  <string name="dca_advisory_note">Token được mua chỉ hiển thị để tham khảo — không thuộc phần được ký trong grant. Chỉ có mức giới hạn, router và khung thời gian ở trên là được thực thi on-chain.</string>
 </resources>

@@ -48,4 +48,8 @@
   <string name="dca_review">Revisar</string>
   <string name="dca_window_start">Início da janela</string>
   <string name="dca_err_verify">Não foi possível verificar a sessão — não assinada</string>
+  <string name="dca_guaranteed">Garantido on-chain</string>
+  <string name="dca_guaranteed_note">Imposto criptograficamente — o serviço não pode exceder isto.</string>
+  <string name="dca_advisory">Informativo — não garantido</string>
+  <string name="dca_advisory_note">O token comprado é mostrado para contexto — não faz parte da concessão assinada. Apenas o limite, o roteador e a janela acima são impostos on-chain.</string>
 </resources>

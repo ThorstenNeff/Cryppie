@@ -48,4 +48,8 @@
   <string name="dca_review">Revisar</string>
   <string name="dca_window_start">Inicio de la ventana</string>
   <string name="dca_err_verify">No se pudo verificar la sesión — no se firmó</string>
+  <string name="dca_guaranteed">Garantizado en cadena</string>
+  <string name="dca_guaranteed_note">Impuesto criptográficamente — el servicio no puede superarlo.</string>
+  <string name="dca_advisory">Informativo — no garantizado</string>
+  <string name="dca_advisory_note">El token comprado se muestra como contexto — no forma parte de la concesión firmada. Solo el límite, el router y la ventana de arriba están impuestos en cadena.</string>
 </resources>

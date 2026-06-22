@@ -48,4 +48,8 @@
   <string name="dca_review">Gjennomgå</string>
   <string name="dca_window_start">Vindusstart</string>
   <string name="dca_err_verify">Kunne ikke verifisere økten — ikke signert</string>
+  <string name="dca_guaranteed">On-chain garantert</string>
+  <string name="dca_guaranteed_note">Kryptografisk håndhevet — tjenesten kan ikke overskride dette.</string>
+  <string name="dca_advisory">Veiledende — ikke garantert</string>
+  <string name="dca_advisory_note">Den kjøpte tokenen vises kun som kontekst — ikke en del av det signerte grantet. Kun cap, router og vindu ovenfor er håndhevet on-chain.</string>
 </resources>

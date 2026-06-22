@@ -48,4 +48,8 @@
   <string name="dca_review">Prüfen</string>
   <string name="dca_window_start">Fensterbeginn</string>
   <string name="dca_err_verify">Konnte die Session nicht verifizieren — nicht signiert</string>
+  <string name="dca_guaranteed">On-chain garantiert</string>
+  <string name="dca_guaranteed_note">Kryptografisch erzwungen — der Service kann das nicht überschreiten.</string>
+  <string name="dca_advisory">Hinweis — nicht garantiert</string>
+  <string name="dca_advisory_note">Der gekaufte Token wird nur zur Info angezeigt — nicht Teil des signierten Grants. Nur Cap, Router und Window oben sind erzwungen.</string>
 </resources>

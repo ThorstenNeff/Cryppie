@@ -48,4 +48,8 @@
   <string name="dca_review">مراجعة</string>
   <string name="dca_window_start">بداية النافذة</string>
   <string name="dca_err_verify">تعذّر التحقق من الجلسة — لم يُوقَّع</string>
+  <string name="dca_guaranteed">مضمون على السلسلة</string>
+  <string name="dca_guaranteed_note">مفروض تشفيريًّا — لا يمكن للخدمة تجاوز هذا الحد.</string>
+  <string name="dca_advisory">إرشادي — غير مضمون</string>
+  <string name="dca_advisory_note">يُعرض الرمز المُشترى للسياق — وهو ليس جزءًا من التفويض الموقَّع. تُفرَض فقط الحدود والموجِّه والنافذة الزمنية أعلاه على السلسلة.</string>
 </resources>

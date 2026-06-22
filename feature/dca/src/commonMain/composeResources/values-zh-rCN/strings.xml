@@ -48,4 +48,8 @@
   <string name="dca_review">检查</string>
   <string name="dca_window_start">窗口起始时间</string>
   <string name="dca_err_verify">无法验证该会话 — 未签名</string>
+  <string name="dca_guaranteed">链上保证</string>
+  <string name="dca_guaranteed_note">由密码学强制执行 — 服务方无法超出此范围。</string>
+  <string name="dca_advisory">仅供参考 — 不作保证</string>
+  <string name="dca_advisory_note">所购代币仅供参考显示 — 并非已签名授权的一部分。仅上方的限额、路由和时间窗口受强制执行。</string>
 </resources>

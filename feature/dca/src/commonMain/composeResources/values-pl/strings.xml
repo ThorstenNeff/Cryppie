@@ -48,4 +48,8 @@
   <string name="dca_review">Sprawdź</string>
   <string name="dca_window_start">Początek okna</string>
   <string name="dca_err_verify">Nie można zweryfikować sesji — niepodpisana</string>
+  <string name="dca_guaranteed">Gwarantowane on-chain</string>
+  <string name="dca_guaranteed_note">Wymuszone kryptograficznie — usługa nie może tego przekroczyć.</string>
+  <string name="dca_advisory">Informacyjnie — bez gwarancji</string>
+  <string name="dca_advisory_note">Kupowany token jest pokazany informacyjnie — nie jest częścią podpisanego zezwolenia. Wymuszane on-chain są tylko limit, router i okno powyżej.</string>
 </resources>

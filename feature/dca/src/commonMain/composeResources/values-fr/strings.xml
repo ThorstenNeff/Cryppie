@@ -48,4 +48,8 @@
   <string name="dca_review">Vérifier</string>
   <string name="dca_window_start">Début de la fenêtre</string>
   <string name="dca_err_verify">Impossible de vérifier la session — non signée</string>
+  <string name="dca_guaranteed">Garanti on-chain</string>
+  <string name="dca_guaranteed_note">Appliqué cryptographiquement — le service ne peut pas le dépasser.</string>
+  <string name="dca_advisory">Indicatif — non garanti</string>
+  <string name="dca_advisory_note">Le token acheté est affiché à titre indicatif — il ne fait pas partie du grant signé. Seuls le plafond, le routeur et la fenêtre ci-dessus sont appliqués.</string>
 </resources>
