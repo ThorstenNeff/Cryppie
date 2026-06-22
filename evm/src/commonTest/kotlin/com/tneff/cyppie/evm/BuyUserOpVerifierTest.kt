@@ -21,16 +21,16 @@ class BuyUserOpVerifierTest {
     private fun approveCall(spender: String) =
         Abi.encodeWithSelector(APPROVE, Abi.address(spender), Abi.uint(Quantity.of(1_000_000L)))
 
-    // multicall(deadline, [ exactInputSingle(tokenIn=usdc, tokenOut, fee, recipient, amountIn, 0, 0) ])
-    private fun swapCall(tokenOut: String = weth): ByteArray {
-        val exactInputSingle = Abi.encodeWithSelector(
-            "0x04e45aaf",
-            Abi.address(usdc), Abi.address(tokenOut), Abi.uint(Quantity.of(500L)), Abi.address(account),
-            Abi.uint(Quantity.of(1_000_000L)), Abi.uint(Quantity.of(0)), Abi.uint(Quantity.of(0)),
-        )
-        return Abi.encodeWithSelector(
-            swapSelector, Abi.uint(Quantity.of(1_900_000_000L)), Abi.array(listOf(Abi.bytes("0x" + Hex.encode(exactInputSingle)))),
-        )
+    private fun exactInputSingle(tokenOut: String, recipient: String) = Abi.encodeWithSelector(
+        "0x04e45aaf",
+        Abi.address(usdc), Abi.address(tokenOut), Abi.uint(Quantity.of(500L)), Abi.address(recipient),
+        Abi.uint(Quantity.of(1_000_000L)), Abi.uint(Quantity.of(0)), Abi.uint(Quantity.of(0)),
+    )
+
+    // multicall(deadline, [ exactInputSingle, … ]) — default = one inner exactInputSingle to the SCA.
+    private fun swapCall(tokenOut: String = weth, recipient: String = account, inners: Int = 1): ByteArray {
+        val one = Abi.bytes("0x" + Hex.encode(exactInputSingle(tokenOut, recipient)))
+        return Abi.encodeWithSelector(swapSelector, Abi.uint(Quantity.of(1_900_000_000L)), Abi.array(List(inners) { one }))
     }
 
     private fun batch(calls: List<Pair<String, ByteArray>>): String {
@@ -65,6 +65,20 @@ class BuyUserOpVerifierTest {
     fun failsClosed_onWrongTokenOut() {
         // 🔒 the inner exactInputSingle tokenOut is bound — a different expected buy token → fail-closed.
         assertFailsWith<BuyVerificationException> { verify(buyOp, rawDigest, out = "0x000000000000000000000000000000000000bEEF") }
+    }
+
+    @Test
+    fun failsClosed_onRogueRecipient() {
+        // 🔒 recipient != the SCA → the swap output would be delivered to an attacker (direct drain) → fail-closed.
+        val bad = op(batch(listOf(usdc to approveCall(router), router to swapCall(recipient = "0x000000000000000000000000000000000000bEEF"))))
+        assertFailsWith<BuyVerificationException> { verify(bad, "0x" + Hex.encode(Erc4337UserOp.userOpHash(bad, 1L))) }
+    }
+
+    @Test
+    fun failsClosed_onMultipleInnerCalls() {
+        // 🔒 a hidden 2nd inner call (n != 1) could move funds up to the approve cap → fail-closed.
+        val bad = op(batch(listOf(usdc to approveCall(router), router to swapCall(inners = 2))))
+        assertFailsWith<BuyVerificationException> { verify(bad, "0x" + Hex.encode(Erc4337UserOp.userOpHash(bad, 1L))) }
     }
 
     @Test

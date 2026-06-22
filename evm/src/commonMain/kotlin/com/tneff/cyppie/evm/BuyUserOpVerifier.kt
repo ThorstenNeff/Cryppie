@@ -81,11 +81,12 @@ object BuyUserOpVerifier {
         if (!KernelExecuteBatch.selectorOf(swap).equals(swapSelector, ignoreCase = true)) {
             throw BuyVerificationException("swap selector != pinned router function")
         }
-        // 3. 🔒 Bind the swap OUTPUT token: decode multicall → exactInputSingle → tokenOut, assert == expected. The
-        //    outer router/selector pin alone leaves tokenOut free → a malicious backend could churn the capped
-        //    spendToken into a worthless token (the SpendingLimits cap only bounds the SELL side). For DCA the buy
-        //    target is fixed by the schedule, so we pin it (pure address match, oracle-free).
-        val swapTokenOut = decodeExactInputSingleTokenOut(swap.callData)
+        // 3. 🔒 Decode + bind the INNER swap: the outer router/multicall pin alone leaves the inner call free.
+        //    Asserts (a) EXACTLY ONE inner call (a hidden 2nd inner call would move funds up to the approve cap;
+        //    on-chain the session only sees "router.multicall"); (b) tokenOut == expected (no churn into a worthless
+        //    token — the SpendingLimits cap only bounds the SELL side); (c) recipient == the SCA (else the swap
+        //    output is sent straight to an attacker = direct drain). For DCA all three are fixed by the schedule.
+        val swapTokenOut = decodeAndVerifyInnerSwap(swap.callData, expectedAccount)
         if (!swapTokenOut.equals(tokenOut, ignoreCase = true)) {
             throw BuyVerificationException("swap tokenOut $swapTokenOut != expected $tokenOut")
         }
@@ -99,21 +100,22 @@ object BuyUserOpVerifier {
     }
 
     /**
-     * Decodes `multicall(uint256 deadline, bytes[] data)` (selector pinned by the caller) whose single inner call is
-     * `exactInputSingle(ExactInputSingleParams)` — returns its `tokenOut` (the 2nd struct word). Fail-closed if the
-     * inner call is not exactInputSingle or the encoding is malformed.
+     * Decodes `multicall(uint256 deadline, bytes[] data)` (selector pinned by the caller) and validates its inner
+     * swap, returning the `tokenOut`. Fail-closed unless: (a) **exactly one** inner call (a 2nd call could move
+     * funds up to the approve cap — the session only sees "router.multicall" on-chain); (b) the inner call is
+     * `exactInputSingle(ExactInputSingleParams)`; (c) its **`recipient` == [expectedAccount]** (the SCA — else the
+     * swap output is delivered straight to an attacker = direct drain).
      */
-    private fun decodeExactInputSingleTokenOut(multicall: ByteArray): String {
+    private fun decodeAndVerifyInnerSwap(multicall: ByteArray, expectedAccount: String): String {
         // multicall args (after the 4-byte selector): word0 = deadline, word1 = offset to bytes[] data.
         val args = 4
-        val dataOff = word(multicall, args + 32)
-        val dataPos = args + dataOff
+        val dataPos = args + word(multicall, args + 32)
         val n = word(multicall, dataPos)
-        if (n < 1) throw BuyVerificationException("multicall has no inner calls")
+        if (n != 1) throw BuyVerificationException("multicall must have exactly one inner call, has $n")
         val elem0 = dataPos + 32 + word(multicall, dataPos + 32) // offset to data[0], relative to the offset table
         val innerLen = word(multicall, elem0)
         val innerStart = elem0 + 32
-        if (innerStart + innerLen > multicall.size || innerLen < 4 + 32 * 2) {
+        if (innerStart + innerLen > multicall.size || innerLen < 4 + 32 * 4) {
             throw BuyVerificationException("malformed inner swap call")
         }
         val inner = multicall.copyOfRange(innerStart, innerStart + innerLen)
@@ -121,6 +123,10 @@ object BuyUserOpVerifier {
             throw BuyVerificationException("inner swap is not exactInputSingle")
         }
         // ExactInputSingleParams = (tokenIn, tokenOut, fee, recipient, amountIn, amountOutMinimum, sqrtPriceLimitX96).
+        val recipient = EvmAddress.fromBytes(inner.copyOfRange(4 + 32 * 3 + 12, 4 + 32 * 4)).value // word[3] = recipient
+        if (!recipient.equals(expectedAccount, ignoreCase = true)) {
+            throw BuyVerificationException("swap recipient $recipient != account (output would leave the SCA)")
+        }
         return EvmAddress.fromBytes(inner.copyOfRange(4 + 32 + 12, 4 + 32 + 32)).value // word[1] = tokenOut
     }
 
