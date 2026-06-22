@@ -7,9 +7,18 @@ import com.tneff.cyppie.evm.SmartSessionEnableDigest.PolicyData
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions
 import kotlinx.serialization.Serializable
 
-/** One per-token SELL-cap in a strategy basket: the SpendingLimit on [token]'s approve. */
+/**
+ * One per-token SELL-cap in a strategy basket: the SpendingLimit on [token]'s approve. [capBaseUnits] is the
+ * **security-relevant** cap (base units of [token], goes on-chain + into verifyBasketGrant). [valueSnapshotBaseUnits]
+ * is FR-9 ≈value (the cap's worth in budget-token base units at grant time) — **display/legibility only**, NOT in
+ * the enable / not verified. Defaulted so older payloads + on-device-built caps don't need it.
+ */
 @Serializable
-data class StrategyCap(val token: String, val capBaseUnits: String)
+data class StrategyCap(
+    val token: String,
+    val capBaseUnits: String,
+    val valueSnapshotBaseUnits: String = "0",
+)
 
 /**
  * The on-device-built Smart-Strategy ENABLE (PRD-07b Vaults-B, KAN-165) — the **M-cap** sibling of
