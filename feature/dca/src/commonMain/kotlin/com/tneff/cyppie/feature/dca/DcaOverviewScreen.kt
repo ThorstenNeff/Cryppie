@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.aa.PendingDca
 import com.tneff.cyppie.feature.dca.generated.resources.dca_expires
 import com.tneff.cyppie.aa.SessionConfig
+import com.tneff.cyppie.designsystem.SecureScreenEffect
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
@@ -79,6 +80,7 @@ fun DcaOverviewScreen(
     onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    SecureScreenEffect() // KAN-168 D1: the per-buy sign dialog (password + on-device sign) + amounts → screen-owned
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     var signingId by remember { mutableStateOf<String?>(null) }
