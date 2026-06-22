@@ -14,8 +14,13 @@ interface DcaApi : EnableBroadcastApi {
     // the same Kernel install+enableSessions batch as Copy, only the enableSessions(session) calldata differs.
     // The app verifies (verifyEnableUserOp + verify7702Authorization) + owner-signs, then registers below.
 
-    /** Register an on-device-enabled Smart Session (grant UX → §2 config + the enable signature). */
-    suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult
+    /**
+     * Register an on-device-enabled Smart Session (grant UX → §2 config). KAN-159: the enable is now
+     * broadcast on-chain via [EnableBroadcastApi] BEFORE this call, so the old `enableSignature` arg is dead
+     * data (cf. backend `copy-trading-c6-execution`: "enableSignature removed; grant just marks active") —
+     * registration carries the §2 schedule (off-chain frequency/usage metadata) keyed by the now-enabled session.
+     */
+    suspend fun grantSession(config: SessionConfig): GrantResult
 
     /** The user's active sessions (running DCA schedules) for the management/revoke UI. */
     suspend fun listSessions(): List<SessionConfig>

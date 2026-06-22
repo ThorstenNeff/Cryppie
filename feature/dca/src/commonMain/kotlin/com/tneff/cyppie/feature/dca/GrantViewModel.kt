@@ -5,10 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tneff.cyppie.aa.AaSigner
 import com.tneff.cyppie.aa.BuiltEnable
 import com.tneff.cyppie.aa.DcaApi
 import com.tneff.cyppie.aa.DcaEnableBuilder
+import com.tneff.cyppie.aa.EnableBroadcaster
+import com.tneff.cyppie.aa.ExpectedEnable
 import com.tneff.cyppie.aa.ScopedAction
 import com.tneff.cyppie.aa.SessionConfig
 import com.tneff.cyppie.aa.SpendingLimit
@@ -39,13 +40,14 @@ data class DcaGrantParams(
  * user's inputs (per-buy [capAmount], [frequency], [durationDays]) over the fixed [params]. Two phases:
  * [review] builds the enable digest **entirely on-device** ([DcaEnableBuilder]; the only runtime input is
  * the RPC-read nonce — no backend enable endpoint) and runs [verifyGrant] as a defensive self-check, then
- * [grant] does re-auth → on-device sign of that verified digest ([AaSigner]) → [DcaApi.grantSession]. The
+ * [grant] does re-auth → the shared [EnableBroadcaster] (verify-the-built-userOp → owner-sign → submit →
+ * poll, KAN-159 — the SAME secured chain as Copy) → register the schedule ([DcaApi.grantSession]). The
  * disclosure renders **only** the verified-from-the-signed-bytes [VerifiedGrant] (no-blind). The seed
- * source is zeroized by [AaSigner].
+ * source is owned + zeroized by the [EnableBroadcaster] (`use{}` on every exit path).
  */
 class GrantViewModel(
     private val api: DcaApi,
-    private val signer: AaSigner,
+    private val broadcaster: EnableBroadcaster,
     private val owner: EvmAddress,
     private val params: DcaGrantParams,
     private val nowEpochSeconds: () -> Long,
@@ -195,10 +197,15 @@ class GrantViewModel(
     }
 
     /**
-     * Phase 2 — **sign** the verified grant: re-auth → on-device sign of the (already-verified) enable
-     * digest → register. Only valid after a successful [review] ([verified]/[pendingEnable] present). The
-     * seed window is minimal (HIGH-1/M1): reauth → sign → zeroize, with the grantSession network call only
-     * AFTER the seed is closed.
+     * Phase 2 — **broadcast + register** the verified grant (KAN-159): re-auth → the shared
+     * [EnableBroadcaster] re-confirms the backend-built enable userOp byte-exact (`verifyEnableUserOp`),
+     * pins the 7702 delegate on the first enable (KAN-160), owner-signs the bound digest(s) in ONE seed
+     * window, submits, and polls for on-chain inclusion — the SAME secured no-blind chain as Copy. Only
+     * valid after a successful [review] ([verified]/[pendingEnable] present). The broadcaster OWNS the seed
+     * for the whole build→verify→sign window and zeroizes it via `use{}` on EVERY exit path (verify-throw /
+     * net-fail / success) — so we must **not** close [source] here (no double-close, mirrors Copy). The DCA
+     * schedule is registered only AFTER a successful enable receipt, so the first buy can no longer revert
+     * against a session that was never enabled on-chain (the old dead `grantSession`-only path).
      */
     fun grant(password: String) {
         val enable = pendingEnable
@@ -209,12 +216,16 @@ class GrantViewModel(
         viewModelScope.launch {
             val outcome = runCatching {
                 val source = reauth(password) ?: return@runCatching DcaError.WRONG_PASSWORD
-                val signature = try {
-                    signer.signDigest(enable.digestToSign, owner, source) // signs the VERIFIED digest + zeroizes
-                } finally {
-                    (source as? AutoCloseable)?.close() // defensive: zeroize even if signing throws
-                }
-                api.grantSession(config, signature) // network AFTER the seed window is closed
+                broadcaster.broadcast(
+                    api = api, // DcaApi : EnableBroadcastApi — same generic /v1/userop/build+submit as Copy
+                    expected = ExpectedEnable(
+                        chainId = enable.chainId, account = enable.account, permissionId = enable.permissionId,
+                        sessionValidator = enable.sessionValidator, sessionValidatorInitData = enable.sessionValidatorInitData,
+                        salt = enable.salt, permissions = enable.permissions,
+                    ),
+                    seedSource = source, // broadcaster owns the zeroize (use{}); do NOT close here
+                )
+                api.grantSession(config) // register the schedule only AFTER a successful on-chain enable receipt
                 null // success
             }.getOrElse { DcaError.AUTHORIZE_FAILED }
             submitting = false

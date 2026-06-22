@@ -46,10 +46,12 @@ class KtorDcaApi(
     private suspend fun bearer(): String =
         bearerToken().ifBlank { throw IllegalStateException("no auth token — sign in required") }
 
-    override suspend fun grantSession(config: SessionConfig, enableSignature: String): GrantResult =
+    // KAN-159: the enable is broadcast on-chain (EnableBroadcastApi) before register, so `enableSignature`
+    // is dead data — kept as an empty field for wire-compatibility until the backend drops it from the body.
+    override suspend fun grantSession(config: SessionConfig): GrantResult =
         httpClient.post("$base/v1/me/sessions") {
             expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)
-            setBody(GrantRequest(config, enableSignature))
+            setBody(GrantRequest(config, enableSignature = ""))
         }.body()
 
     override suspend fun listSessions(): List<SessionConfig> =

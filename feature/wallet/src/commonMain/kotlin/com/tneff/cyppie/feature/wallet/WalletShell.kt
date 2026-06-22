@@ -19,6 +19,7 @@ import com.tneff.cyppie.aa.AaSigner
 import com.tneff.cyppie.aa.CopyEnableBuilder
 import com.tneff.cyppie.aa.CopyScopeRequest
 import com.tneff.cyppie.aa.DcaEnableBuilder
+import com.tneff.cyppie.aa.EnableBroadcaster
 import com.tneff.cyppie.aa.FollowGrantService
 import com.tneff.cyppie.aa.KtorCopyApi
 import com.tneff.cyppie.aa.KtorDcaApi
@@ -318,6 +319,9 @@ fun WalletShell(onLock: () -> Unit) {
     // The User-Service client: bearer = the session JWT (fail-closed — KtorDcaApi.bearer() throws on blank).
     val dcaApi = remember(seedSource) { KtorDcaApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
     val aaSigner = remember { AaSigner() }
+    // KAN-159: the shared on-device enable-broadcast orchestration (verify→sign→submit→poll) — reused by
+    // the DCA grant call-site (and Copy via FollowGrantService). Owns the seed-zeroize over the sign window.
+    val enableBroadcaster = remember(aaSigner) { EnableBroadcaster(aaSigner) }
     // Copy-trading (PRD-06, KAN-154/155): same JWT User-Service + Dev-2's on-device verify→sign→submit grant
     // service (prepareGrant runs verifyGrant; authorizeGrant runs verifyEnableUserOp before owner-signing).
     val copyApi = remember(seedSource) { KtorCopyApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
@@ -463,7 +467,7 @@ fun WalletShell(onLock: () -> Unit) {
             val grantVm: GrantViewModel = viewModel(key = "dca_grant") {
                 GrantViewModel(
                     api = dcaApi,
-                    signer = aaSigner,
+                    broadcaster = enableBroadcaster,
                     owner = dcaOwner,
                     params = dcaGrantParams,
                     nowEpochSeconds = ::nowEpochSeconds,
