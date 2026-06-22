@@ -113,7 +113,7 @@ internal fun FollowReviewScreen(viewModel: FollowViewModel, onBack: () -> Unit, 
                         title = stringResource(Res.string.copy_advisory),
                         description = stringResource(Res.string.copy_advisory_note),
                         tone = CryptasaBannerTone.Info,
-                        modifier = Modifier.testTag("copy_advisory"),
+                        modifier = Modifier.testTag(CopyTestTags.ADVISORY),
                     )
                     DisclosureRow(stringResource(Res.string.copy_source), BidiSanitizer.sanitize(preview.source), ltr = true, truncate = false)
                     // Mirror token (KAN-161) — advisory, NOT in the signed enable: fixed → the exact receive

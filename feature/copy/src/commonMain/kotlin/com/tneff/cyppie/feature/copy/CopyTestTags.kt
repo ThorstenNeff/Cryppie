@@ -27,6 +27,7 @@ object CopyTestTags {
     // Screen 3 — verified disclosure + authorize/sign
     const val REVIEW_SCREEN = "copy_review_title"
     const val DISCLOSURE = "copy_you_authorize"
+    const val ADVISORY = "copy_advisory" // the ℹ️ advisory section banner (KAN-168 F4)
     const val DISCLOSURE_CAP = "copy_cap"
     const val PASSWORD = "copy_password"
     const val AUTHORIZE = "copy_authorize"
