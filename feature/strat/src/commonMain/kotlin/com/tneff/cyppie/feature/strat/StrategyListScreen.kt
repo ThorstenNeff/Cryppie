@@ -197,7 +197,10 @@ private fun StrategyDetailScreen(
             DisclosureRow(stringResource(Res.string.strat_budget), humanAmount(session.budgetBaseUnits, budgetTokenDecimals), ltr = true)
             DisclosureRow(stringResource(Res.string.strat_drift), "${session.driftBps / 100}%", ltr = true, valueTestTag = StrategyTestTags.DETAIL_DRIFT)
             session.performance?.let { DisclosureRow(stringResource(Res.string.strat_performance), BidiSanitizer.sanitize(it), ltr = true) }
-            DisclosureRow(stringResource(Res.string.strat_last_rebalance, formatRebalance(session.lastRebalanceEpochSeconds)), "", ltr = true)
+            // KAN-170 S5: a normal Label+Value row (was the formatted sentence as label with an empty value —
+            // inconsistent with the rows above). The "Last rebalance %1$s" key with an empty arg → the bare label;
+            // the date is the value. (List-card subtitle above still uses the full formatted sentence.)
+            DisclosureRow(stringResource(Res.string.strat_last_rebalance, "").trim(), formatRebalance(session.lastRebalanceEpochSeconds), ltr = true)
 
             // Current vs Target allocation — two weight columns (no donut yet; weights are readable values).
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.lg)) {
