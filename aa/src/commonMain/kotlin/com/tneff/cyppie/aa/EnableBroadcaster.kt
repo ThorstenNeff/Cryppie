@@ -61,7 +61,7 @@ class EnableBroadcaster(private val aaSigner: AaSigner = AaSigner()) {
             val built = api.buildEnableUserOp(buildRequest)
             val packed = built.userOp.toPackedUserOp()
             // P0 — bind the owner's (full-authority root) signature to an op that enables EXACTLY our session.
-            EnableUserOpVerifier.verify(
+            val verified = EnableUserOpVerifier.verify(
                 userOp = packed, digestToSign = built.digestToSign, chainId = expected.chainId, expectedAccount = owner.value,
                 sessionValidator = expected.sessionValidator, sessionValidatorInitData = expected.sessionValidatorInitData,
                 salt = expected.salt, permissions = expected.permissions,
@@ -73,7 +73,8 @@ class EnableBroadcaster(private val aaSigner: AaSigner = AaSigner()) {
                 ?: throw IllegalArgumentException("digestToSign not valid hex")
             val digests = if (authDigest != null) listOf(authDigest, userOpDigest) else listOf(userOpDigest)
             val signatures = aaSigner.signDigests(digests, owner, seedSource, closeSeed = false)
-            SignedEnable(built.userOpHash, auth, signatures)
+            // P2 (KAN-162): submit the RECOMPUTED userOpHash (what we verified + bound the sig to), not the backend's field.
+            SignedEnable("0x" + Hex.encode(verified.userOpHash), auth, signatures)
         }
         // seed is now zeroized; submit + poll use only the signatures.
         val signedAuthorization = signed.auth?.let { tuple -> signedAuthorization(tuple, signed.signatures[0]) }

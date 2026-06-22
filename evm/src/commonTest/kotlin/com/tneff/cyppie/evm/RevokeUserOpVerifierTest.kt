@@ -60,6 +60,14 @@ class RevokeUserOpVerifierTest {
     }
 
     @Test
+    fun decodeSingle_failsClosed_onNonZeroValue() {
+        // P2 (KAN-162): a non-zero packed value (would move ETH) must be rejected. chars: 0x(2)+selector(8)+mode(64)
+        // +offset(64)+len(64)+target(40) = 242; the value field is the next 64 — flip a digit inside it.
+        val tampered = REVOKE_CALLDATA.substring(0, 250) + "1" + REVOKE_CALLDATA.substring(251)
+        assertFailsWith<IllegalArgumentException> { KernelExecuteBatch.decodeSingle(tampered) }
+    }
+
+    @Test
     fun verify_failsClosed_onUnboundDigest() {
         assertFailsWith<RevokeVerificationException> {
             RevokeUserOpVerifier.verify(op(), "0xdead0000000000000000000000000000000000000000000000000000000000ff", 1L, sender, permissionId)

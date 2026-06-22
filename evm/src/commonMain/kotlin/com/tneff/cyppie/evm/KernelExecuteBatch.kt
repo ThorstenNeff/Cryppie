@@ -59,6 +59,8 @@ object KernelExecuteBatch {
         val execLen = wordToInt(data, execStart)
         val exec = data.copyOfRange(execStart + 32, execStart + 32 + execLen) // packed: target(20) ‖ value(32) ‖ callData
         require(exec.size >= 52) { "single-call execution too short" }
+        // P2 (KAN-162): the call MUST send no ETH — a non-zero value would move native funds alongside the call.
+        for (i in 20 until 52) require(exec[i].toInt() == 0) { "single-call execute carries non-zero value" }
         val target = EvmAddress.fromBytes(exec.copyOfRange(0, 20)).value
         return Execution(target, exec.copyOfRange(52, exec.size))
     }

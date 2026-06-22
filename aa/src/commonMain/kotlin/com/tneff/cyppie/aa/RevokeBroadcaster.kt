@@ -45,14 +45,15 @@ class RevokeBroadcaster(private val aaSigner: AaSigner = AaSigner()) {
             )
             val built = api.buildEnableUserOp(buildRequest)
             // P0 — bind the owner's (full-authority root) signature to EXACTLY removeSession(expectedPermissionId).
-            RevokeUserOpVerifier.verify(
+            val verified = RevokeUserOpVerifier.verify(
                 userOp = built.userOp.toPackedUserOp(), digestToSign = built.digestToSign,
                 chainId = expected.chainId, expectedAccount = owner.value, expectedPermissionId = expected.permissionId,
             )
             val userOpDigest = Hex.decodeOrNull(built.digestToSign.removePrefix("0x"))
                 ?: throw IllegalArgumentException("digestToSign not valid hex")
             val signature = aaSigner.signDigests(listOf(userOpDigest), owner, seedSource, closeSeed = false).first()
-            built.userOpHash to signature
+            // P2 (KAN-162): submit the RECOMPUTED userOpHash (verified + sig-bound), not the backend's field.
+            ("0x" + Hex.encode(verified.userOpHash)) to signature
         }
         val userOpHash = api.submitEnableUserOp(SubmitEnableRequest(signed.first, signed.second, null))
 
