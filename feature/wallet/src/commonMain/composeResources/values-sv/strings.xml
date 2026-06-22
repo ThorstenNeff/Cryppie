@@ -141,4 +141,5 @@
   <string name="home_market">Marknader</string>
   <string name="home_dca">Auto-Invest</string>
   <string name="home_copy">Copy trading</string>
+  <string name="home_strat">Strategier</string>
 </resources>

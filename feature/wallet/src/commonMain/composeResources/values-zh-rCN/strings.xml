@@ -141,4 +141,5 @@
   <string name="home_market">行情</string>
   <string name="home_dca">自动定投</string>
   <string name="home_copy">跟单交易</string>
+  <string name="home_strat">策略</string>
 </resources>

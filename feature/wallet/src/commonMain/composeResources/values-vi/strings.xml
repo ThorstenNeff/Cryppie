@@ -141,4 +141,5 @@
   <string name="home_market">Thị trường</string>
   <string name="home_dca">Tự động đầu tư</string>
   <string name="home_copy">Sao chép giao dịch</string>
+  <string name="home_strat">Chiến lược</string>
 </resources>

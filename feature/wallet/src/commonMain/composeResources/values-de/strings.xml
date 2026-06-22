@@ -141,4 +141,5 @@
   <string name="home_market">Märkte</string>
   <string name="home_dca">Auto-Invest</string>
   <string name="home_copy">Copy-Trading</string>
+  <string name="home_strat">Strategien</string>
 </resources>
