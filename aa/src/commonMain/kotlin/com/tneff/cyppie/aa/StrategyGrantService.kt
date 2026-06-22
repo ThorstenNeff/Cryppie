@@ -48,7 +48,9 @@ class StrategyGrantService(
             expectedCaps = p.caps.associate { it.token to it.capBaseUnits }, // 🔒 the granted per-token cap VALUES (not just tokens)
             infraActions = listOf(SmartSessionGrantVerifier.ActionPin(StrategyEnableBuilder.PERMIT2, StrategyEnableBuilder.PERMIT2_APPROVE_SELECTOR)),
         )
-        return StrategyGrantPreview(verified, request.basket, enable) // basket weights = advisory intent (not in the enable)
+        // p.caps == the crypto-verified caps (verifyBasketGrant asserted cap VALUES vs the signed bytes) + the FR-9
+        // ≈value snapshot for the disclosure rows. verifiedGrant.caps is TokenCap (token+cap only, no ≈value).
+        return StrategyGrantPreview(verified, request.basket, enable, p.caps)
     }
 
     /** Phase 2 (authorize): run the shared broadcaster (build→verify→owner-sign→submit→poll), then register. */
@@ -75,13 +77,15 @@ class StrategyGrantService(
 
 /**
  * The no-blind disclosure for the Strategy grant UI (KAN-166 seam). [verifiedGrant] is the **crypto-verified**
- * SELL-cap scope (🔒 — the per-token sell-caps + router + window); [weights] are **advisory** (ℹ️ — the rebalance
- * target, not on-chain-enforced) the UI must render visually separated.
+ * SELL-cap scope (🔒 — the per-token sell-caps + router + window); [caps] are the same verified per-token caps but
+ * carry the FR-9 ≈value snapshot ([StrategyCap.valueSnapshotBaseUnits]) for the ≈value/envelope display rows;
+ * [weights] are **advisory** (ℹ️ — the rebalance target, not on-chain-enforced) the UI renders visually separated.
  */
 data class StrategyGrantPreview(
     val verifiedGrant: VerifiedBasketGrant,
     val weights: List<StrategyWeight>,
     val enable: BuiltStrategyEnable,
+    val caps: List<StrategyCap>,
 )
 
 data class StrategyGrantResult(val permissionId: String, val userOpHash: String, val txHash: String?)
