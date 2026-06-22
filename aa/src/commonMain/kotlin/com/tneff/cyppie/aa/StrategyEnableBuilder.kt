@@ -5,8 +5,10 @@ import com.tneff.cyppie.evm.SmartSessionEnableDigest
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.ActionData
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.PolicyData
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions
+import kotlinx.serialization.Serializable
 
 /** One per-token SELL-cap in a strategy basket: the SpendingLimit on [token]'s approve. */
+@Serializable
 data class StrategyCap(val token: String, val capBaseUnits: String)
 
 /**
