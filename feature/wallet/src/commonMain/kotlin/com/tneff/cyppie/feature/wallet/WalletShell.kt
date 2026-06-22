@@ -29,10 +29,14 @@ import com.tneff.cyppie.feature.copy.CopyActiveScreen
 import com.tneff.cyppie.feature.copy.CopyRoot
 import com.tneff.cyppie.feature.copy.CopySessionsViewModel
 import com.tneff.cyppie.feature.copy.CopyToken
+import com.tneff.cyppie.aa.KtorStrategyApi
+import com.tneff.cyppie.aa.StrategyGrantService
+import com.tneff.cyppie.aa.StrategyScopeRequest
+import com.tneff.cyppie.aa.StrategyWeight
+import com.tneff.cyppie.feature.strat.BasketTarget
 import com.tneff.cyppie.feature.strat.StrategyListScreen
 import com.tneff.cyppie.feature.strat.StrategyListViewModel
 import com.tneff.cyppie.feature.strat.StrategyRoot
-import com.tneff.cyppie.feature.strat.StubStrategyGrantService
 import com.tneff.cyppie.evm.Hex
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
@@ -339,6 +343,10 @@ fun WalletShell(onLock: () -> Unit) {
     // service (prepareGrant runs verifyGrant; authorizeGrant runs verifyEnableUserOp before owner-signing).
     val copyApi = remember(seedSource) { KtorCopyApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
     val followService = remember(copyApi) { FollowGrantService(copyApi) }
+    // Smart-Strategies (PRD-07b, KAN-165/166): same JWT User-Service + Dev-2's on-device verify→sign→submit grant
+    // service (prepareGrant runs verifyBasketGrant on the canonical per-token sell-caps; authorizeGrant broadcasts).
+    val strategyApi = remember(seedSource) { KtorStrategyApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
+    val strategyService = remember(strategyApi) { StrategyGrantService(strategyApi) }
     // AA-op signing uses a FRESH per-op re-auth source (explicit consent per funds-moving signature), like
     // Send/WC — distinct from the light post-unlock SIWE consent (ambient session, identity only).
     val dcaReauth: suspend (String) -> SeedSource? = remember {
@@ -569,15 +577,15 @@ fun WalletShell(onLock: () -> Unit) {
         }
         WalletDest.Strat -> {
             // Smart-Strategies area landing (KAN-166, Strat2-List): active strategies + "New strategy" CTA.
-            // Scaffold seam = StubStrategyGrantService (Dev-2's KAN-165 :aa service swaps in later). FLAG_SECURE
-            // is owned by StrategyListScreen itself (KAN-168). router/selector are scaffold placeholders.
-            val strategyStub = remember { StubStrategyGrantService(dcaGrantParams.router, dcaGrantParams.swapSelector, COPY_WINDOW_SECONDS, ::nowEpochSeconds) }
+            // FLAG_SECURE owned by StrategyListScreen (KAN-168). The strategy-sessions LIST/REVOKE endpoints aren't
+            // in StrategyApi yet (only prepare/grant) → the list is empty until a backend strat-list lands (follow);
+            // the GRANT path uses Dev-2's real StrategyGrantService (KAN-165).
             val stratListVm: StrategyListViewModel = viewModel(key = "strat_list") {
                 StrategyListViewModel(
-                    listStrategies = { strategyStub.listStrategies() },
-                    revokeStrategy = { session, seed -> strategyStub.revoke(session, seed) },
+                    listStrategies = { emptyList() }, // TODO(KAN-166 follow): GET strat sessions when backend lands it
+                    revokeStrategy = { _, _ -> },      // TODO: RevokeBroadcaster(strategy permissionId) when list lands
                     reauth = dcaReauth,
-                    setPaused = { session, paused -> strategyStub.setPaused(session, paused) },
+                    setPaused = { _, _ -> },
                 )
             }
             StrategyListScreen(
@@ -589,13 +597,28 @@ fun WalletShell(onLock: () -> Unit) {
             )
         }
         WalletDest.StratNew -> {
-            // Strategy setup → review → on-device sign (KAN-166). Scaffold seam; FLAG_SECURE owned by the
-            // StrategyReviewScreen itself (KAN-168). Real verify→sign→submit = Dev-2 KAN-165.
-            val strategyStub = remember { StubStrategyGrantService(dcaGrantParams.router, dcaGrantParams.swapSelector, COPY_WINDOW_SECONDS, ::nowEpochSeconds) }
+            // Strategy setup → review → on-device sign (KAN-166 integration). FLAG_SECURE owned by
+            // StrategyReviewScreen (KAN-168). Real verify→sign→submit = Dev-2's StrategyGrantService (KAN-165):
+            // the app sends the INTENT (budgetToken/budget/basket-weights); prepare returns the canonical per-token
+            // sell-caps → verifyBasketGrant → disclosure 🔒 caps + ℹ️ weights → owner-sign via EnableBroadcaster.
             StrategyRoot(
                 budgetTokenDecimals = dcaGrantParams.spendTokenDecimals,
-                prepareGrant = { targets, budgetBaseUnits -> strategyStub.prepareGrant(targets, budgetBaseUnits) },
-                authorizeGrant = { preview, seed -> strategyStub.authorizeGrant(preview, seed) },
+                prepareGrant = { targets, budgetBaseUnits ->
+                    val now = nowEpochSeconds()
+                    strategyService.prepareGrant(
+                        StrategyScopeRequest(
+                            chainId = dcaGrantParams.chainId,
+                            follower = dcaOwner.value,
+                            budgetToken = dcaGrantParams.spendToken,
+                            budget = budgetBaseUnits,
+                            basket = targets.map { StrategyWeight(it.token, it.weightPercent * 100) }, // % → bps
+                            windowStart = now,
+                            windowEnd = now + COPY_WINDOW_SECONDS,
+                        ),
+                        dcaOwner,
+                    )
+                },
+                authorizeGrant = { preview, seed -> strategyService.authorizeGrant(preview, seed) },
                 reauth = dcaReauth,
                 onExit = { dest = WalletDest.Strat }, // back to the Strat list (a new strategy shows there)
             )

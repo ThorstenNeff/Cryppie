@@ -1,5 +1,11 @@
 package com.tneff.cyppie.feature.strat
 
+import com.tneff.cyppie.aa.BuiltStrategyEnable
+import com.tneff.cyppie.aa.StrategyGrantPreview
+import com.tneff.cyppie.aa.StrategyWeight
+import com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions
+import com.tneff.cyppie.evm.TokenCap
+import com.tneff.cyppie.evm.VerifiedBasketGrant
 import com.tneff.cyppie.wallet.SeedSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,10 +33,23 @@ class StrategyViewModelTest {
 
     private val seed: SeedSource = SeedSource.ofSeed(ByteArray(64))
 
-    private fun preview(targets: List<BasketTarget>, budget: String) = StrategyGrantPreview(
-        sellCapBaseUnits = budget, basketTokens = targets.map { it.token }, router = ROUTER,
-        actionSelector = "0x5ae401dc", windowStartEpochSeconds = 0L, windowEndEpochSeconds = 100L, targets = targets,
-    )
+    // The :aa StrategyGrantPreview (KAN-165): 🔒 verifiedGrant (per-token sell-caps) + ℹ️ advisory weights + the
+    // enable. The VM only stores it + hands `enable` to the (faked) authorizeGrant, so a minimal enable is fine.
+    private fun preview(targets: List<BasketTarget>, budget: String): StrategyGrantPreview {
+        val weights = targets.map { StrategyWeight(it.token, it.weightPercent * 100) }
+        return StrategyGrantPreview(
+            verifiedGrant = VerifiedBasketGrant(
+                account = "0x" + "f".repeat(40), chainId = 1L, actionTarget = ROUTER, actionSelector = "0x5ae401dc",
+                caps = targets.map { TokenCap(it.token, budget) }, windowStartEpochSeconds = 0L, windowEndEpochSeconds = 100L,
+            ),
+            weights = weights,
+            enable = BuiltStrategyEnable(
+                digestToSign = "0x", account = "0x" + "f".repeat(40), chainId = 1L, sessionValidator = "0x",
+                sessionValidatorInitData = "0x", salt = "0x", nonce = "0", permissionId = "0x",
+                permissions = SignedPermissions(permitERC4337Paymaster = true), capTokens = targets.map { it.token },
+            ),
+        )
+    }
 
     private fun vm(
         prepare: suspend (List<BasketTarget>, String) -> StrategyGrantPreview = { t, b -> preview(t, b) },
@@ -65,7 +84,7 @@ class StrategyViewModelTest {
         m.review()
         assertEquals(StratStep.Review, m.step)
         assertNotNull(m.prepared)
-        assertEquals(2, m.prepared!!.basketTokens.size)
+        assertEquals(2, m.prepared!!.verifiedGrant.caps.size)
     }
 
     @Test

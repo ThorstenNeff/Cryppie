@@ -42,12 +42,10 @@ import com.tneff.cyppie.feature.strat.generated.resources.strat_advisory_note
 import com.tneff.cyppie.feature.strat.generated.resources.strat_allowed
 import com.tneff.cyppie.feature.strat.generated.resources.strat_authorize
 import com.tneff.cyppie.feature.strat.generated.resources.strat_authorizing
-import com.tneff.cyppie.feature.strat.generated.resources.strat_basket
 import com.tneff.cyppie.feature.strat.generated.resources.strat_budget
 import com.tneff.cyppie.feature.strat.generated.resources.strat_cap
 import com.tneff.cyppie.feature.strat.generated.resources.strat_caveat
 import com.tneff.cyppie.feature.strat.generated.resources.strat_continue
-import com.tneff.cyppie.feature.strat.generated.resources.strat_disclosure
 import com.tneff.cyppie.feature.strat.generated.resources.strat_err_budget
 import com.tneff.cyppie.feature.strat.generated.resources.strat_err_min
 import com.tneff.cyppie.feature.strat.generated.resources.strat_err_password
@@ -161,7 +159,7 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
     var password by remember { mutableStateOf("") }
     val preview = viewModel.prepared
     if (preview == null) { onBack(); return } // defensive: no verified grant → back to setup
-    val capHuman = viewModel.capHuman(preview.sellCapBaseUnits)
+    val v = preview.verifiedGrant
 
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 480.dp).fillMaxSize()) {
@@ -171,26 +169,30 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
                 verticalArrangement = Arrangement.spacedBy(spacing.lg),
             ) {
                 Text(stringResource(Res.string.strat_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
-                Text(
-                    stringResource(Res.string.strat_disclosure, capHuman, BidiSanitizer.sanitize(preview.router)),
-                    style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant,
-                )
 
-                // ── Section 1: ON-CHAIN GUARANTEED (sell-side verified grant) ──
+                // ── 🔒 ON-CHAIN GUARANTEED — the verified sell-side grant (KAN-165 VerifiedBasketGrant): the M
+                // per-token SELL-caps over the basket(+budget) tokens + router + allowed-fn + window. Decoded from
+                // the signed enable bytes (verifyBasketGrant) — never raw backend material. ──
                 Column(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag(StrategyTestTags.DISCLOSURE),
                     verticalArrangement = Arrangement.spacedBy(spacing.xs),
                 ) {
                     Text(stringResource(Res.string.strat_guaranteed), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
                     Text(stringResource(Res.string.strat_guaranteed_note), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
-                    DisclosureRow(stringResource(Res.string.strat_cap), BidiSanitizer.sanitize(capHuman), ltr = true, valueTestTag = StrategyTestTags.CAP)
-                    DisclosureRow(stringResource(Res.string.strat_basket), preview.basketTokens.joinToString(", ") { BidiSanitizer.sanitize(it) }, ltr = true, truncate = false)
-                    DisclosureRow(stringResource(Res.string.strat_router), BidiSanitizer.sanitize(preview.router), ltr = true, truncate = false)
-                    DisclosureRow(stringResource(Res.string.strat_allowed), BidiSanitizer.sanitize(preview.actionSelector), ltr = true, truncate = false)
-                    DisclosureRow(stringResource(Res.string.strat_window), "${preview.windowStartEpochSeconds} – ${preview.windowEndEpochSeconds}", ltr = true)
+                    // Per-token sell-caps (🔒): each basket(+budget) token → the max base-units the strategy may sell.
+                    Text(stringResource(Res.string.strat_cap), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
+                    v.caps.forEachIndexed { i, cap ->
+                        DisclosureRow(
+                            BidiSanitizer.sanitize(cap.token), BidiSanitizer.sanitize(cap.capBaseUnits),
+                            ltr = true, truncate = false, valueTestTag = if (i == 0) StrategyTestTags.CAP else null,
+                        )
+                    }
+                    DisclosureRow(stringResource(Res.string.strat_router), BidiSanitizer.sanitize(v.actionTarget), ltr = true, truncate = false)
+                    DisclosureRow(stringResource(Res.string.strat_allowed), BidiSanitizer.sanitize(v.actionSelector), ltr = true, truncate = false)
+                    DisclosureRow(stringResource(Res.string.strat_window), "${v.windowStartEpochSeconds} – ${v.windowEndEpochSeconds}", ltr = true)
                 }
 
-                // ── Section 2: ADVISORY (target weights — mirror-time, not in the enable) ──
+                // ── ℹ️ ADVISORY — the target weights (rebalance target; NOT in the enable / not on-chain-enforced). ──
                 Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
                     CryptasaBanner(
                         title = stringResource(Res.string.strat_advisory),
@@ -199,7 +201,7 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
                     )
                     DisclosureRow(
                         stringResource(Res.string.strat_weights),
-                        preview.targets.joinToString(" · ") { "${BidiSanitizer.sanitize(it.token)} ${it.weightPercent}%" },
+                        preview.weights.joinToString(" · ") { "${BidiSanitizer.sanitize(it.token)} ${it.weightBps / 100}%" },
                         ltr = true, truncate = false,
                     )
                 }
