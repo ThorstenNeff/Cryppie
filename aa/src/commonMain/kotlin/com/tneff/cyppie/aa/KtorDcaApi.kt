@@ -14,7 +14,7 @@ import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 
 @Serializable
-private data class GrantRequest(val config: SessionConfig, val enableSignature: String)
+private data class GrantRequest(val config: SessionConfig)
 
 @Serializable
 private data class SignatureRequest(val signature: String)
@@ -46,12 +46,13 @@ class KtorDcaApi(
     private suspend fun bearer(): String =
         bearerToken().ifBlank { throw IllegalStateException("no auth token — sign in required") }
 
-    // KAN-159: the enable is broadcast on-chain (EnableBroadcastApi) before register, so `enableSignature`
-    // is dead data — kept as an empty field for wire-compatibility until the backend drops it from the body.
+    // KAN-159: the enable is broadcast on-chain (EnableBroadcastApi) before register; the live endpoint
+    // (`0a2b24c`) accepts the nested `{config}` body and derives chain_id/account/signer/valid_until from it
+    // (account==SIWE guard, no enableSignature). Single source of truth — no duplicated/driftable fields.
     override suspend fun grantSession(config: SessionConfig): GrantResult =
         httpClient.post("$base/v1/me/sessions") {
             expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)
-            setBody(GrantRequest(config, enableSignature = ""))
+            setBody(GrantRequest(config))
         }.body()
 
     override suspend fun listSessions(): List<SessionConfig> =
