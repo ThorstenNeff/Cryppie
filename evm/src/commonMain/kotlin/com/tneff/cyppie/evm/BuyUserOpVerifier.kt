@@ -26,9 +26,12 @@ object BuyUserOpVerifier {
         val account: String,
         val chainId: Long,
         val spendToken: String,
+        val tokenOut: String,
         val router: String,
         val userOpHash: ByteArray,
     )
+
+    const val EXACT_INPUT_SINGLE_SELECTOR: String = "0x04e45aaf" // SwapRouter02 exactInputSingle(ExactInputSingleParams)
 
     fun verify(
         userOp: Erc4337UserOp.PackedUserOp,
@@ -36,6 +39,7 @@ object BuyUserOpVerifier {
         chainId: Long,
         expectedAccount: String,
         spendToken: String,
+        tokenOut: String,
         router: String,
         swapSelector: String,
     ): VerifiedBuy {
@@ -77,12 +81,56 @@ object BuyUserOpVerifier {
         if (!KernelExecuteBatch.selectorOf(swap).equals(swapSelector, ignoreCase = true)) {
             throw BuyVerificationException("swap selector != pinned router function")
         }
-        return VerifiedBuy(expectedAccount, chainId, spendToken, router, userOpHash)
+        // 3. 🔒 Bind the swap OUTPUT token: decode multicall → exactInputSingle → tokenOut, assert == expected. The
+        //    outer router/selector pin alone leaves tokenOut free → a malicious backend could churn the capped
+        //    spendToken into a worthless token (the SpendingLimits cap only bounds the SELL side). For DCA the buy
+        //    target is fixed by the schedule, so we pin it (pure address match, oracle-free).
+        val swapTokenOut = decodeExactInputSingleTokenOut(swap.callData)
+        if (!swapTokenOut.equals(tokenOut, ignoreCase = true)) {
+            throw BuyVerificationException("swap tokenOut $swapTokenOut != expected $tokenOut")
+        }
+        return VerifiedBuy(expectedAccount, chainId, spendToken, tokenOut, router, userOpHash)
     }
 
     /** `approve(address spender, uint256 amount)` → the spender (low 20 bytes of the first arg word). */
     private fun approveSpender(callData: ByteArray): String {
         if (callData.size < 4 + 32) throw BuyVerificationException("approve calldata too short")
         return EvmAddress.fromBytes(callData.copyOfRange(4 + 12, 4 + 32)).value
+    }
+
+    /**
+     * Decodes `multicall(uint256 deadline, bytes[] data)` (selector pinned by the caller) whose single inner call is
+     * `exactInputSingle(ExactInputSingleParams)` — returns its `tokenOut` (the 2nd struct word). Fail-closed if the
+     * inner call is not exactInputSingle or the encoding is malformed.
+     */
+    private fun decodeExactInputSingleTokenOut(multicall: ByteArray): String {
+        // multicall args (after the 4-byte selector): word0 = deadline, word1 = offset to bytes[] data.
+        val args = 4
+        val dataOff = word(multicall, args + 32)
+        val dataPos = args + dataOff
+        val n = word(multicall, dataPos)
+        if (n < 1) throw BuyVerificationException("multicall has no inner calls")
+        val elem0 = dataPos + 32 + word(multicall, dataPos + 32) // offset to data[0], relative to the offset table
+        val innerLen = word(multicall, elem0)
+        val innerStart = elem0 + 32
+        if (innerStart + innerLen > multicall.size || innerLen < 4 + 32 * 2) {
+            throw BuyVerificationException("malformed inner swap call")
+        }
+        val inner = multicall.copyOfRange(innerStart, innerStart + innerLen)
+        if (!("0x" + Hex.encode(inner.copyOfRange(0, 4))).equals(EXACT_INPUT_SINGLE_SELECTOR, ignoreCase = true)) {
+            throw BuyVerificationException("inner swap is not exactInputSingle")
+        }
+        // ExactInputSingleParams = (tokenIn, tokenOut, fee, recipient, amountIn, amountOutMinimum, sqrtPriceLimitX96).
+        return EvmAddress.fromBytes(inner.copyOfRange(4 + 32 + 12, 4 + 32 + 32)).value // word[1] = tokenOut
+    }
+
+    /** Reads a 32-byte word at [off] as a non-negative Int (ABI offset/length); fail-closed if it overflows. */
+    private fun word(b: ByteArray, off: Int): Int {
+        if (off + 32 > b.size) throw BuyVerificationException("calldata too short")
+        for (i in off until off + 28) if (b[i].toInt() != 0) throw BuyVerificationException("oversized offset/length")
+        var v = 0L
+        for (i in off + 28 until off + 32) v = (v shl 8) or (b[i].toLong() and 0xFF)
+        if (v > Int.MAX_VALUE) throw BuyVerificationException("offset/length too large")
+        return v.toInt()
     }
 }

@@ -14,14 +14,24 @@ class BuyUserOpVerifierTest {
 
     private val account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     private val usdc = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    private val weth = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     private val router = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
     private val swapSelector = "0x5ae401dc"
 
     private fun approveCall(spender: String) =
         Abi.encodeWithSelector(APPROVE, Abi.address(spender), Abi.uint(Quantity.of(1_000_000L)))
 
-    private fun swapCall(selector: String) =
-        Hex.decodeOrNull(selector.removePrefix("0x"))!! + ByteArray(64) // selector + arbitrary multicall body
+    // multicall(deadline, [ exactInputSingle(tokenIn=usdc, tokenOut, fee, recipient, amountIn, 0, 0) ])
+    private fun swapCall(tokenOut: String = weth): ByteArray {
+        val exactInputSingle = Abi.encodeWithSelector(
+            "0x04e45aaf",
+            Abi.address(usdc), Abi.address(tokenOut), Abi.uint(Quantity.of(500L)), Abi.address(account),
+            Abi.uint(Quantity.of(1_000_000L)), Abi.uint(Quantity.of(0)), Abi.uint(Quantity.of(0)),
+        )
+        return Abi.encodeWithSelector(
+            swapSelector, Abi.uint(Quantity.of(1_900_000_000L)), Abi.array(listOf(Abi.bytes("0x" + Hex.encode(exactInputSingle)))),
+        )
+    }
 
     private fun batch(calls: List<Pair<String, ByteArray>>): String {
         val execs = calls.map { (to, data) -> Abi.tuple(listOf(Abi.address(to), Abi.uint(Quantity.of(0)), Abi.bytes("0x" + Hex.encode(data)))) }
@@ -37,17 +47,24 @@ class BuyUserOpVerifierTest {
         paymasterAndData = "0x",
     )
 
-    private val buyOp = op(batch(listOf(usdc to approveCall(router), router to swapCall(swapSelector))))
+    private val buyOp = op(batch(listOf(usdc to approveCall(router), router to swapCall())))
     private val rawDigest = "0x" + Hex.encode(Erc4337UserOp.userOpHash(buyOp, 1L))
 
-    private fun verify(o: Erc4337UserOp.PackedUserOp, digest: String, token: String = usdc, r: String = router) =
-        BuyUserOpVerifier.verify(o, digest, chainId = 1L, expectedAccount = account, spendToken = token, router = r, swapSelector = swapSelector)
+    private fun verify(o: Erc4337UserOp.PackedUserOp, digest: String, token: String = usdc, out: String = weth, r: String = router) =
+        BuyUserOpVerifier.verify(o, digest, chainId = 1L, expectedAccount = account, spendToken = token, tokenOut = out, router = r, swapSelector = swapSelector)
 
     @Test
     fun verify_roundTrips_theBuy() {
         val v = verify(buyOp, rawDigest)
         assertEquals(usdc, v.spendToken)
+        assertEquals(weth, v.tokenOut)
         assertEquals(router, v.router)
+    }
+
+    @Test
+    fun failsClosed_onWrongTokenOut() {
+        // 🔒 the inner exactInputSingle tokenOut is bound — a different expected buy token → fail-closed.
+        assertFailsWith<BuyVerificationException> { verify(buyOp, rawDigest, out = "0x000000000000000000000000000000000000bEEF") }
     }
 
     @Test
@@ -69,13 +86,13 @@ class BuyUserOpVerifierTest {
 
     @Test
     fun failsClosed_onApproveSpenderNotRouter() {
-        val bad = op(batch(listOf(usdc to approveCall("0x000000000000000000000000000000000000dEaD"), router to swapCall(swapSelector))))
+        val bad = op(batch(listOf(usdc to approveCall("0x000000000000000000000000000000000000dEaD"), router to swapCall())))
         assertFailsWith<BuyVerificationException> { verify(bad, "0x" + Hex.encode(Erc4337UserOp.userOpHash(bad, 1L))) }
     }
 
     @Test
     fun failsClosed_onExtraCall() {
-        val three = op(batch(listOf(usdc to approveCall(router), router to swapCall(swapSelector), router to swapCall(swapSelector))))
+        val three = op(batch(listOf(usdc to approveCall(router), router to swapCall(), router to swapCall())))
         assertFailsWith<BuyVerificationException> { verify(three, "0x" + Hex.encode(Erc4337UserOp.userOpHash(three, 1L))) }
     }
 
@@ -93,10 +110,10 @@ class BuyUserOpVerifierTest {
         )
         val ethHash = "0x10a9d27aeff1a9c43ec52f7f478e69fa553fb71f8a6565c55fde969d3a89331f"
         assertEquals(ethHash.removePrefix("0x"), Hex.encode(Erc4337UserOp.userOpHash(realBuy, 1L)))
-        assertEquals(usdc, BuyUserOpVerifier.verify(realBuy, ethHash, 1L, account, usdc, router, swapSelector).spendToken)
+        assertEquals(usdc, BuyUserOpVerifier.verify(realBuy, ethHash, 1L, account, usdc, weth, router, swapSelector).spendToken)
         val baseHash = "0x37b67188d3f56d6a9f9ca09a9b16fbb21fce28a2ca68668e910fd8af2e63947b"
         assertEquals(baseHash.removePrefix("0x"), Hex.encode(Erc4337UserOp.userOpHash(realBuy, 8453L)))
-        assertEquals(router, BuyUserOpVerifier.verify(realBuy, baseHash, 8453L, account, usdc, router, swapSelector).router)
+        assertEquals(router, BuyUserOpVerifier.verify(realBuy, baseHash, 8453L, account, usdc, weth, router, swapSelector).router)
     }
 
     private companion object {
