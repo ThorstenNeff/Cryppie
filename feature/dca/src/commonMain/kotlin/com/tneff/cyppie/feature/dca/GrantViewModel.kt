@@ -33,6 +33,10 @@ data class DcaGrantParams(
     val swapSelector: String,
     val spendToken: String,
     val spendTokenDecimals: Int, // P1-5: scale the human cap to base units (e.g. USDC = 6)
+    // KAN-168 D2: the token the user is DCAing INTO (what's bought). It is NOT in the signed enable / verifyGrant
+    // (the on-chain grant only caps the spend-token sell on the router) — so it's disclosed as ADVISORY, like
+    // Copy's tokenOut. Shown so the user sees what they buy before signing.
+    val buyToken: String,
 )
 
 /**
@@ -108,6 +112,9 @@ class GrantViewModel(
         while (carry > 0) { out.addFirst('0' + (carry % 10).toInt()); carry /= 10 }
         return out.joinToString("").trimStart('0').ifEmpty { "0" }
     }
+
+    /** KAN-168 D2: the advisory receive/buy token (what the DCA buys) — NOT in the verified grant. */
+    val receiveToken: String get() = params.buyToken
 
     /**
      * The VERIFIED cap rendered in whole units, float-free, via the configured token decimals. If the

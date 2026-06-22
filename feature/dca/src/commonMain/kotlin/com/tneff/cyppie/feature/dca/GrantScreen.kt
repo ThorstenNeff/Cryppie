@@ -4,8 +4,13 @@ import com.tneff.cyppie.feature.dca.generated.resources.Res
 import com.tneff.cyppie.feature.dca.generated.resources.dca_amount_per_buy
 import com.tneff.cyppie.feature.dca.generated.resources.dca_authorize
 import com.tneff.cyppie.feature.dca.generated.resources.dca_account
+import com.tneff.cyppie.feature.dca.generated.resources.dca_advisory
+import com.tneff.cyppie.feature.dca.generated.resources.dca_advisory_note
 import com.tneff.cyppie.feature.dca.generated.resources.dca_chain
 import com.tneff.cyppie.feature.dca.generated.resources.dca_authorizing
+import com.tneff.cyppie.feature.dca.generated.resources.dca_guaranteed
+import com.tneff.cyppie.feature.dca.generated.resources.dca_guaranteed_note
+import com.tneff.cyppie.feature.dca.generated.resources.dca_receive_token
 import com.tneff.cyppie.feature.dca.generated.resources.dca_expires
 import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_daily
 import com.tneff.cyppie.feature.dca.generated.resources.dca_freq_weekly
@@ -112,13 +117,15 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                         modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag("dca_grant_review"),
                     )
                 } else {
-                    // No-blind disclosure — renders ONLY the VerifiedGrant (decoded from the bytes inside the
-                    // signed enable digest), never the raw backend material. External strings sanitized.
+                    Text(stringResource(Res.string.dca_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+                    // ── 🔒 On-chain guaranteed (KAN-168 D2): ONLY the VerifiedGrant (decoded from the bytes inside
+                    // the signed enable digest), never the raw backend material. External strings sanitized. ──
                     Column(
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag("dca_grant_disclosure"),
                         verticalArrangement = Arrangement.spacedBy(spacing.xs),
                     ) {
-                        Text(stringResource(Res.string.dca_you_authorize), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+                        Text(stringResource(Res.string.dca_guaranteed), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
+                        Text(stringResource(Res.string.dca_guaranteed_note), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
                         DisclosureRow(stringResource(Res.string.dca_account), BidiSanitizer.sanitize(verified.account), ltr = true, truncate = false)
                         DisclosureRow(stringResource(Res.string.dca_chain), verified.chainId.toString(), ltr = true)
                         DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(verified.actionTarget), ltr = true, truncate = false)
@@ -128,6 +135,17 @@ fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Uni
                         DisclosureRow(stringResource(Res.string.dca_total_cap), "${viewModel.capHuman(verified)} (= ${viewModel.capAmount} × ${viewModel.estimatedBuys()})", ltr = true, valueTestTag = "dca_grant_cap")
                         DisclosureRow(stringResource(Res.string.dca_window_start), verified.windowStartEpochSeconds.toString(), ltr = true)
                         DisclosureRow(stringResource(Res.string.dca_expires), verified.windowEndEpochSeconds.toString(), ltr = true)
+                    }
+                    // ── ℹ️ Advisory (KAN-168 D2): the receive/buy token. NOT in the signed enable (the on-chain grant
+                    // only caps the spend-token sell) → shown as advisory, like Copy's tokenOut, so the user sees
+                    // what's bought before signing. ──
+                    Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                        CryptasaBanner(
+                            title = stringResource(Res.string.dca_advisory),
+                            description = stringResource(Res.string.dca_advisory_note),
+                            tone = CryptasaBannerTone.Info,
+                        )
+                        DisclosureRow(stringResource(Res.string.dca_receive_token), BidiSanitizer.sanitize(viewModel.receiveToken), ltr = true, truncate = false, valueTestTag = "dca_grant_receive_token")
                     }
 
                     // Re-auth gate (ADR-0009) → on-device sign of the VERIFIED enable digest.
