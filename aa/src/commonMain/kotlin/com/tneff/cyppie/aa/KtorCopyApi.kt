@@ -59,4 +59,10 @@ class KtorCopyApi(
             expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json); setBody(request)
         }
     }
+
+    // KAN-157: the follower is derived from the JWT by the User-Service (not a client query param) — the bearer
+    // IS the identity, so a client can never list another follower's sessions.
+    override suspend fun listCopySessions(): List<CopySession> =
+        httpClient.get("$base/v1/copy/sessions") { expectSuccess = true; bearerAuth(bearer()) }
+            .body<CopySessionsResponse>().sessions
 }

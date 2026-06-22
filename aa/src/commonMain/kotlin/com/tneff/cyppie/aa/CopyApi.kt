@@ -22,7 +22,37 @@ interface CopyApi : EnableBroadcastApi {
 
     /** Mark the session active after a successful enable receipt (`/v1/copy/session/grant`). */
     suspend fun grantSession(request: CopyGrantRequest)
+
+    /**
+     * The follower's **granted** (active|paused) copy sessions for the management/revoke UI (KAN-157,
+     * `GET /v1/copy/sessions`). The User-Service derives the follower from the JWT (the SCA = SIWE address);
+     * `prepared` (not yet enabled) and `revoked` (ended) sessions are excluded backend-side.
+     */
+    suspend fun listCopySessions(): List<CopySession>
 }
+
+/**
+ * One granted copy session as the UX `Copy0-Active` row (KAN-157). Amounts are base-unit decimal Strings
+ * (FR-6). [source] is **advisory** (the followed trader — not an on-chain guarantee, per the Confirm trust
+ * pattern). [remaining] = cap − used (clamped ≥ 0, off-chain Q7 accounting). [status] is `active`
+ * (granted+unpaused) | `paused` (kill-switch); [since] is the grant time (unix s, "following since").
+ */
+@Serializable
+data class CopySession(
+    val permissionId: String,
+    val chainId: Long,
+    val source: String,
+    val token: String,
+    val cap: String,
+    val used: String,
+    val remaining: String,
+    val status: String,
+    val since: Long,
+    val router: String,
+)
+
+@Serializable
+data class CopySessionsResponse(val follower: String, val sessions: List<CopySession>)
 
 /**
  * The app-built scope for a follow (from the UI's pick-trader + set-budget steps). [follower] is the app's OWN

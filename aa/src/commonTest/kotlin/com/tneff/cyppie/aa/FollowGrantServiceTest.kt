@@ -34,6 +34,7 @@ private class FakeCopyApi(
     }
     override suspend fun opStatus(chainId: Long, userOpHash: String) = statuses.removeFirst()
     override suspend fun grantSession(request: CopyGrantRequest) { grantedPermissionId = request.permissionId }
+    override suspend fun listCopySessions(): List<CopySession> = emptyList()
 }
 
 /** End-to-end orchestration test for the Copy grant (KAN-154) over the byte-exact enable-userOp vector. */
