@@ -20,10 +20,14 @@ import com.tneff.cyppie.aa.CopyEnableBuilder
 import com.tneff.cyppie.aa.CopyScopeRequest
 import com.tneff.cyppie.aa.DcaEnableBuilder
 import com.tneff.cyppie.aa.EnableBroadcaster
+import com.tneff.cyppie.aa.ExpectedRevoke
 import com.tneff.cyppie.aa.FollowGrantService
+import com.tneff.cyppie.aa.RevokeBroadcaster
 import com.tneff.cyppie.aa.KtorCopyApi
 import com.tneff.cyppie.aa.KtorDcaApi
+import com.tneff.cyppie.feature.copy.CopyActiveScreen
 import com.tneff.cyppie.feature.copy.CopyRoot
+import com.tneff.cyppie.feature.copy.CopySessionsViewModel
 import com.tneff.cyppie.evm.Hex
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
@@ -99,7 +103,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant, Copy }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant, Copy, CopyFollow }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -322,6 +326,9 @@ fun WalletShell(onLock: () -> Unit) {
     // KAN-159: the shared on-device enable-broadcast orchestration (verify→sign→submit→poll) — reused by
     // the DCA grant call-site (and Copy via FollowGrantService). Owns the seed-zeroize over the sign window.
     val enableBroadcaster = remember(aaSigner) { EnableBroadcaster(aaSigner) }
+    // KAN-157: the sibling revoke orchestration (build removeSession on-device → verifyRevokeUserOp → owner-sign
+    // in its own seed window → submit → poll). Consumed by the Copy Active-list's revoke seam.
+    val revokeBroadcaster = remember(aaSigner) { RevokeBroadcaster(aaSigner) }
     // Copy-trading (PRD-06, KAN-154/155): same JWT User-Service + Dev-2's on-device verify→sign→submit grant
     // service (prepareGrant runs verifyGrant; authorizeGrant runs verifyEnableUserOp before owner-signing).
     val copyApi = remember(seedSource) { KtorCopyApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
@@ -486,6 +493,30 @@ fun WalletShell(onLock: () -> Unit) {
             GrantScreen(viewModel = grantVm, onDone = { dest = WalletDest.Dca }, onBack = { dest = WalletDest.Dca })
         }
         WalletDest.Copy -> {
+            // Copy area landing (KAN-157, Copy0-Active): the active-copies overview + "Copy a trader" CTA into
+            // the Follow-flow. Revoke is on-chain + owner-signed (no-blind) via the RevokeBroadcaster seam.
+            // FLAG_SECURE over the whole area (the revoke re-auth/sign shows the address+signature context).
+            SecureScreenEffect()
+            val copySessionsVm: CopySessionsViewModel = viewModel(key = "copy_sessions") {
+                CopySessionsViewModel(
+                    listSessions = { copyApi.listCopySessions() },
+                    // No-blind revoke: build removeSession on-device → verifyRevokeUserOp → owner-sign (the
+                    // broadcaster owns the seed-zeroize) → submit → poll. owner = account#0 (the 7702 SCA).
+                    revokeSession = { session, seed ->
+                        revokeBroadcaster.revoke(copyApi, ExpectedRevoke(session.chainId, dcaOwner.value, session.permissionId), seed)
+                    },
+                    reauth = dcaReauth,
+                )
+            }
+            CopyActiveScreen(
+                viewModel = copySessionsVm,
+                tokenDecimals = dcaGrantParams.spendTokenDecimals,
+                formatSince = { iso8601Utc(it).take(10) }, // YYYY-MM-DD (readable-time polish = KAN-148 follow)
+                onCopyTrader = { dest = WalletDest.CopyFollow },
+                onBack = { dest = WalletDest.Home },
+            )
+        }
+        WalletDest.CopyFollow -> {
             // Copy / Follow-Trader flow (KAN-155/161). FLAG_SECURE over the whole flow (disclosure + signature
             // context; spec asks for it on Confirm — superset is fine). owner = account#0 (self-copy guard);
             // fresh per-op re-auth source. The two crypto/network seams bind to Dev-2's FollowGrantService;
@@ -521,7 +552,7 @@ fun WalletShell(onLock: () -> Unit) {
                 },
                 authorizeGrant = { preview, seed -> followService.authorizeGrant(preview, seed) },
                 reauth = dcaReauth,
-                onExit = { dest = WalletDest.Home },
+                onExit = { dest = WalletDest.Copy }, // back to the Active overview (a new follow shows in the list)
             )
         }
     }

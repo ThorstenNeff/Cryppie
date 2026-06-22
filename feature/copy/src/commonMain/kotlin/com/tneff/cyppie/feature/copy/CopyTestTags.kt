@@ -34,4 +34,15 @@ object CopyTestTags {
 
     // Done
     const val DONE_SCREEN = "copy_done_screen"
+
+    // Active overview (Copy0-Active, KAN-157) + on-chain Revoke
+    const val ACTIVE_SCREEN = "copy_active"       // the Active-copies landing
+    const val COPY_CTA = "copy_title"             // "Copy a trader" CTA → Follow-flow
+    const val EMPTY = "copy_empty"                // no-sessions state
+    const val LOAD_ERROR = "copy_load_error"      // list load-error banner
+    const val SESSION_STATUS = "copy_status"      // per-row status badge (icon+text)
+    const val REVOKE = "copy_revoke"              // per-row revoke action
+    const val REVOKE_TITLE = "copy_revoke_title"  // the Revoke-Confirm dialog
+    const val REVOKE_CONFIRM = "copy_revoke_confirm" // the danger confirm button
+    const val REVOKED = "copy_revoked"            // success confirmation
 }
