@@ -38,8 +38,8 @@ class StrategyGrantServiceTest {
     )
 
     private val scope = StrategyScopeRequest(
-        chainId = 1L, follower = owner.value, legs = caps, router = StrategyEnableBuilder.universalRouter(1L)!!,
-        windowStart = 0L, windowEnd = 1893456000L, weights = weights,
+        chainId = 1L, follower = owner.value, budgetToken = usdc, budget = "1000000000", basket = weights,
+        windowStart = 0L, windowEnd = 1893456000L,
     )
 
     @Test

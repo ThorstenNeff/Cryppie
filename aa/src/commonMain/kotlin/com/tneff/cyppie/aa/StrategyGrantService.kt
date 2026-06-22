@@ -48,7 +48,7 @@ class StrategyGrantService(
             expectedCaps = p.caps.associate { it.token to it.capBaseUnits }, // 🔒 the granted per-token cap VALUES (not just tokens)
             infraActions = listOf(SmartSessionGrantVerifier.ActionPin(StrategyEnableBuilder.PERMIT2, StrategyEnableBuilder.PERMIT2_APPROVE_SELECTOR)),
         )
-        return StrategyGrantPreview(verified, request.weights, enable) // weights = advisory (UI input), not from prepare
+        return StrategyGrantPreview(verified, request.basket, enable) // basket weights = advisory intent (not in the enable)
     }
 
     /** Phase 2 (authorize): run the shared broadcaster (build→verify→owner-sign→submit→poll), then register. */

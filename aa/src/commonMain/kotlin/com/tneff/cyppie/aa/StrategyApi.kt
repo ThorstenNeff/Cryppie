@@ -22,21 +22,21 @@ interface StrategyApi : EnableBroadcastApi {
 data class StrategyWeight(val token: String, val weightBps: Int)
 
 /**
- * The app-built strategy scope (`/v1/strategy/session/prepare`, per `strategy-enable-scope-contract.md §2`).
- * [follower] is the app's OWN device-derived owner. [legs] = the per-token SELL-caps (EVERY basket token + the
- * budget token; cap = cumulative per-token) — the on-chain 🔒 set; [router] + [windowStart]/[windowEnd] complete
- * the scope. [weights] are **advisory** (the rebalance target — execution-time, NOT in the enable / permissionId);
- * carried only so the disclosure UI can render them visually separated.
+ * The app's strategy **intent** (`/v1/strategy/session/prepare` — flow (B)): the app sends the target allocation +
+ * budget; the backend KAN-164 strategy engine derives the canonical per-token sell-caps (single-source with the
+ * rebalance logic — no app/engine drift) and returns them in [StrategyPrepare.caps]. [follower] is the app's OWN
+ * device-derived owner. [basket] = the target weights (intent + advisory disclosure); [budget]/[budgetToken] size
+ * the strategy. The derived caps are reviewed + consented by the user before signing (no-blind via `verifyBasketGrant`).
  */
 @Serializable
 data class StrategyScopeRequest(
     val chainId: Long,
     val follower: String,
-    val legs: List<StrategyCap>,
-    val router: String,
+    val budgetToken: String,
+    val budget: String,
+    val basket: List<StrategyWeight>,
     val windowStart: Long,
     val windowEnd: Long,
-    val weights: List<StrategyWeight> = emptyList(),
 )
 
 /**
