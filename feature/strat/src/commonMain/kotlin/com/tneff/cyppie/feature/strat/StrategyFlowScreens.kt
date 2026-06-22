@@ -80,6 +80,7 @@ private fun StratError.res(): StringResource = when (this) {
     StratError.SUM_NOT_100 -> Res.string.strat_err_sum
     StratError.MIN_TOKENS -> Res.string.strat_err_min
     StratError.INVALID_TOKEN -> Res.string.strat_err_token
+    StratError.CHURN_NOT_ACKED -> Res.string.strat_churn_title // VM backstop (button is already gated on the ack)
     StratError.WRONG_PASSWORD -> Res.string.strat_err_password
     StratError.VERIFY_FAILED -> Res.string.strat_err_verify
     StratError.SUBMIT_FAILED -> Res.string.strat_err_submit

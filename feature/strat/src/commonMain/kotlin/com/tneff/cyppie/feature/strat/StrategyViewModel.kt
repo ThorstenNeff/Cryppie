@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 enum class StratStep { Setup, Review, Done }
 
-enum class StratError { ENTER_BUDGET, SUM_NOT_100, MIN_TOKENS, INVALID_TOKEN, WRONG_PASSWORD, VERIFY_FAILED, SUBMIT_FAILED }
+enum class StratError { ENTER_BUDGET, SUM_NOT_100, MIN_TOKENS, INVALID_TOKEN, CHURN_NOT_ACKED, WRONG_PASSWORD, VERIFY_FAILED, SUBMIT_FAILED }
 
 /** One editable target-allocation row in `Strat1-Setup` (basket token + its weight %). */
 data class TargetRow(val token: String = "", val weight: String = "")
@@ -83,6 +83,9 @@ class StrategyViewModel(
     /** Phase 2 — re-auth → on-device sign of the VERIFIED grant (the seam owns the seed-zeroize; no double-close). */
     fun confirm(password: String) {
         val preview = prepared ?: run { error = StratError.VERIFY_FAILED; return }
+        // KAN-167: the churn-risk consent justifies the advisory buy-leg (v1) — enforce it at the VM, fail-closed,
+        // never sign on UI-state alone (the Authorize button also gates on it). No ack → no sign.
+        if (!churnAck) { error = StratError.CHURN_NOT_ACKED; return }
         error = null; submitting = true
         viewModelScope.launch {
             val result: StratError? = runCatching {

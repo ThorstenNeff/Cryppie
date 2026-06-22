@@ -111,15 +111,26 @@ class StrategyViewModelTest {
     fun confirm_success_reachesDone() = runTest {
         val m = vm()
         m.fillValid(); m.review()
+        m.acknowledgeChurn(true) // KAN-167: mandatory churn-risk consent before sign
         m.confirm("pw")
         assertEquals(StratStep.Done, m.step)
         assertNull(m.error)
     }
 
     @Test
+    fun confirm_withoutChurnAck_isFailClosed() = runTest {
+        val m = vm()
+        m.fillValid(); m.review()
+        m.confirm("pw") // no ack → VM refuses, fail-closed (not just the UI button)
+        assertEquals(StratError.CHURN_NOT_ACKED, m.error)
+        assertEquals(StratStep.Review, m.step)
+    }
+
+    @Test
     fun confirm_wrongPassword_isFailClosed() = runTest {
         val m = vm(reauth = { null })
         m.fillValid(); m.review()
+        m.acknowledgeChurn(true)
         m.confirm("bad")
         assertEquals(StratError.WRONG_PASSWORD, m.error)
         assertEquals(StratStep.Review, m.step) // never advanced to Done
