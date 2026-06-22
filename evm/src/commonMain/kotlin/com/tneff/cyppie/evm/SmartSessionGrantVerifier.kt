@@ -235,14 +235,14 @@ object SmartSessionGrantVerifier {
         digestToSign: String,
         swapTarget: String,
         swapSelector: String,
-        expectedCapTokens: Set<String>,
+        expectedCaps: Map<String, String>,
         infraActions: List<ActionPin> = emptyList(),
         spendingLimitPolicy: String = SPENDING_LIMIT_POLICY,
         timeFramePolicy: String = TIMEFRAME_POLICY,
         sessionValidatorPin: String = SESSION_VALIDATOR,
         smartSession: String = SmartSessionEnableDigest.SMART_SESSION_ADDRESS,
     ): VerifiedBasketGrant {
-        if (expectedCapTokens.isEmpty()) throw GrantVerificationException("basket grant needs at least one cap token")
+        if (expectedCaps.isEmpty()) throw GrantVerificationException("basket grant needs at least one cap token")
         // 1-3: identical envelope checks to verifyGrant (digest binds the disclosed material to the pinned module).
         val recomputed = Hex.encode(
             SmartSessionEnableDigest.enableDigest(account, chainId, sessionValidator, sessionValidatorInitData, salt, nonce, permissions, smartSession),
@@ -264,8 +264,10 @@ object SmartSessionGrantVerifier {
         }
         val (start, end) = decodeTimeFrame(windowPolicy.initData)
 
-        // 5: classify every action — M caps (each on a distinct expected token), one swap, the pinned infra.
-        val expected = expectedCapTokens.map { it.lowercase() }.toHashSet()
+        // 5: classify every action — M caps (each on a distinct expected token AT the granted cap value), one swap,
+        //    the pinned infra. 🔒 the permissionId does NOT bind caps/router/window — the SCOPE lives entirely in
+        //    these actions, so the cap VALUE (not just the token) MUST be checked against the granted per-token cap.
+        val expected = expectedCaps.entries.associate { it.key.lowercase() to it.value }
         val seenCaps = HashSet<String>()
         val caps = ArrayList<TokenCap>()
         var sawSwap = false
@@ -283,7 +285,9 @@ object SmartSessionGrantVerifier {
                         throw GrantVerificationException("spending-limit token $token != approve target ${action.actionTarget}")
                     }
                     val key = token.lowercase()
-                    if (key !in expected) throw GrantVerificationException("cap on unexpected token $token (not in the basket+budget set)")
+                    val wantCap = expected[key]
+                        ?: throw GrantVerificationException("cap on unexpected token $token (not in the basket+budget set)")
+                    if (cap != wantCap) throw GrantVerificationException("cap value for $token: signed $cap != granted $wantCap")
                     if (!seenCaps.add(key)) throw GrantVerificationException("duplicate cap for token $token")
                     caps.add(TokenCap(token, cap))
                 }

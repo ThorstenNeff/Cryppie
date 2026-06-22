@@ -45,7 +45,7 @@ class StrategyGrantService(
             sessionValidator = enable.sessionValidator, sessionValidatorInitData = enable.sessionValidatorInitData,
             salt = enable.salt, nonce = enable.nonce, permissions = enable.permissions, digestToSign = enable.digestToSign,
             swapTarget = ur, swapSelector = StrategyEnableBuilder.UNIVERSAL_ROUTER_EXECUTE_SELECTOR,
-            expectedCapTokens = enable.capTokens.toSet(),
+            expectedCaps = p.caps.associate { it.token to it.capBaseUnits }, // 🔒 the granted per-token cap VALUES (not just tokens)
             infraActions = listOf(SmartSessionGrantVerifier.ActionPin(StrategyEnableBuilder.PERMIT2, StrategyEnableBuilder.PERMIT2_APPROVE_SELECTOR)),
         )
         return StrategyGrantPreview(verified, p.weights, enable)

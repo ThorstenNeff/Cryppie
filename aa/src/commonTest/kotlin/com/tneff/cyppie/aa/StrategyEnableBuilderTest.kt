@@ -32,20 +32,20 @@ class StrategyEnableBuilderTest {
         caps = caps, windowStart = window.first, windowEnd = window.second, salt = salt, nonce = 0L,
     )
 
-    private fun verify(permissions: com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions, capTokens: Set<String>, digest: String) =
+    private fun verify(permissions: com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions, capTokens: Map<String, String>, digest: String) =
         SmartSessionGrantVerifier.verifyBasketGrant(
             account = account, chainId = 1L, sessionValidator = SmartSessionGrantVerifier.SESSION_VALIDATOR,
             sessionValidatorInitData = DcaEnableBuilder.ownableInitData(sessionPubkey), salt = salt, nonce = "0",
             permissions = permissions, digestToSign = digest,
             swapTarget = urEth, swapSelector = SmartSessionGrantVerifier.UNIVERSAL_ROUTER_EXECUTE_SELECTOR,
-            expectedCapTokens = capTokens,
+            expectedCaps = capTokens,
             infraActions = listOf(SmartSessionGrantVerifier.ActionPin(permit2, SmartSessionGrantVerifier.PERMIT2_APPROVE_SELECTOR)),
         )
 
     @Test
     fun buildVerifyRoundTrip_returnsTheMCapBasket() {
         val b = built()
-        val grant = verify(b.permissions, setOf(weth, usdc), b.digestToSign)
+        val grant = verify(b.permissions, mapOf(weth to "1000000000000000000", usdc to "1000000000"), b.digestToSign)
         assertEquals(urEth, grant.actionTarget) // the UR is the user-facing swap target
         assertEquals(2, grant.caps.size)
         assertEquals(setOf(weth.lowercase(), usdc.lowercase()), grant.caps.map { it.token.lowercase() }.toSet())
@@ -61,13 +61,19 @@ class StrategyEnableBuilderTest {
     @Test
     fun failsClosed_onUnexpectedCapToken() {
         // verify against a basket set that omits one of the actually-capped tokens → fail-closed.
-        assertFailsWith<GrantVerificationException> { verify(built().permissions, setOf(weth, wbtc), built().digestToSign) }
+        assertFailsWith<GrantVerificationException> { verify(built().permissions, mapOf(weth to "1000000000000000000", wbtc to "100000000"), built().digestToSign) }
+    }
+
+    @Test
+    fun failsClosed_onWrongCapValue() {
+        // 🔒 the cap VALUE (not just the token) is bound — a granted value different from the signed cap → fail-closed.
+        assertFailsWith<GrantVerificationException> { verify(built().permissions, mapOf(weth to "999", usdc to "1000000000"), built().digestToSign) }
     }
 
     @Test
     fun failsClosed_onMissingCapToken() {
         // expect 3 tokens but the session only caps 2 → fail-closed.
-        assertFailsWith<GrantVerificationException> { verify(built().permissions, setOf(weth, usdc, wbtc), built().digestToSign) }
+        assertFailsWith<GrantVerificationException> { verify(built().permissions, mapOf(weth to "1000000000000000000", usdc to "1000000000", wbtc to "100000000"), built().digestToSign) }
     }
 
     @Test
@@ -83,7 +89,7 @@ class StrategyEnableBuilderTest {
                 account, 1L, SmartSessionGrantVerifier.SESSION_VALIDATOR, DcaEnableBuilder.ownableInitData(sessionPubkey), salt, "0", tampered,
             ),
         )
-        assertFailsWith<GrantVerificationException> { verify(tampered, setOf(weth, usdc), digest) }
+        assertFailsWith<GrantVerificationException> { verify(tampered, mapOf(weth to "1000000000000000000", usdc to "1000000000"), digest) }
     }
 
     @Test
@@ -96,6 +102,6 @@ class StrategyEnableBuilderTest {
                 account, 1L, SmartSessionGrantVerifier.SESSION_VALIDATOR, DcaEnableBuilder.ownableInitData(sessionPubkey), salt, "0", tampered,
             ),
         )
-        assertFailsWith<GrantVerificationException> { verify(tampered, setOf(weth, usdc), digest) }
+        assertFailsWith<GrantVerificationException> { verify(tampered, mapOf(weth to "1000000000000000000", usdc to "1000000000"), digest) }
     }
 }

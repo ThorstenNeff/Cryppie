@@ -54,7 +54,9 @@ object StrategyEnableBuilder {
         require(caps.isNotEmpty()) { "a strategy needs at least one capped token" }
         val ur = universalRouter(chainId) ?: throw IllegalArgumentException("unsupported chainId $chainId")
         val window = PolicyData(DcaEnableBuilder.TIMEFRAME_POLICY, DcaEnableBuilder.timeFrameInitData(validAfter = windowStart, validUntil = windowEnd))
-        val capActions = caps.map { cap ->
+        // Canonical leg order = sorted by token address (matches the backend `sortLegs`) → the enableSessions bytes
+        // + digest are independent of the input order. Per-token dedup is enforced by verifyBasketGrant downstream.
+        val capActions = caps.sortedBy { it.token.lowercase() }.map { cap ->
             ActionData(
                 DcaEnableBuilder.APPROVE_SELECTOR,
                 cap.token,
