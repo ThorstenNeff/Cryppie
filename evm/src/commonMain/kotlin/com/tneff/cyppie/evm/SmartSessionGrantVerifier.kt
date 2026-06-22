@@ -21,6 +21,25 @@ data class VerifiedGrant(
     val windowEndEpochSeconds: Long,      // time-frame validUntil
 )
 
+/** One per-token SELL-cap inside a [VerifiedBasketGrant] (the SpendingLimit on that token's approve). */
+data class TokenCap(val token: String, val capBaseUnits: String)
+
+/**
+ * The **verified** Strategy/basket grant (PRD-07b, KAN-165) — the M-cap analogue of [VerifiedGrant]. [caps] are the
+ * on-chain-pinned SELL-caps over the user's basket(+budget) tokens (🔒); [actionTarget] is the swap router. The
+ * swap `tokenOut` (buy direction) and the target weights are NOT here — they are advisory (ℹ️), bounded only by
+ * the per-token sell-caps + the off-chain allowlist/slippage. Every field is derived from the signed enable bytes.
+ */
+data class VerifiedBasketGrant(
+    val account: String,
+    val chainId: Long,
+    val actionTarget: String,             // the swap router (EIP-55), e.g. the UniversalRouter
+    val actionSelector: String,           // the swap 4-byte selector
+    val caps: List<TokenCap>,             // M per-token sell-caps (the basket + budget tokens), in action order
+    val windowStartEpochSeconds: Long,
+    val windowEndEpochSeconds: Long,
+)
+
 /**
  * On-device **grant verification** (PRD-05 Ph1, approach C / V1+decode; KAN-144, C3-corrected placement KAN-150).
  * Closes the cap-blind P0-Δ: the [SmartSessionEnableDigest] proves the session *structure* is in the signed
@@ -193,6 +212,105 @@ object SmartSessionGrantVerifier {
             windowStartEpochSeconds = start,
             windowEndEpochSeconds = end,
         )
+    }
+
+    /**
+     * Strategy/basket grant (PRD-07b, KAN-165) — the **M-cap** generalization of [verifyGrant]. Instead of exactly
+     * one cap, the session caps the SELL side of EACH of the user's [expectedCapTokens] (basket + budget). Shape:
+     * `userOpPolicies = [TimeFrame]`; `actions = M×(token.approve → SpendingLimits) + 1×(swap → TimeFrame) +
+     * N×(infra → TimeFrame)`. Each cap-action is pinned to a distinct token in [expectedCapTokens] (no unknown / no
+     * duplicate / none missing); the swap + infra are window-policed like [verifyGrant]. Fail-closed on any deviation.
+     * The cap tokens are the on-chain SELL set (🔒); the swap `tokenOut`/weights are advisory (not pinned here).
+     *
+     * @throws GrantVerificationException on ANY mismatch — the caller must NOT sign on throw.
+     */
+    fun verifyBasketGrant(
+        account: String,
+        chainId: Long,
+        sessionValidator: String,
+        sessionValidatorInitData: String,
+        salt: String,
+        nonce: String,
+        permissions: SignedPermissions,
+        digestToSign: String,
+        swapTarget: String,
+        swapSelector: String,
+        expectedCapTokens: Set<String>,
+        infraActions: List<ActionPin> = emptyList(),
+        spendingLimitPolicy: String = SPENDING_LIMIT_POLICY,
+        timeFramePolicy: String = TIMEFRAME_POLICY,
+        sessionValidatorPin: String = SESSION_VALIDATOR,
+        smartSession: String = SmartSessionEnableDigest.SMART_SESSION_ADDRESS,
+    ): VerifiedBasketGrant {
+        if (expectedCapTokens.isEmpty()) throw GrantVerificationException("basket grant needs at least one cap token")
+        // 1-3: identical envelope checks to verifyGrant (digest binds the disclosed material to the pinned module).
+        val recomputed = Hex.encode(
+            SmartSessionEnableDigest.enableDigest(account, chainId, sessionValidator, sessionValidatorInitData, salt, nonce, permissions, smartSession),
+        )
+        if (!recomputed.equals(normalizeDigest(digestToSign), ignoreCase = true)) {
+            throw GrantVerificationException("enable digest mismatch — refusing to sign")
+        }
+        if (!sessionValidator.equals(sessionValidatorPin, ignoreCase = true)) {
+            throw GrantVerificationException("unexpected session validator $sessionValidator")
+        }
+        if (permissions.permitAdminAccess || permissions.permitGenericPolicy || permissions.ignoreSecurityAttestations) {
+            throw GrantVerificationException("grant requests broad access (admin/generic/ignore-attestations)")
+        }
+        // 4: exactly one TimeFrame userOp window.
+        val windowPolicy = permissions.userOpPolicies.singleOrNull()
+            ?: throw GrantVerificationException("expected exactly one userOp (time-frame) policy")
+        if (!windowPolicy.policy.equals(timeFramePolicy, ignoreCase = true)) {
+            throw GrantVerificationException("unexpected time-frame policy address ${windowPolicy.policy}")
+        }
+        val (start, end) = decodeTimeFrame(windowPolicy.initData)
+
+        // 5: classify every action — M caps (each on a distinct expected token), one swap, the pinned infra.
+        val expected = expectedCapTokens.map { it.lowercase() }.toHashSet()
+        val seenCaps = HashSet<String>()
+        val caps = ArrayList<TokenCap>()
+        var sawSwap = false
+        val seenInfra = HashSet<Int>()
+        for (action in permissions.actions) {
+            when {
+                action.actionTargetSelector.equals(APPROVE_SELECTOR, ignoreCase = true) -> {
+                    val capPolicy = action.actionPolicies.singleOrNull()
+                        ?: throw GrantVerificationException("expected exactly one spending-limit policy on the approve action")
+                    if (!capPolicy.policy.equals(spendingLimitPolicy, ignoreCase = true)) {
+                        throw GrantVerificationException("unexpected spending-limit policy address ${capPolicy.policy}")
+                    }
+                    val (token, cap) = decodeSpendingLimit(capPolicy.initData)
+                    if (!action.actionTarget.equals(token, ignoreCase = true)) {
+                        throw GrantVerificationException("spending-limit token $token != approve target ${action.actionTarget}")
+                    }
+                    val key = token.lowercase()
+                    if (key !in expected) throw GrantVerificationException("cap on unexpected token $token (not in the basket+budget set)")
+                    if (!seenCaps.add(key)) throw GrantVerificationException("duplicate cap for token $token")
+                    caps.add(TokenCap(token, cap))
+                }
+                action.actionTarget.equals(swapTarget, ignoreCase = true) &&
+                    action.actionTargetSelector.equals(swapSelector, ignoreCase = true) -> {
+                    if (sawSwap) throw GrantVerificationException("more than one swap action")
+                    requireWindowAction(action, timeFramePolicy, start, end)
+                    sawSwap = true
+                }
+                else -> {
+                    val idx = infraActions.indexOfFirst {
+                        action.actionTarget.equals(it.target, ignoreCase = true) &&
+                            action.actionTargetSelector.equals(it.selector, ignoreCase = true)
+                    }
+                    if (idx < 0) throw GrantVerificationException("unknown action ${action.actionTargetSelector}@${action.actionTarget}")
+                    if (!seenInfra.add(idx)) throw GrantVerificationException("duplicate infra action")
+                    requireWindowAction(action, timeFramePolicy, start, end)
+                }
+            }
+        }
+        if (seenCaps.size != expected.size) {
+            throw GrantVerificationException("missing cap(s): expected ${expected.size} basket+budget tokens, got ${seenCaps.size}")
+        }
+        if (!sawSwap) throw GrantVerificationException("missing swap action $swapSelector@$swapTarget")
+        if (seenInfra.size != infraActions.size) throw GrantVerificationException("missing pinned infra action(s)")
+
+        return VerifiedBasketGrant(account, chainId, swapTarget, swapSelector, caps, start, end)
     }
 
     /** A window-policed action: exactly one TimeFrame policy at the pinned address, window == the userOp window. */
