@@ -77,6 +77,8 @@ kotlin {
             implementation(projects.feature.dca)
             // Copy-Trading / Follow-Trader UI (KAN-155) — flow host + stub grant service (real = Dev-2 KAN-154).
             implementation(projects.feature.copy)
+            // Smart-Strategies UI (KAN-166) — flow host + stub grant service (real = Dev-2 KAN-165).
+            implementation(projects.feature.strat)
             implementation(projects.aa)
             implementation(projects.auth)
             // shared HTTP plumbing (jsonHttpClient for the DCA/Keycloak clients) + base-url config.

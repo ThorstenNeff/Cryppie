@@ -56,12 +56,15 @@ run {
             file("feature/copy/src/commonMain/composeResources"),
             listOf("copy_", "common_"), // common_retry / common_cancel reused in the Copy screens (KAN-155)
         ),
+        Triple(
+            "feature:strat",
+            file("feature/strat/src/commonMain/composeResources"),
+            listOf("strat_", "common_"), // KAN-166: strat_ graduated from pendingPrefixes; common_retry/cancel reused
+        ),
     )
     // Prefixes owned by modules not yet on develop — keys here are intentionally not synced (no module),
     // but must still be "covered" so the unmapped-key check below doesn't flag them as lost.
-    // strat_ = Vaults UX (KAN-167) pre-landed in the SoT before :feature:strat exists (KAN-166); cover it
-    // until the module lands, then move "strat_" into a real target above + syncI18n (like pf_/send_/wc_ did).
-    val pendingPrefixes = listOf("strat_")
+    val pendingPrefixes = emptyList<String>()
 
     tasks.register("syncI18n") {
         group = "i18n"

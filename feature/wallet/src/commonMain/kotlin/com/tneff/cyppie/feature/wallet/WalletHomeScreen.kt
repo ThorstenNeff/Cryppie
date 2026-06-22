@@ -56,6 +56,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_copy
 import com.tneff.cyppie.feature.wallet.generated.resources.home_dca
 import com.tneff.cyppie.feature.wallet.generated.resources.home_market
 import com.tneff.cyppie.feature.wallet.generated.resources.home_portfolio
+import com.tneff.cyppie.feature.wallet.generated.resources.home_strat
 import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
 import com.tneff.cyppie.feature.wallet.generated.resources.home_retry
@@ -85,6 +86,7 @@ fun WalletHomeScreen(
     onMarket: () -> Unit = {},
     onDca: () -> Unit = {},
     onCopy: () -> Unit = {},
+    onStrat: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -210,6 +212,14 @@ fun WalletHomeScreen(
                 onClick = onCopy,
                 style = CryptasaButtonStyle.Secondary,
                 modifier = Modifier.fillMaxWidth().testTag("home_copy"),
+            )
+
+            // Smart-Strategies entry (PRD-07b, KAN-166) — full-width secondary; native-only.
+            CryptasaButton(
+                text = stringResource(Res.string.home_strat),
+                onClick = onStrat,
+                style = CryptasaButtonStyle.Secondary,
+                modifier = Modifier.fillMaxWidth().testTag("home_strat"),
             )
 
             // Entry points (KAN-103): receive is always available (even on an empty wallet, to fund it).

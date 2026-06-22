@@ -29,6 +29,10 @@ import com.tneff.cyppie.feature.copy.CopyActiveScreen
 import com.tneff.cyppie.feature.copy.CopyRoot
 import com.tneff.cyppie.feature.copy.CopySessionsViewModel
 import com.tneff.cyppie.feature.copy.CopyToken
+import com.tneff.cyppie.feature.strat.StrategyListScreen
+import com.tneff.cyppie.feature.strat.StrategyListViewModel
+import com.tneff.cyppie.feature.strat.StrategyRoot
+import com.tneff.cyppie.feature.strat.StubStrategyGrantService
 import com.tneff.cyppie.evm.Hex
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
@@ -104,7 +108,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant, Copy, CopyFollow }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant, Copy, CopyFollow, Strat, StratNew }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -352,6 +356,7 @@ fun WalletShell(onLock: () -> Unit) {
             onMarket = { dest = WalletDest.Market },
             onDca = { dest = WalletDest.Dca },
             onCopy = { dest = WalletDest.Copy },
+            onStrat = { dest = WalletDest.Strat },
             viewModel = viewModel,
         )
         WalletDest.Receive -> {
@@ -560,6 +565,39 @@ fun WalletShell(onLock: () -> Unit) {
                         ?.let { chain -> TokenCatalog.forChain(chain).map { CopyToken(it.address.value, it.symbol, it.name) } }
                         .orEmpty()
                 },
+            )
+        }
+        WalletDest.Strat -> {
+            // Smart-Strategies area landing (KAN-166, Strat2-List): active strategies + "New strategy" CTA.
+            // Scaffold seam = StubStrategyGrantService (Dev-2's KAN-165 :aa service swaps in later). FLAG_SECURE
+            // is owned by StrategyListScreen itself (KAN-168). router/selector are scaffold placeholders.
+            val strategyStub = remember { StubStrategyGrantService(dcaGrantParams.router, dcaGrantParams.swapSelector, COPY_WINDOW_SECONDS, ::nowEpochSeconds) }
+            val stratListVm: StrategyListViewModel = viewModel(key = "strat_list") {
+                StrategyListViewModel(
+                    listStrategies = { strategyStub.listStrategies() },
+                    revokeStrategy = { session, seed -> strategyStub.revoke(session, seed) },
+                    reauth = dcaReauth,
+                    setPaused = { session, paused -> strategyStub.setPaused(session, paused) },
+                )
+            }
+            StrategyListScreen(
+                viewModel = stratListVm,
+                budgetTokenDecimals = dcaGrantParams.spendTokenDecimals,
+                formatRebalance = { iso8601Utc(it).take(10) },
+                onNewStrategy = { dest = WalletDest.StratNew },
+                onBack = { dest = WalletDest.Home },
+            )
+        }
+        WalletDest.StratNew -> {
+            // Strategy setup → review → on-device sign (KAN-166). Scaffold seam; FLAG_SECURE owned by the
+            // StrategyReviewScreen itself (KAN-168). Real verify→sign→submit = Dev-2 KAN-165.
+            val strategyStub = remember { StubStrategyGrantService(dcaGrantParams.router, dcaGrantParams.swapSelector, COPY_WINDOW_SECONDS, ::nowEpochSeconds) }
+            StrategyRoot(
+                budgetTokenDecimals = dcaGrantParams.spendTokenDecimals,
+                prepareGrant = { targets, budgetBaseUnits -> strategyStub.prepareGrant(targets, budgetBaseUnits) },
+                authorizeGrant = { preview, seed -> strategyStub.authorizeGrant(preview, seed) },
+                reauth = dcaReauth,
+                onExit = { dest = WalletDest.Strat }, // back to the Strat list (a new strategy shows there)
             )
         }
     }
