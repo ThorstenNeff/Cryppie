@@ -81,13 +81,17 @@ class DcaViewModel(
             if (paused) { load(); return@launch } // refresh → the screen shows the paused banner; nothing signed
             // Minimal seed window (HIGH-1 pattern): reauth → sign → zeroize, submit only after.
             val outcome = runCatching {
+                // C3 USE-lock (KAN-163): the buy digest MUST be the RAW userOpHash — never an EIP-191/hashMessage
+                // form. Refuse anything else (the only check the app can do without the opaque userOp; the on-chain
+                // Smart-Session policy is the hard scope bound). Fail-closed.
+                if (!dca.digestToSign.equals(dca.userOpHash, ignoreCase = true)) return@runCatching DcaError.VERIFY_FAILED
                 val source = reauth(password) ?: return@runCatching DcaError.WRONG_PASSWORD
                 val signature = try {
-                    signer.signDigest(dca.userOpHash, owner, source) // zeroizes the source
+                    signer.signDigest(dca.digestToSign, owner, source) // RAW sign of the userOpHash; zeroizes the source
                 } finally {
                     (source as? AutoCloseable)?.close() // defensive zeroize even if signing throws
                 }
-                api.submitSignature(dca.id, signature)
+                api.submitSignature(dca.id, signature) // → bundler userOpHash (poll receipt via opStatus)
                 null // success
             }.getOrElse { DcaError.SUBMIT_FAILED }
             if (outcome != null) signError = outcome

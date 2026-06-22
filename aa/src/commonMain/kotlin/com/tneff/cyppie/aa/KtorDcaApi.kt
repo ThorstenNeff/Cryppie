@@ -19,6 +19,9 @@ private data class GrantRequest(val config: SessionConfig)
 @Serializable
 private data class SignatureRequest(val signature: String)
 
+@Serializable
+private data class PendingDcaResponse(val pending: List<PendingDca>)
+
 /**
  * Ktor [DcaApi] over the JWT User-Service ([baseUrl]). [bearerToken] supplies the user JWT per call (the
  * session/auth layer owns refresh). [httpClient] must have `ContentNegotiation(Json)` installed (the app
@@ -62,15 +65,20 @@ class KtorDcaApi(
         httpClient.delete("$base/v1/me/sessions/$sessionId") { expectSuccess = true; bearerAuth(bearer()) }
     }
 
-    override suspend fun pendingDca(): List<PendingDca> =
-        httpClient.get("$base/v1/me/dca/pending") { expectSuccess = true; bearerAuth(bearer()) }.body()
+    override suspend fun createSchedule(request: DcaScheduleRequest): DcaScheduleResult =
+        httpClient.post("$base/v1/me/dca/schedules") {
+            expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json); setBody(request)
+        }.body()
 
-    override suspend fun submitSignature(dcaId: String, signature: String) {
-        httpClient.post("$base/v1/me/dca/$dcaId/signature") {
+    override suspend fun pendingDca(): List<PendingDca> =
+        httpClient.get("$base/v1/me/dca/pending") { expectSuccess = true; bearerAuth(bearer()) }
+            .body<PendingDcaResponse>().pending
+
+    override suspend fun submitSignature(dcaId: String, signature: String): String =
+        httpClient.post("$base/v1/me/dca/$dcaId/submit") {
             expectSuccess = true; bearerAuth(bearer()); contentType(ContentType.Application.Json)
             setBody(SignatureRequest(signature))
-        }
-    }
+        }.body<SubmittedUserOp>().userOpHash
 
     override suspend fun buildEnableUserOp(request: BuildEnableRequest): BuiltEnableUserOp =
         httpClient.post("$base/v1/userop/build") {

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.tneff.cyppie.aa.BuiltEnable
 import com.tneff.cyppie.aa.DcaApi
 import com.tneff.cyppie.aa.DcaEnableBuilder
+import com.tneff.cyppie.aa.DcaScheduleRequest
 import com.tneff.cyppie.aa.EnableBroadcaster
 import com.tneff.cyppie.aa.ExpectedEnable
 import com.tneff.cyppie.aa.ScopedAction
@@ -37,6 +38,7 @@ data class DcaGrantParams(
     // (the on-chain grant only caps the spend-token sell on the router) — so it's disclosed as ADVISORY, like
     // Copy's tokenOut. Shown so the user sees what they buy before signing.
     val buyToken: String,
+    val feeTier: Int, // KAN-163: Uniswap V3 pool fee for the scheduled buys (e.g. 3000 = 0.3%)
 )
 
 /**
@@ -232,7 +234,17 @@ class GrantViewModel(
                     ),
                     seedSource = source, // broadcaster owns the zeroize (use{}); do NOT close here
                 )
-                api.grantSession(config) // register the schedule only AFTER a successful on-chain enable receipt
+                api.grantSession(config) // register the session only AFTER a successful on-chain enable receipt
+                // KAN-163: create the recurring schedule under the now-enabled session → the backend scheduler
+                // builds its per-buy ops each tick (the app then signs them on-device, DcaViewModel.signPending).
+                api.createSchedule(
+                    DcaScheduleRequest(
+                        chainId = params.chainId, account = owner.value,
+                        tokenIn = params.spendToken, tokenOut = params.buyToken,
+                        amountIn = scaledCap(), router = params.router,
+                        intervalSeconds = frequency.seconds, permissionId = enable.permissionId, feeTier = params.feeTier,
+                    ),
+                )
                 null // success
             }.getOrElse { DcaError.AUTHORIZE_FAILED }
             submitting = false

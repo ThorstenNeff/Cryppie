@@ -16,7 +16,6 @@ import com.tneff.cyppie.feature.dca.generated.resources.dca_paused_body
 import com.tneff.cyppie.feature.dca.generated.resources.dca_paused_title
 import com.tneff.cyppie.feature.dca.generated.resources.dca_pay_token
 import com.tneff.cyppie.feature.dca.generated.resources.dca_pending
-import com.tneff.cyppie.feature.dca.generated.resources.dca_receive_token
 import com.tneff.cyppie.feature.dca.generated.resources.dca_review_sign
 import com.tneff.cyppie.feature.dca.generated.resources.dca_revoke
 import com.tneff.cyppie.feature.dca.generated.resources.dca_router
@@ -153,11 +152,11 @@ private fun PendingCard(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).background(colors.surfaceVariant).padding(spacing.lg).testTag("dca_pending"),
         verticalArrangement = Arrangement.spacedBy(spacing.xs),
     ) {
-        // No-blind disclosure of the op the user is about to authorize.
-        DisclosureRow(stringResource(Res.string.dca_spend), BidiSanitizer.sanitize(dca.action.amountIn), ltr = true, valueTestTag = "dca_amount_in")
-        DisclosureRow(stringResource(Res.string.dca_pay_token), BidiSanitizer.sanitize(dca.action.tokenIn), ltr = true, truncate = false)
-        DisclosureRow(stringResource(Res.string.dca_receive_token), BidiSanitizer.sanitize(dca.action.tokenOut), ltr = true, truncate = false)
-        DisclosureRow(stringResource(Res.string.dca_router), BidiSanitizer.sanitize(dca.action.router), ltr = true, truncate = false)
+        // Disclosure of the buy the user is about to sign (advisory spend; KAN-163 pending shape = tokenIn/amountIn).
+        // The receive-token/router are NOT in the per-buy pending payload — they're bound on-chain by the enabled
+        // session policy (USE-mode), so the signature can't exceed the granted router/cap regardless.
+        DisclosureRow(stringResource(Res.string.dca_spend), BidiSanitizer.sanitize(dca.amountIn), ltr = true, valueTestTag = "dca_amount_in")
+        DisclosureRow(stringResource(Res.string.dca_pay_token), BidiSanitizer.sanitize(dca.tokenIn), ltr = true, truncate = false)
         if (isSigning) {
             // Re-auth gate (ADR-0009) — a correct password yields a fresh seed source that AaSigner zeroizes.
             CryptasaTextField(

@@ -195,6 +195,7 @@ private val dcaGrantParams: DcaGrantParams by lazy {
         spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC (mainnet)
         spendTokenDecimals = 6,                                      // USDC = 6
         buyToken = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",     // WETH (mainnet) — the DCA target (advisory; KAN-168 D2)
+        feeTier = 3000,                                              // Uniswap V3 0.3% pool for the scheduled buys (KAN-163)
     )
 }
 
