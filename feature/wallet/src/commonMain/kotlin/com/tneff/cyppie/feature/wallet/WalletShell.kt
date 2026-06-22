@@ -495,8 +495,7 @@ fun WalletShell(onLock: () -> Unit) {
         WalletDest.Copy -> {
             // Copy area landing (KAN-157, Copy0-Active): the active-copies overview + "Copy a trader" CTA into
             // the Follow-flow. Revoke is on-chain + owner-signed (no-blind) via the RevokeBroadcaster seam.
-            // FLAG_SECURE over the whole area (the revoke re-auth/sign shows the address+signature context).
-            SecureScreenEffect()
+            // FLAG_SECURE is owned by CopyActiveScreen itself (KAN-168) — not wired here, so it can't be lost.
             val copySessionsVm: CopySessionsViewModel = viewModel(key = "copy_sessions") {
                 CopySessionsViewModel(
                     listSessions = { copyApi.listCopySessions() },
@@ -517,13 +516,12 @@ fun WalletShell(onLock: () -> Unit) {
             )
         }
         WalletDest.CopyFollow -> {
-            // Copy / Follow-Trader flow (KAN-155/161). FLAG_SECURE over the whole flow (disclosure + signature
-            // context; spec asks for it on Confirm — superset is fine). owner = account#0 (self-copy guard);
-            // fresh per-op re-auth source. The two crypto/network seams bind to Dev-2's FollowGrantService;
-            // prepareGrant assembles the full CopyScopeRequest around (trader, budget, tokenOut): chain/token
-            // single-sourced from dcaGrantParams; router/selector client-pinned from CopyEnableBuilder; window
-            // = now + COPY_WINDOW_SECONDS; tokenOut set (fixed) or null (dynamic, webhook-derived).
-            SecureScreenEffect()
+            // Copy / Follow-Trader flow (KAN-155/161). FLAG_SECURE is owned by FollowReviewScreen (Confirm)
+            // itself (KAN-168) — the screen that shows the password/sign context — so it can't be lost by the
+            // host. owner = account#0 (self-copy guard); fresh per-op re-auth source. The two crypto/network
+            // seams bind to Dev-2's FollowGrantService; prepareGrant assembles the full CopyScopeRequest around
+            // (trader, budget, tokenOut): chain/token single-sourced from dcaGrantParams; router/selector
+            // client-pinned from CopyEnableBuilder; window = now + COPY_WINDOW_SECONDS; tokenOut set/null.
             CopyRoot(
                 owner = dcaOwner,
                 budgetTokenDecimals = dcaGrantParams.spendTokenDecimals,

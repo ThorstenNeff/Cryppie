@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.aa.CopySession
 import com.tneff.cyppie.designsystem.BidiSanitizer
+import com.tneff.cyppie.designsystem.SecureScreenEffect
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
@@ -82,6 +83,7 @@ fun CopyActiveScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    SecureScreenEffect() // KAN-168: this screen OWNS its protection (trader addresses + the revoke re-auth/sign)
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     LaunchedEffect(Unit) { viewModel.load() }

@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.tneff.cyppie.designsystem.BidiSanitizer
+import com.tneff.cyppie.designsystem.SecureScreenEffect
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
@@ -67,6 +68,7 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun FollowReviewScreen(viewModel: FollowViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    SecureScreenEffect() // KAN-168: this screen OWNS its screenshot/recents protection (password + sign context)
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     var password by remember { mutableStateOf("") }
