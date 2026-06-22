@@ -59,7 +59,9 @@ run {
     )
     // Prefixes owned by modules not yet on develop — keys here are intentionally not synced (no module),
     // but must still be "covered" so the unmapped-key check below doesn't flag them as lost.
-    val pendingPrefixes = emptyList<String>()
+    // strat_ = Vaults UX (KAN-167) pre-landed in the SoT before :feature:strat exists (KAN-166); cover it
+    // until the module lands, then move "strat_" into a real target above + syncI18n (like pf_/send_/wc_ did).
+    val pendingPrefixes = listOf("strat_")
 
     tasks.register("syncI18n") {
         group = "i18n"
