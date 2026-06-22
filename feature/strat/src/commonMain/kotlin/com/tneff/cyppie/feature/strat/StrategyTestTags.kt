@@ -11,6 +11,9 @@ object StrategyTestTags {
     const val TOTAL = "strat_total"
     const val BUDGET_INPUT = "strat_budget"
     const val CONTINUE = "strat_continue"
+    const val TOKEN_PICK = "strat_basket"         // KAN-170 S3: the basket-token picker entry (first row)
+    const val TOKEN_SEARCH = "strat_token_search" // KAN-170 S3: the picker search field
+    const val TOKEN_NONE = "strat_token_none"     // KAN-170 S3: the picker empty state
 
     // Review / Confirm (Strat-Confirm) — 2-section sell-side disclosure
     const val REVIEW_SCREEN = "strat_review_title"

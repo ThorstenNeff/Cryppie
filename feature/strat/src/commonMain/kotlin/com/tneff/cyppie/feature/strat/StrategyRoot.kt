@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tneff.cyppie.aa.StrategyGrantPreview
+import com.tneff.cyppie.designsystem.components.TokenPickerItem
 import com.tneff.cyppie.wallet.SeedSource
 
 /**
@@ -22,6 +23,7 @@ fun StrategyRoot(
     reauth: suspend (password: String) -> SeedSource?,
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
+    allowlistTokens: List<TokenPickerItem> = emptyList(),
 ) {
     val viewModel: StrategyViewModel = viewModel(key = "strat_setup") {
         StrategyViewModel(
@@ -29,6 +31,7 @@ fun StrategyRoot(
             prepareGrant = prepareGrant,
             authorizeGrant = authorizeGrant,
             reauth = reauth,
+            allowlistTokens = allowlistTokens,
         )
     }
     when (viewModel.step) {

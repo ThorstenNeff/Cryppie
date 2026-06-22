@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tneff.cyppie.aa.StrategyGrantPreview
+import com.tneff.cyppie.designsystem.components.TokenPickerItem
 import com.tneff.cyppie.evm.EvmAddress
 import com.tneff.cyppie.wallet.SeedSource
 import kotlinx.coroutines.launch
@@ -29,6 +30,8 @@ class StrategyViewModel(
     private val prepareGrant: suspend (targets: List<BasketTarget>, budgetBaseUnits: String) -> StrategyGrantPreview,
     private val authorizeGrant: suspend (preview: StrategyGrantPreview, seed: SeedSource) -> Unit,
     private val reauth: suspend (password: String) -> SeedSource?,
+    // KAN-170 S3: the curated basket allowlist — Setup picks from this (no free 0x… field → no hex-typo/fake token).
+    val allowlistTokens: List<TokenPickerItem> = emptyList(),
 ) : ViewModel() {
 
     var step: StratStep by mutableStateOf(StratStep.Setup); private set
@@ -41,6 +44,12 @@ class StrategyViewModel(
     // into ANY listed token — buy-leg is advisory v1, on-chain output constraint is post-GA). Gates authorize.
     var churnAck: Boolean by mutableStateOf(false); private set
     fun acknowledgeChurn(checked: Boolean) { churnAck = checked }
+
+    // KAN-170 S3: which row's basket-token picker is open (null = closed). Selecting an allowlist token fills it.
+    var pickerRowIndex: Int? by mutableStateOf(null); private set
+    fun openTokenPicker(index: Int) { pickerRowIndex = index }
+    fun dismissTokenPicker() { pickerRowIndex = null }
+    fun selectToken(token: TokenPickerItem) { pickerRowIndex?.let { setToken(it, token.address) }; pickerRowIndex = null }
 
     fun setToken(index: Int, value: String) { rows = rows.mapIndexed { i, r -> if (i == index) r.copy(token = value) else r }; invalidate() }
     fun setWeight(index: Int, value: String) { rows = rows.mapIndexed { i, r -> if (i == index) r.copy(weight = value.filter { it.isDigit() }) else r }; invalidate() }

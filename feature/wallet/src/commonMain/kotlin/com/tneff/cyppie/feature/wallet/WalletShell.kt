@@ -49,6 +49,7 @@ import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
 import com.tneff.cyppie.designsystem.components.ProgressRing
+import com.tneff.cyppie.designsystem.components.TokenPickerItem
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.dca.DcaGrantParams
 import com.tneff.cyppie.feature.dca.DcaOverviewScreen
@@ -632,6 +633,12 @@ fun WalletShell(onLock: () -> Unit) {
                 authorizeGrant = { preview, seed -> strategyService.authorizeGrant(preview, seed) },
                 reauth = dcaReauth,
                 onExit = { dest = WalletDest.Strat }, // back to the Strat list (a new strategy shows there)
+                // KAN-170 S3: the curated basket allowlist (picker, no free 0x… field). From TokenCatalog.
+                allowlistTokens = remember {
+                    EvmChain.fromChainId(dcaGrantParams.chainId)
+                        ?.let { chain -> TokenCatalog.forChain(chain).map { TokenPickerItem(it.address.value, it.symbol, it.name) } }
+                        .orEmpty()
+                },
             )
         }
     }

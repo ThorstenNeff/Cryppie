@@ -38,6 +38,8 @@ import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
 import com.tneff.cyppie.designsystem.components.CryptasaCheckbox
 import com.tneff.cyppie.designsystem.components.CryptasaTextField
+import com.tneff.cyppie.designsystem.components.TokenPicker
+import com.tneff.cyppie.designsystem.components.TokenPickerItem
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
 import com.tneff.cyppie.designsystem.components.SelectionCard
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
@@ -164,74 +166,17 @@ internal fun ModeSelectScreen(viewModel: FollowViewModel, onBack: () -> Unit, mo
                 )
             }
         }
-        if (viewModel.tokenPickerOpen) CopyTokenPicker(viewModel)
-    }
-}
-
-/**
- * `Copy-TokenPicker` (KAN-168 F5) — a bottom-sheet that lists the curated receive-token allowlist with a
- * search box. Replaces the free address field in fixed mode: only an allowlist token is selectable, so a
- * hex-typo / fake-token can't be picked. A letter-avatar stands in for the token icon (real icons = follow).
- */
-@Composable
-private fun CopyTokenPicker(viewModel: FollowViewModel) {
-    val colors = CryptasaTheme.colors
-    val spacing = CryptasaTheme.spacing
-    var query by remember { mutableStateOf("") }
-    val matches = viewModel.allowlistTokens.filter {
-        query.isBlank() || it.symbol.contains(query, ignoreCase = true) || it.name.contains(query, ignoreCase = true)
-    }
-
-    Box(
-        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)).clickable(onClick = viewModel::dismissTokenPicker),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Surface(
-            shape = RoundedCornerShape(topStart = CryptasaTheme.radius.xl, topEnd = CryptasaTheme.radius.xl),
-            color = colors.surfaceRaised,
-            contentColor = colors.onSurface,
-            // Consume taps on the sheet so they don't dismiss via the scrim.
-            modifier = Modifier.fillMaxWidth().widthIn(max = 480.dp).clickable(enabled = false) {},
-        ) {
-            Column(Modifier.padding(spacing.xl), verticalArrangement = Arrangement.spacedBy(spacing.md)) {
-                Text(stringResource(Res.string.copy_token_pick), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface, modifier = Modifier.testTag(CopyTestTags.TOKEN_PICK))
-                CryptasaTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = stringResource(Res.string.copy_token_search),
-                    keyboardType = KeyboardType.Text,
-                    modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.TOKEN_SEARCH),
-                )
-                if (matches.isEmpty()) {
-                    Text(stringResource(Res.string.copy_token_none), style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant, modifier = Modifier.testTag(CopyTestTags.TOKEN_NONE))
-                } else LazyColumn(
-                    Modifier.fillMaxWidth().heightIn(max = 360.dp),
-                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
-                ) {
-                    items(matches, key = { it.address }) { token -> CopyTokenRow(token) { viewModel.selectToken(token) } }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CopyTokenRow(token: CopyToken, onClick: () -> Unit) {
-    val colors = CryptasaTheme.colors
-    val spacing = CryptasaTheme.spacing
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).clickable(onClick = onClick).padding(spacing.md),
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // Letter-avatar placeholder (real token icons = follow): first char of the symbol in a tinted circle.
-        Box(Modifier.size(32.dp).clip(CircleShape).background(colors.surfaceVariant), contentAlignment = Alignment.Center) {
-            Text(token.symbol.take(1).uppercase(), style = CryptasaTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-        }
-        Column(Modifier.weight(1f)) {
-            Text(BidiSanitizer.sanitize(token.symbol), style = CryptasaTheme.typography.body, color = colors.onSurface)
-            Text(BidiSanitizer.sanitize(token.name), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
-        }
+        if (viewModel.tokenPickerOpen) TokenPicker(
+            tokens = viewModel.allowlistTokens.map { TokenPickerItem(it.address, it.symbol, it.name) },
+            title = stringResource(Res.string.copy_token_pick),
+            searchLabel = stringResource(Res.string.copy_token_search),
+            emptyText = stringResource(Res.string.copy_token_none),
+            onSelect = { viewModel.selectToken(CopyToken(it.address, it.symbol, it.name)) },
+            onDismiss = viewModel::dismissTokenPicker,
+            titleTestTag = CopyTestTags.TOKEN_PICK,
+            searchTestTag = CopyTestTags.TOKEN_SEARCH,
+            emptyTestTag = CopyTestTags.TOKEN_NONE,
+        )
     }
 }
 

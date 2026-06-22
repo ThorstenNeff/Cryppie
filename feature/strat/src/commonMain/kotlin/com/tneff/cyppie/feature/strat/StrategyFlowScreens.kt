@@ -34,6 +34,7 @@ import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
 import com.tneff.cyppie.designsystem.components.CryptasaCheckbox
 import com.tneff.cyppie.designsystem.components.CryptasaTextField
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
+import com.tneff.cyppie.designsystem.components.TokenPicker
 import com.tneff.cyppie.designsystem.components.DisclosureRow
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.strat.generated.resources.Res
@@ -50,7 +51,11 @@ import com.tneff.cyppie.feature.strat.generated.resources.strat_authorize
 import com.tneff.cyppie.feature.strat.generated.resources.strat_authorizing
 import com.tneff.cyppie.feature.strat.generated.resources.strat_budget
 import com.tneff.cyppie.feature.strat.generated.resources.strat_cap
+import com.tneff.cyppie.feature.strat.generated.resources.strat_basket
 import com.tneff.cyppie.feature.strat.generated.resources.strat_caveat
+import com.tneff.cyppie.feature.strat.generated.resources.strat_caveat_title
+import com.tneff.cyppie.feature.strat.generated.resources.strat_token_none
+import com.tneff.cyppie.feature.strat.generated.resources.strat_token_search
 import com.tneff.cyppie.feature.strat.generated.resources.strat_continue
 import com.tneff.cyppie.feature.strat.generated.resources.strat_envelope
 import com.tneff.cyppie.feature.strat.generated.resources.strat_err_budget
@@ -104,12 +109,14 @@ internal fun StrategySetupScreen(viewModel: StrategyViewModel, onBack: () -> Uni
 
                 viewModel.rows.forEachIndexed { index, row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
-                        CryptasaTextField(
-                            value = row.token,
-                            onValueChange = { viewModel.setToken(index, it) },
-                            label = "0x…",
-                            keyboardType = KeyboardType.Text,
-                            modifier = Modifier.weight(2f),
+                        // KAN-170 S3: pick the basket token from the curated allowlist (no free 0x… field → no
+                        // hex-typo / fake token). Shows the picked symbol, or the "Basket tokens" placeholder.
+                        val picked = viewModel.allowlistTokens.firstOrNull { it.address.equals(row.token, ignoreCase = true) }
+                        CryptasaButton(
+                            text = picked?.symbol ?: stringResource(Res.string.strat_basket),
+                            onClick = { viewModel.openTokenPicker(index) },
+                            style = CryptasaButtonStyle.Secondary,
+                            modifier = Modifier.weight(2f).let { if (index == 0) it.testTag(StrategyTestTags.TOKEN_PICK) else it },
                         )
                         CryptasaTextField(
                             value = row.weight,
@@ -138,8 +145,10 @@ internal fun StrategySetupScreen(viewModel: StrategyViewModel, onBack: () -> Uni
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth().testTag(StrategyTestTags.BUDGET_INPUT),
                 )
+                // KAN-170 S1: the caveat now carries a title (strat_caveat_title) + the description (strat_caveat).
                 CryptasaBanner(
-                    title = stringResource(Res.string.strat_caveat),
+                    title = stringResource(Res.string.strat_caveat_title),
+                    description = stringResource(Res.string.strat_caveat),
                     tone = CryptasaBannerTone.Info,
                 )
                 viewModel.error?.let { CryptasaBanner(title = stringResource(it.res()), tone = CryptasaBannerTone.Danger) }
@@ -151,6 +160,19 @@ internal fun StrategySetupScreen(viewModel: StrategyViewModel, onBack: () -> Uni
                     modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag(StrategyTestTags.CONTINUE),
                 )
             }
+        }
+        // KAN-170 S3: the basket-token picker (shared :designsystem TokenPicker) overlays when a row opens it.
+        viewModel.pickerRowIndex?.let {
+            TokenPicker(
+                tokens = viewModel.allowlistTokens,
+                title = stringResource(Res.string.strat_basket),
+                searchLabel = stringResource(Res.string.strat_token_search),
+                emptyText = stringResource(Res.string.strat_token_none),
+                onSelect = viewModel::selectToken,
+                onDismiss = viewModel::dismissTokenPicker,
+                searchTestTag = StrategyTestTags.TOKEN_SEARCH,
+                emptyTestTag = StrategyTestTags.TOKEN_NONE,
+            )
         }
     }
 }
