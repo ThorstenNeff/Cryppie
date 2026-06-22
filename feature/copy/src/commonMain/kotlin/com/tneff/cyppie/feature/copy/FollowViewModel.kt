@@ -22,6 +22,9 @@ enum class FollowStep { SelectTrader, ModeSelect, Budget, Review, Done }
  */
 enum class CopyMode { FIXED, DYNAMIC }
 
+/** A curated receive-token for the fixed-mode picker (KAN-168 F5) — from the app shell's TokenCatalog. */
+data class CopyToken(val address: String, val symbol: String, val name: String)
+
 /**
  * KAN-155 — the Copy / Follow-Trader flow VM. Linear: [toMode] validates the trader (EIP-55 + self-check) →
  * [toBudget] requires a chosen [mode] (fixed → a valid [tokenOut]; dynamic → the [dynRiskAck] checkbox) →
@@ -40,6 +43,9 @@ class FollowViewModel(
     private val prepareGrant: suspend (trader: String, budgetBaseUnits: String, tokenOut: String?) -> CopyGrantPreview,
     private val authorizeGrant: suspend (preview: CopyGrantPreview, seed: SeedSource) -> Unit,
     private val reauth: suspend (password: String) -> SeedSource?,
+    // KAN-168 F5: the curated receive-token allowlist for fixed mode (from the app shell's TokenCatalog). Empty
+    // = the picker shows the no-tokens state. Picking is the ONLY way to set tokenOut (no free hex entry).
+    val allowlistTokens: List<CopyToken> = emptyList(),
 ) : ViewModel() {
 
     var step: FollowStep by mutableStateOf(FollowStep.SelectTrader); private set
@@ -52,6 +58,15 @@ class FollowViewModel(
     var submitting: Boolean by mutableStateOf(false); private set
     var error: CopyError? by mutableStateOf(null); private set
     var prepared: CopyGrantPreview? by mutableStateOf(null); private set
+    var tokenPickerOpen: Boolean by mutableStateOf(false); private set // KAN-168 F5: the token-picker bottom-sheet
+
+    /** The currently-selected fixed-mode token (for the picker entry row), or null if none picked yet. */
+    val selectedToken: CopyToken? get() = allowlistTokens.firstOrNull { it.address.equals(tokenOut, ignoreCase = true) }
+
+    fun openTokenPicker() { tokenPickerOpen = true }
+    fun dismissTokenPicker() { tokenPickerOpen = false }
+    /** Pick a curated token (the only way to set the fixed-mode receive token — no free hex entry). */
+    fun selectToken(token: CopyToken) { tokenOut = token.address; tokenPickerOpen = false; error = null; prepared = null }
 
     fun enterTrader(value: String) { trader = value.trim(); error = null; prepared = null }
     fun enterTokenOut(value: String) { tokenOut = value.trim(); error = null; prepared = null }

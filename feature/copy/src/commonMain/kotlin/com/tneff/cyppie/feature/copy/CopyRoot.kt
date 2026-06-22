@@ -25,6 +25,7 @@ fun CopyRoot(
     reauth: suspend (password: String) -> SeedSource?,
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
+    allowlistTokens: List<CopyToken> = emptyList(),
 ) {
     val viewModel: FollowViewModel = viewModel(key = "copy_follow") {
         FollowViewModel(
@@ -33,6 +34,7 @@ fun CopyRoot(
             prepareGrant = prepareGrant,
             authorizeGrant = authorizeGrant,
             reauth = reauth,
+            allowlistTokens = allowlistTokens,
         )
     }
     when (viewModel.step) {

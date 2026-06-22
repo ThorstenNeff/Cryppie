@@ -28,6 +28,7 @@ import com.tneff.cyppie.aa.KtorDcaApi
 import com.tneff.cyppie.feature.copy.CopyActiveScreen
 import com.tneff.cyppie.feature.copy.CopyRoot
 import com.tneff.cyppie.feature.copy.CopySessionsViewModel
+import com.tneff.cyppie.feature.copy.CopyToken
 import com.tneff.cyppie.evm.Hex
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
@@ -552,6 +553,13 @@ fun WalletShell(onLock: () -> Unit) {
                 authorizeGrant = { preview, seed -> followService.authorizeGrant(preview, seed) },
                 reauth = dcaReauth,
                 onExit = { dest = WalletDest.Copy }, // back to the Active overview (a new follow shows in the list)
+                // KAN-168 F5: the curated receive-token allowlist (fixed-mode picker) — only allowlist tokens
+                // selectable (no free hex entry). From TokenCatalog for the Copy chain.
+                allowlistTokens = remember {
+                    EvmChain.fromChainId(dcaGrantParams.chainId)
+                        ?.let { chain -> TokenCatalog.forChain(chain).map { CopyToken(it.address.value, it.symbol, it.name) } }
+                        .orEmpty()
+                },
             )
         }
     }

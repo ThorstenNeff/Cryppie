@@ -14,7 +14,9 @@ object CopyTestTags {
     const val MODE_SCREEN = "copy_mode_title"
     const val MODE_FIXED = "copy_mode_fixed"
     const val MODE_DYNAMIC = "copy_mode_dynamic"
-    const val TOKEN_PICK = "copy_token_pick"     // fixed mode: the receive-token INPUT field (ModeSelect)
+    const val TOKEN_PICK = "copy_token_pick"     // fixed mode: the receive-token picker entry + sheet title (ModeSelect)
+    const val TOKEN_SEARCH = "copy_token_search" // the token-picker search field (KAN-168 F5)
+    const val TOKEN_NONE = "copy_token_none"     // the picker's empty state (KAN-168 F5)
     const val RECEIVES = "copy_receives"         // disclosure advisory: the mirror/receive token value
     const val DYN_RISK = "copy_dyn_risk_title"   // dynamic mode: the danger consent banner
     const val DYN_RISK_ACK = "copy_dyn_risk_ack" // dynamic mode: the mandatory acknowledgement checkbox

@@ -66,7 +66,22 @@ class FollowViewModelTest {
         },
         authorizeGrant: suspend (CopyGrantPreview, SeedSource) -> Unit = { _, seed -> (seed as? AutoCloseable)?.close() },
         reauth: suspend (String) -> SeedSource? = { FakeSeed() },
-    ) = FollowViewModel(owner = OWNER, budgetTokenDecimals = 6, prepareGrant = prepareGrant, authorizeGrant = authorizeGrant, reauth = reauth)
+        allowlistTokens: List<CopyToken> = emptyList(),
+    ) = FollowViewModel(owner = OWNER, budgetTokenDecimals = 6, prepareGrant = prepareGrant, authorizeGrant = authorizeGrant, reauth = reauth, allowlistTokens = allowlistTokens)
+
+    @Test
+    fun tokenPicker_selectsAllowlistToken_setsTokenOutAndCloses() {
+        val tok = CopyToken(VALID_TOKEN, "WETH", "Wrapped Ether")
+        val m = vm(allowlistTokens = listOf(tok))
+        m.selectMode(CopyMode.FIXED)
+        m.openTokenPicker()
+        assertTrue(m.tokenPickerOpen)
+        m.selectToken(tok)
+        assertFalse(m.tokenPickerOpen)
+        assertEquals(VALID_TOKEN, m.tokenOut)
+        assertEquals(tok, m.selectedToken)
+        assertTrue(m.modeReady) // a picked allowlist token is a valid address
+    }
 
     /** Drive the flow to Review in FIXED mode with a valid token + the given budget. */
     private fun FollowViewModel.toReviewFixed(budget: String = "100") {

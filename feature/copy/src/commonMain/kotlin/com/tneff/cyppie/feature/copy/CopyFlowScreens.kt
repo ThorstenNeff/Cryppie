@@ -1,22 +1,38 @@
 package com.tneff.cyppie.feature.copy
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.tneff.cyppie.designsystem.BidiSanitizer
 import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
@@ -40,7 +56,9 @@ import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_fixed
 import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_fixed_desc
 import com.tneff.cyppie.feature.copy.generated.resources.copy_mode_title
 import com.tneff.cyppie.feature.copy.generated.resources.copy_select_title
+import com.tneff.cyppie.feature.copy.generated.resources.copy_token_none
 import com.tneff.cyppie.feature.copy.generated.resources.copy_token_pick
+import com.tneff.cyppie.feature.copy.generated.resources.copy_token_search
 import com.tneff.cyppie.feature.copy.generated.resources.copy_trader_label
 import com.tneff.cyppie.feature.copy.generated.resources.copy_trader_placeholder
 import org.jetbrains.compose.resources.stringResource
@@ -114,13 +132,11 @@ internal fun ModeSelectScreen(viewModel: FollowViewModel, onBack: () -> Unit, mo
 
                 // Mode-specific gate: fixed → the receive token; dynamic → the mandatory risk acknowledgement.
                 when (viewModel.mode) {
-                    CopyMode.FIXED -> CryptasaTextField(
-                        value = viewModel.tokenOut,
-                        onValueChange = viewModel::enterTokenOut,
-                        label = stringResource(Res.string.copy_token_pick),
-                        placeholder = stringResource(Res.string.copy_trader_placeholder),
-                        errorText = viewModel.error?.takeIf { it == CopyError.INVALID_ADDRESS }?.text(),
-                        keyboardType = KeyboardType.Text,
+                    // KAN-168 F5: pick from the curated allowlist (no free hex entry → no fake-token risk).
+                    CopyMode.FIXED -> SelectionCard(
+                        title = viewModel.selectedToken?.let { "${it.symbol} — ${it.name}" } ?: stringResource(Res.string.copy_token_pick),
+                        selected = viewModel.selectedToken != null,
+                        onClick = viewModel::openTokenPicker,
                         modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.TOKEN_PICK),
                     )
                     CopyMode.DYNAMIC -> {
@@ -147,6 +163,74 @@ internal fun ModeSelectScreen(viewModel: FollowViewModel, onBack: () -> Unit, mo
                     modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.CONTINUE),
                 )
             }
+        }
+        if (viewModel.tokenPickerOpen) CopyTokenPicker(viewModel)
+    }
+}
+
+/**
+ * `Copy-TokenPicker` (KAN-168 F5) — a bottom-sheet that lists the curated receive-token allowlist with a
+ * search box. Replaces the free address field in fixed mode: only an allowlist token is selectable, so a
+ * hex-typo / fake-token can't be picked. A letter-avatar stands in for the token icon (real icons = follow).
+ */
+@Composable
+private fun CopyTokenPicker(viewModel: FollowViewModel) {
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+    var query by remember { mutableStateOf("") }
+    val matches = viewModel.allowlistTokens.filter {
+        query.isBlank() || it.symbol.contains(query, ignoreCase = true) || it.name.contains(query, ignoreCase = true)
+    }
+
+    Box(
+        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)).clickable(onClick = viewModel::dismissTokenPicker),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Surface(
+            shape = RoundedCornerShape(topStart = CryptasaTheme.radius.xl, topEnd = CryptasaTheme.radius.xl),
+            color = colors.surfaceRaised,
+            contentColor = colors.onSurface,
+            // Consume taps on the sheet so they don't dismiss via the scrim.
+            modifier = Modifier.fillMaxWidth().widthIn(max = 480.dp).clickable(enabled = false) {},
+        ) {
+            Column(Modifier.padding(spacing.xl), verticalArrangement = Arrangement.spacedBy(spacing.md)) {
+                Text(stringResource(Res.string.copy_token_pick), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface, modifier = Modifier.testTag(CopyTestTags.TOKEN_PICK))
+                CryptasaTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = stringResource(Res.string.copy_token_search),
+                    keyboardType = KeyboardType.Text,
+                    modifier = Modifier.fillMaxWidth().testTag(CopyTestTags.TOKEN_SEARCH),
+                )
+                if (matches.isEmpty()) {
+                    Text(stringResource(Res.string.copy_token_none), style = CryptasaTheme.typography.body, color = colors.onSurfaceVariant, modifier = Modifier.testTag(CopyTestTags.TOKEN_NONE))
+                } else LazyColumn(
+                    Modifier.fillMaxWidth().heightIn(max = 360.dp),
+                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
+                ) {
+                    items(matches, key = { it.address }) { token -> CopyTokenRow(token) { viewModel.selectToken(token) } }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CopyTokenRow(token: CopyToken, onClick: () -> Unit) {
+    val colors = CryptasaTheme.colors
+    val spacing = CryptasaTheme.spacing
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(CryptasaTheme.radius.md)).clickable(onClick = onClick).padding(spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Letter-avatar placeholder (real token icons = follow): first char of the symbol in a tinted circle.
+        Box(Modifier.size(32.dp).clip(CircleShape).background(colors.surfaceVariant), contentAlignment = Alignment.Center) {
+            Text(token.symbol.take(1).uppercase(), style = CryptasaTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(BidiSanitizer.sanitize(token.symbol), style = CryptasaTheme.typography.body, color = colors.onSurface)
+            Text(BidiSanitizer.sanitize(token.name), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
         }
     }
 }
