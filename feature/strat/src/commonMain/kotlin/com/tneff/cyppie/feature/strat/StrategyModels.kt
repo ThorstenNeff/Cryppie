@@ -26,6 +26,22 @@ data class StrategySession(
     val performance: String? = null,
 )
 
+/** Float-free sum of non-negative base-10 strings (for the ≈value envelope total). Defensive → "0" on non-digits. */
+internal fun sumDecimal(values: List<String>): String {
+    var acc = "0"
+    for (raw in values) {
+        val a = acc; val b = raw.trimStart('0').ifEmpty { "0" }
+        if (a.any { it !in '0'..'9' } || b.any { it !in '0'..'9' }) return "0"
+        val out = StringBuilder(); var i = a.length - 1; var j = b.length - 1; var carry = 0
+        while (i >= 0 || j >= 0 || carry > 0) {
+            val s = (if (i >= 0) a[i--] - '0' else 0) + (if (j >= 0) b[j--] - '0' else 0) + carry
+            out.append(('0' + s % 10)); carry = s / 10
+        }
+        acc = out.reverse().toString().trimStart('0').ifEmpty { "0" }
+    }
+    return acc
+}
+
 /** Float-free base-units → human amount via [decimals] (e.g. 30000000 @ 6 → "30"). Defensive on non-digits. */
 internal fun humanAmount(base: String, decimals: Int): String {
     if (base.isEmpty() || base.any { it !in '0'..'9' }) return base

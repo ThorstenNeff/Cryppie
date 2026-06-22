@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ القيمة عند لقطة المنح</string>
   <string name="strat_envelope">الإجمالي بحدّ أقصى</string>
   <string name="strat_regrant_note">عند استنفاد الحد، أعد التفويض للمتابعة.</string>
+  <string name="strat_caveat_title">معلومة مفيدة</string>
+  <string name="strat_token_search">البحث عن الرموز</string>
+  <string name="strat_token_none">لم يتم العثور على رموز</string>
 </resources>

@@ -52,6 +52,7 @@ import com.tneff.cyppie.feature.strat.generated.resources.strat_budget
 import com.tneff.cyppie.feature.strat.generated.resources.strat_cap
 import com.tneff.cyppie.feature.strat.generated.resources.strat_caveat
 import com.tneff.cyppie.feature.strat.generated.resources.strat_continue
+import com.tneff.cyppie.feature.strat.generated.resources.strat_envelope
 import com.tneff.cyppie.feature.strat.generated.resources.strat_err_budget
 import com.tneff.cyppie.feature.strat.generated.resources.strat_err_min
 import com.tneff.cyppie.feature.strat.generated.resources.strat_err_password
@@ -67,6 +68,7 @@ import com.tneff.cyppie.feature.strat.generated.resources.strat_err_token
 import com.tneff.cyppie.feature.strat.generated.resources.strat_setup_title
 import com.tneff.cyppie.feature.strat.generated.resources.strat_target
 import com.tneff.cyppie.feature.strat.generated.resources.strat_total
+import com.tneff.cyppie.feature.strat.generated.resources.strat_value_snapshot
 import com.tneff.cyppie.feature.strat.generated.resources.strat_weight
 import com.tneff.cyppie.feature.strat.generated.resources.strat_weights
 import com.tneff.cyppie.feature.strat.generated.resources.strat_window
@@ -193,7 +195,14 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
                             BidiSanitizer.sanitize(cap.token), BidiSanitizer.sanitize(cap.capBaseUnits),
                             ltr = true, truncate = false, valueTestTag = if (i == 0) StrategyTestTags.CAP else null,
                         )
+                        // KAN-167 FR-9 ≈value (display-only, from the prepare snapshot): the cap's value at grant.
+                        preview.caps.firstOrNull { it.token.equals(cap.token, ignoreCase = true) }
+                            ?.valueSnapshotBaseUnits?.takeIf { it != "0" }
+                            ?.let { DisclosureRow(stringResource(Res.string.strat_value_snapshot), BidiSanitizer.sanitize(it), ltr = true) }
                     }
+                    // Envelope: the total ≈value the strategy may sell at most (sum of the per-cap snapshots).
+                    val totalSnapshot = sumDecimal(preview.caps.map { it.valueSnapshotBaseUnits })
+                    if (totalSnapshot != "0") DisclosureRow(stringResource(Res.string.strat_envelope), BidiSanitizer.sanitize(totalSnapshot), ltr = true)
                     DisclosureRow(stringResource(Res.string.strat_router), BidiSanitizer.sanitize(v.actionTarget), ltr = true, truncate = false)
                     DisclosureRow(stringResource(Res.string.strat_allowed), BidiSanitizer.sanitize(v.actionSelector), ltr = true, truncate = false)
                     DisclosureRow(stringResource(Res.string.strat_window), "${v.windowStartEpochSeconds} – ${v.windowEndEpochSeconds}", ltr = true)

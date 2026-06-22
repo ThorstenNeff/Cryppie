@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ värde vid tilldelningens ögonblicksbild</string>
   <string name="strat_envelope">Totalt högst</string>
   <string name="strat_regrant_note">När taket är förbrukat, auktorisera på nytt för att fortsätta.</string>
+  <string name="strat_caveat_title">Bra att veta</string>
+  <string name="strat_token_search">Sök tokens</string>
+  <string name="strat_token_none">Inga tokens hittades</string>
 </resources>

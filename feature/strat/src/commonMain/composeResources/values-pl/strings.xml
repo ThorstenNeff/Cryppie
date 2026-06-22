@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ wartość w momencie snapshotu</string>
   <string name="strat_envelope">Łącznie najwyżej</string>
   <string name="strat_regrant_note">Po wyczerpaniu limitu autoryzuj ponownie, aby kontynuować.</string>
+  <string name="strat_caveat_title">Warto wiedzieć</string>
+  <string name="strat_token_search">Szukaj tokenów</string>
+  <string name="strat_token_none">Nie znaleziono tokenów</string>
 </resources>

@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ valor no snapshot da concessão</string>
   <string name="strat_envelope">Total no máximo</string>
   <string name="strat_regrant_note">Quando o limite se esgotar, autorize novamente para continuar.</string>
+  <string name="strat_caveat_title">Bom saber</string>
+  <string name="strat_token_search">Buscar tokens</string>
+  <string name="strat_token_none">Nenhum token encontrado</string>
 </resources>

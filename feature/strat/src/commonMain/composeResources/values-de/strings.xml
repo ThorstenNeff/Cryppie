@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ Wert zum Grant-Snapshot</string>
   <string name="strat_envelope">Gesamt höchstens</string>
   <string name="strat_regrant_note">Bei Erschöpfung des Limits neu autorisieren, um fortzufahren.</string>
+  <string name="strat_caveat_title">Gut zu wissen</string>
+  <string name="strat_token_search">Token suchen</string>
+  <string name="strat_token_none">Keine Token gefunden</string>
 </resources>

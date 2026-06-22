@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ giá trị tại snapshot lúc cấp quyền</string>
   <string name="strat_envelope">Tổng tối đa</string>
   <string name="strat_regrant_note">Khi giới hạn dùng hết, hãy ủy quyền lại để tiếp tục.</string>
+  <string name="strat_caveat_title">Cần biết</string>
+  <string name="strat_token_search">Tìm token</string>
+  <string name="strat_token_none">Không tìm thấy token</string>
 </resources>

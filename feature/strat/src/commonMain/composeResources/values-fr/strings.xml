@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ valeur au snapshot du grant</string>
   <string name="strat_envelope">Total au maximum</string>
   <string name="strat_regrant_note">Une fois le plafond épuisé, réautorisez pour continuer.</string>
+  <string name="strat_caveat_title">Bon à savoir</string>
+  <string name="strat_token_search">Rechercher un token</string>
+  <string name="strat_token_none">Aucun token trouvé</string>
 </resources>

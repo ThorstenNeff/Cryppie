@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ 授权快照时的价值</string>
   <string name="strat_envelope">总计至多</string>
   <string name="strat_regrant_note">上限用尽后，请重新授权以继续。</string>
+  <string name="strat_caveat_title">温馨提示</string>
+  <string name="strat_token_search">搜索代币</string>
+  <string name="strat_token_none">未找到代币</string>
 </resources>

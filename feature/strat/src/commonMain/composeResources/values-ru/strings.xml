@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ стоимость на момент снимка гранта</string>
   <string name="strat_envelope">Всего не более</string>
   <string name="strat_regrant_note">Когда лимит исчерпан, повторно авторизуйте, чтобы продолжить.</string>
+  <string name="strat_caveat_title">Полезно знать</string>
+  <string name="strat_token_search">Поиск токенов</string>
+  <string name="strat_token_none">Токены не найдены</string>
 </resources>

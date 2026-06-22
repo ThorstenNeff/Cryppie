@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ grant anındaki değer</string>
   <string name="strat_envelope">En fazla toplam</string>
   <string name="strat_regrant_note">Sınır tükendiğinde devam etmek için yeniden yetki ver.</string>
+  <string name="strat_caveat_title">Bilmekte fayda var</string>
+  <string name="strat_token_search">Token ara</string>
+  <string name="strat_token_none">Token bulunamadı</string>
 </resources>

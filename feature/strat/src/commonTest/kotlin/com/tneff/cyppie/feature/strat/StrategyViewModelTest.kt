@@ -1,6 +1,7 @@
 package com.tneff.cyppie.feature.strat
 
 import com.tneff.cyppie.aa.BuiltStrategyEnable
+import com.tneff.cyppie.aa.StrategyCap
 import com.tneff.cyppie.aa.StrategyGrantPreview
 import com.tneff.cyppie.aa.StrategyWeight
 import com.tneff.cyppie.evm.SmartSessionEnableDigest.SignedPermissions
@@ -48,6 +49,8 @@ class StrategyViewModelTest {
                 sessionValidatorInitData = "0x", salt = "0x", nonce = "0", permissionId = "0x",
                 permissions = SignedPermissions(permitERC4337Paymaster = true), capTokens = targets.map { it.token },
             ),
+            // KAN-167 ≈value: prepare caps carry the value snapshot the disclosure renders (display-only).
+            caps = targets.map { StrategyCap(it.token, budget, valueSnapshotBaseUnits = "1000000") },
         )
     }
 

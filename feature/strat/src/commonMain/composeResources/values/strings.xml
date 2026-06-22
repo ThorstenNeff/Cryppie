@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ value at grant snapshot</string>
   <string name="strat_envelope">Total at most</string>
   <string name="strat_regrant_note">When the cap is used up, re-authorize to continue.</string>
+  <string name="strat_caveat_title">Good to know</string>
+  <string name="strat_token_search">Search tokens</string>
+  <string name="strat_token_none">No tokens found</string>
 </resources>

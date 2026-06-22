@@ -65,4 +65,7 @@
   <string name="strat_value_snapshot">≈ værdi ved grant-snapshot</string>
   <string name="strat_envelope">I alt højst</string>
   <string name="strat_regrant_note">Når grænsen er opbrugt, skal du genautorisere for at fortsætte.</string>
+  <string name="strat_caveat_title">Godt at vide</string>
+  <string name="strat_token_search">Søg tokens</string>
+  <string name="strat_token_none">Ingen tokens fundet</string>
 </resources>
