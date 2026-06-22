@@ -34,12 +34,12 @@ class StrategyGrantServiceTest {
 
     private val prepared = StrategyPrepare(
         permissionId = permissionId, chainId = 1L, follower = owner.value, sessionPublicKey = sessionPubkey,
-        caps = caps, windowStart = 0L, windowEnd = 1893456000L, salt = salt, nonce = 0L, weights = weights,
+        caps = caps, windowStart = 0L, windowEnd = 1893456000L, salt = salt, nonce = 0L,
     )
 
     private val scope = StrategyScopeRequest(
-        chainId = 1L, follower = owner.value, budgetToken = usdc, budget = "1000000000", basket = weights,
-        windowStart = 0L, windowEnd = 1893456000L,
+        chainId = 1L, follower = owner.value, legs = caps, router = StrategyEnableBuilder.universalRouter(1L)!!,
+        windowStart = 0L, windowEnd = 1893456000L, weights = weights,
     )
 
     @Test

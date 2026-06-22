@@ -22,25 +22,28 @@ interface StrategyApi : EnableBroadcastApi {
 data class StrategyWeight(val token: String, val weightBps: Int)
 
 /**
- * The app-built strategy scope (from the UI's basket + budget). [follower] is the app's OWN device-derived owner.
- * The [basket] tokens + [budgetToken] define the on-chain SELL set (caps go on these); the [weights] are advisory.
+ * The app-built strategy scope (`/v1/strategy/session/prepare`, per `strategy-enable-scope-contract.md §2`).
+ * [follower] is the app's OWN device-derived owner. [legs] = the per-token SELL-caps (EVERY basket token + the
+ * budget token; cap = cumulative per-token) — the on-chain 🔒 set; [router] + [windowStart]/[windowEnd] complete
+ * the scope. [weights] are **advisory** (the rebalance target — execution-time, NOT in the enable / permissionId);
+ * carried only so the disclosure UI can render them visually separated.
  */
 @Serializable
 data class StrategyScopeRequest(
     val chainId: Long,
     val follower: String,
-    val budgetToken: String,
-    val budget: String,
-    val basket: List<StrategyWeight>,
+    val legs: List<StrategyCap>,
+    val router: String,
     val windowStart: Long,
     val windowEnd: Long,
+    val weights: List<StrategyWeight> = emptyList(),
 )
 
 /**
- * The prepared strategy session (backend `EnableInputs`). [caps] are the backend-computed per-token SELL-caps over
- * the basket+budget tokens (the 🔒 set); [permissionId] is the follow handle (app cross-checks it against its own
- * [StrategyEnableBuilder] permissionId). [weights] are advisory (echoed for the disclosure). The app MUST cross-
- * check [follower] against the device owner.
+ * The prepared strategy session (backend `StrategyEnableInputs`). [caps] are the canonical per-token SELL-caps (the
+ * 🔒 set; backend `sortLegs`-ordered, the app re-sorts identically); [permissionId] is the follow handle (app
+ * cross-checks it against its own [StrategyEnableBuilder] permissionId — necessary-not-sufficient; the cap VALUES
+ * are the real binding, checked in `verifyBasketGrant`). The app MUST cross-check [follower] against the device owner.
  */
 @Serializable
 data class StrategyPrepare(
@@ -53,7 +56,6 @@ data class StrategyPrepare(
     val windowEnd: Long,
     val salt: String,
     val nonce: Long,
-    val weights: List<StrategyWeight> = emptyList(),
 )
 
 @Serializable
