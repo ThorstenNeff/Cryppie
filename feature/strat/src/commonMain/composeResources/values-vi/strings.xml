@@ -58,4 +58,11 @@
   <string name="strat_revoked">Đã kết thúc chiến lược</string>
   <string name="strat_weights">Trọng số mục tiêu</string>
   <string name="strat_err_token">Địa chỉ token không hợp lệ</string>
+  <string name="strat_churn_title">Tái cân bằng trong các token có trong danh sách</string>
+  <string name="strat_churn_body">Chiến lược tái cân bằng trong các token được phép — nó có thể đổi token trong rổ của bạn sang các token khác có trong danh sách. Bạn có thể kết thúc với việc nắm giữ bất kỳ token nào có trong danh sách; khoản lỗ của bạn vẫn bị giới hạn bởi ngân sách.</string>
+  <string name="strat_churn_ack">Tôi hiểu rằng chiến lược có thể đổi token trong rổ của tôi sang bất kỳ token nào có trong danh sách.</string>
+  <string name="strat_sell_cap_per_token">Giới hạn bán mỗi token</string>
+  <string name="strat_value_snapshot">≈ giá trị tại snapshot lúc cấp quyền</string>
+  <string name="strat_envelope">Tổng tối đa</string>
+  <string name="strat_regrant_note">Khi giới hạn dùng hết, hãy ủy quyền lại để tiếp tục.</string>
 </resources>

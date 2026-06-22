@@ -58,4 +58,11 @@
   <string name="strat_revoking">جارٍ الإبطال…</string>
   <string name="strat_revoked">انتهت الاستراتيجية</string>
   <string name="strat_err_token">عنوان الرمز غير صالح</string>
+  <string name="strat_churn_title">إعادة موازنة ضمن الرموز المُدرَجة</string>
+  <string name="strat_churn_body">تُعيد الاستراتيجية الموازنة ضمن الرموز المسموح بها — إذ يمكنها مبادلة رموز سلّتك برموز أخرى مُدرَجة. قد ينتهي بك الأمر إلى حيازة أي رمز مُدرَج؛ ويبقى خسارتك محدودةً بالميزانية.</string>
+  <string name="strat_churn_ack">أفهم أن الاستراتيجية يمكنها مبادلة رموز سلّتي بأي رمز مُدرَج.</string>
+  <string name="strat_sell_cap_per_token">الحد الأقصى للبيع لكل رمز</string>
+  <string name="strat_value_snapshot">≈ القيمة عند لقطة المنح</string>
+  <string name="strat_envelope">الإجمالي بحدّ أقصى</string>
+  <string name="strat_regrant_note">عند استنفاد الحد، أعد التفويض للمتابعة.</string>
 </resources>

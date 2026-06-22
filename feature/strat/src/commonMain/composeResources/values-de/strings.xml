@@ -58,4 +58,11 @@
   <string name="strat_revoked">Strategie beendet</string>
   <string name="strat_weights">Ziel-Gewichte</string>
   <string name="strat_err_token">Ungültige Token-Adresse</string>
+  <string name="strat_churn_title">Rebalanced innerhalb gelisteter Token</string>
+  <string name="strat_churn_body">Die Strategie rebalanced innerhalb der erlaubten Token — sie kann deine Basket-Token in andere gelistete Token tauschen. Du kannst am Ende beliebige gelistete Token halten; dein Verlust bleibt durch das Budget gedeckelt.</string>
+  <string name="strat_churn_ack">Mir ist klar, dass die Strategie meine Basket-Token in beliebige gelistete Token tauschen kann.</string>
+  <string name="strat_sell_cap_per_token">Verkaufs-Limit pro Token</string>
+  <string name="strat_value_snapshot">≈ Wert zum Grant-Snapshot</string>
+  <string name="strat_envelope">Gesamt höchstens</string>
+  <string name="strat_regrant_note">Bei Erschöpfung des Limits neu autorisieren, um fortzufahren.</string>
 </resources>

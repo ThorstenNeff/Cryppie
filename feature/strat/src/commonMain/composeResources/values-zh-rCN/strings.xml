@@ -58,4 +58,11 @@
   <string name="strat_revoked">策略已结束</string>
   <string name="strat_weights">目标权重</string>
   <string name="strat_err_token">无效的代币地址</string>
+  <string name="strat_churn_title">在已上市代币内再平衡</string>
+  <string name="strat_churn_body">策略会在允许的代币内进行再平衡 — 它可以将你的篮子代币换成其他已上市代币。你最终可能持有任意已上市代币；你的损失仍由预算封顶。</string>
+  <string name="strat_churn_ack">我明白策略可以将我的篮子代币换成任意已上市代币。</string>
+  <string name="strat_sell_cap_per_token">每种代币的卖出上限</string>
+  <string name="strat_value_snapshot">≈ 授权快照时的价值</string>
+  <string name="strat_envelope">总计至多</string>
+  <string name="strat_regrant_note">上限用尽后，请重新授权以继续。</string>
 </resources>

@@ -37,6 +37,10 @@ class StrategyViewModel(
     var error: StratError? by mutableStateOf(null); private set
     var submitting: Boolean by mutableStateOf(false); private set
     var prepared: StrategyGrantPreview? by mutableStateOf(null); private set
+    // KAN-167 Vaults-B disclosure: the mandatory churn-risk acknowledgement (the strategy may swap basket tokens
+    // into ANY listed token — buy-leg is advisory v1, on-chain output constraint is post-GA). Gates authorize.
+    var churnAck: Boolean by mutableStateOf(false); private set
+    fun acknowledgeChurn(checked: Boolean) { churnAck = checked }
 
     fun setToken(index: Int, value: String) { rows = rows.mapIndexed { i, r -> if (i == index) r.copy(token = value) else r }; invalidate() }
     fun setWeight(index: Int, value: String) { rows = rows.mapIndexed { i, r -> if (i == index) r.copy(weight = value.filter { it.isDigit() }) else r }; invalidate() }
@@ -44,8 +48,8 @@ class StrategyViewModel(
     fun removeToken(index: Int) { if (rows.size > 2) { rows = rows.filterIndexed { i, _ -> i != index }; invalidate() } }
     fun enterBudget(value: String) { budget = value.filter { it.isDigit() }; invalidate() } // not setBudget (clashes with var budget's setter)
 
-    /** Any setup edit invalidates a prior review — the user must re-verify what they're about to sign. */
-    private fun invalidate() { prepared = null; error = null }
+    /** Any setup edit invalidates a prior review — the user must re-verify (+ re-ack) what they're about to sign. */
+    private fun invalidate() { prepared = null; error = null; churnAck = false }
 
     /** Live sum of the entered weights (the donut/bar + the `strat_total` line render this). */
     val totalWeight: Int get() = rows.sumOf { it.weight.toIntOrNull() ?: 0 }

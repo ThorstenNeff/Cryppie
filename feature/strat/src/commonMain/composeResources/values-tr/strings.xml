@@ -58,4 +58,11 @@
   <string name="strat_revoked">Strateji sonlandırıldı</string>
   <string name="strat_weights">Hedef ağırlıklar</string>
   <string name="strat_err_token">Geçersiz token adresi</string>
+  <string name="strat_churn_title">Listedeki token'lar içinde yeniden dengeler</string>
+  <string name="strat_churn_body">Strateji, izin verilen token'lar içinde yeniden dengeler — sepet token'larını listedeki başka token'larla takas edebilir. Sonunda listedeki herhangi bir token'ı tutuyor olabilirsin; zararın bütçeyle sınırlı kalır.</string>
+  <string name="strat_churn_ack">Stratejinin sepet token'larımı listedeki herhangi bir token'la takas edebileceğini anlıyorum.</string>
+  <string name="strat_sell_cap_per_token">Token başına satış sınırı</string>
+  <string name="strat_value_snapshot">≈ grant anındaki değer</string>
+  <string name="strat_envelope">En fazla toplam</string>
+  <string name="strat_regrant_note">Sınır tükendiğinde devam etmek için yeniden yetki ver.</string>
 </resources>

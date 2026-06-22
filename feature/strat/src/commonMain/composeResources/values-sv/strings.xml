@@ -58,4 +58,11 @@
   <string name="strat_revoked">Strategi avslutad</string>
   <string name="strat_weights">Målvikter</string>
   <string name="strat_err_token">Ogiltig tokenadress</string>
+  <string name="strat_churn_title">Rebalanserar inom listade tokens</string>
+  <string name="strat_churn_body">Strategin rebalanserar inom de tillåtna tokens — den kan byta dina korgtokens mot andra listade tokens. Du kan sluta med att hålla vilken listad token som helst; din förlust förblir begränsad av budgeten.</string>
+  <string name="strat_churn_ack">Jag förstår att strategin kan byta mina korgtokens mot vilken listad token som helst.</string>
+  <string name="strat_sell_cap_per_token">Säljtak per token</string>
+  <string name="strat_value_snapshot">≈ värde vid tilldelningens ögonblicksbild</string>
+  <string name="strat_envelope">Totalt högst</string>
+  <string name="strat_regrant_note">När taket är förbrukat, auktorisera på nytt för att fortsätta.</string>
 </resources>

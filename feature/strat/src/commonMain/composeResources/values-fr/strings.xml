@@ -58,4 +58,11 @@
   <string name="strat_revoked">Stratégie terminée</string>
   <string name="strat_weights">Poids cibles</string>
   <string name="strat_err_token">Adresse de token invalide</string>
+  <string name="strat_churn_title">Rééquilibre au sein des tokens listés</string>
+  <string name="strat_churn_body">La stratégie rééquilibre au sein des tokens autorisés — elle peut échanger vos tokens du panier contre d'autres tokens listés. Vous pouvez finir par détenir n'importe quel token listé ; votre perte reste plafonnée par le budget.</string>
+  <string name="strat_churn_ack">Je comprends que la stratégie peut échanger mes tokens du panier contre n'importe quel token listé.</string>
+  <string name="strat_sell_cap_per_token">Plafond de vente par token</string>
+  <string name="strat_value_snapshot">≈ valeur au snapshot du grant</string>
+  <string name="strat_envelope">Total au maximum</string>
+  <string name="strat_regrant_note">Une fois le plafond épuisé, réautorisez pour continuer.</string>
 </resources>

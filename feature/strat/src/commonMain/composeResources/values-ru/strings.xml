@@ -58,4 +58,11 @@
   <string name="strat_revoked">Стратегия завершена</string>
   <string name="strat_weights">Целевые веса</string>
   <string name="strat_err_token">Некорректный адрес токена</string>
+  <string name="strat_churn_title">Ребалансировка в пределах токенов из списка</string>
+  <string name="strat_churn_body">Стратегия ребалансирует в пределах разрешённых токенов — она может обменивать ваши токены basket на другие токены из списка. В итоге вы можете держать любой токен из списка; ваш убыток остаётся ограничен бюджетом.</string>
+  <string name="strat_churn_ack">Я понимаю, что стратегия может обменивать мои токены basket на любой токен из списка.</string>
+  <string name="strat_sell_cap_per_token">Лимит продажи на токен</string>
+  <string name="strat_value_snapshot">≈ стоимость на момент снимка гранта</string>
+  <string name="strat_envelope">Всего не более</string>
+  <string name="strat_regrant_note">Когда лимит исчерпан, повторно авторизуйте, чтобы продолжить.</string>
 </resources>

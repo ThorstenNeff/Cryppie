@@ -58,4 +58,11 @@
   <string name="strat_revoked">Strategy ended</string>
   <string name="strat_weights">Target weights</string>
   <string name="strat_err_token">Invalid token address</string>
+  <string name="strat_churn_title">Rebalances within listed tokens</string>
+  <string name="strat_churn_body">The strategy rebalances within the allowed tokens — it can swap your basket tokens into other listed tokens. You may end up holding any listed token; your loss stays capped by the budget.</string>
+  <string name="strat_churn_ack">I understand the strategy can swap my basket tokens into any listed token.</string>
+  <string name="strat_sell_cap_per_token">Sell cap per token</string>
+  <string name="strat_value_snapshot">≈ value at grant snapshot</string>
+  <string name="strat_envelope">Total at most</string>
+  <string name="strat_regrant_note">When the cap is used up, re-authorize to continue.</string>
 </resources>

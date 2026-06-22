@@ -31,12 +31,18 @@ import com.tneff.cyppie.designsystem.components.CryptasaBanner
 import com.tneff.cyppie.designsystem.components.CryptasaBannerTone
 import com.tneff.cyppie.designsystem.components.CryptasaButton
 import com.tneff.cyppie.designsystem.components.CryptasaButtonStyle
+import com.tneff.cyppie.designsystem.components.CryptasaCheckbox
 import com.tneff.cyppie.designsystem.components.CryptasaTextField
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
 import com.tneff.cyppie.designsystem.components.DisclosureRow
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 import com.tneff.cyppie.feature.strat.generated.resources.Res
 import com.tneff.cyppie.feature.strat.generated.resources.strat_add_token
+import com.tneff.cyppie.feature.strat.generated.resources.strat_churn_ack
+import com.tneff.cyppie.feature.strat.generated.resources.strat_churn_body
+import com.tneff.cyppie.feature.strat.generated.resources.strat_churn_title
+import com.tneff.cyppie.feature.strat.generated.resources.strat_regrant_note
+import com.tneff.cyppie.feature.strat.generated.resources.strat_sell_cap_per_token
 import com.tneff.cyppie.feature.strat.generated.resources.strat_advisory
 import com.tneff.cyppie.feature.strat.generated.resources.strat_advisory_note
 import com.tneff.cyppie.feature.strat.generated.resources.strat_allowed
@@ -180,7 +186,7 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
                     Text(stringResource(Res.string.strat_guaranteed), style = CryptasaTheme.typography.titleSmall, color = colors.onSurface)
                     Text(stringResource(Res.string.strat_guaranteed_note), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
                     // Per-token sell-caps (🔒): each basket(+budget) token → the max base-units the strategy may sell.
-                    Text(stringResource(Res.string.strat_cap), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
+                    Text(stringResource(Res.string.strat_sell_cap_per_token), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
                     v.caps.forEachIndexed { i, cap ->
                         DisclosureRow(
                             BidiSanitizer.sanitize(cap.token), BidiSanitizer.sanitize(cap.capBaseUnits),
@@ -190,6 +196,8 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
                     DisclosureRow(stringResource(Res.string.strat_router), BidiSanitizer.sanitize(v.actionTarget), ltr = true, truncate = false)
                     DisclosureRow(stringResource(Res.string.strat_allowed), BidiSanitizer.sanitize(v.actionSelector), ltr = true, truncate = false)
                     DisclosureRow(stringResource(Res.string.strat_window), "${v.windowStartEpochSeconds} – ${v.windowEndEpochSeconds}", ltr = true)
+                    // KAN-167: when the per-token caps are exhausted, the user re-authorizes to continue.
+                    Text(stringResource(Res.string.strat_regrant_note), style = CryptasaTheme.typography.helper, color = colors.onSurfaceVariant)
                 }
 
                 // ── ℹ️ ADVISORY — the target weights (rebalance target; NOT in the enable / not on-chain-enforced). ──
@@ -206,6 +214,22 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
                     )
                 }
 
+                // ── danger CHURN-RISK ACK (KAN-167 Vaults-B): the buy-leg is advisory v1 (on-chain output
+                // constraint = post-GA), so the honest gate is a mandatory ack that the strategy may swap the
+                // basket into ANY listed token. Like Copy's dynamic risk-ack — authorize is blocked until checked. ──
+                CryptasaBanner(
+                    title = stringResource(Res.string.strat_churn_title),
+                    description = stringResource(Res.string.strat_churn_body),
+                    tone = CryptasaBannerTone.Danger,
+                    modifier = Modifier.testTag(StrategyTestTags.CHURN_RISK),
+                )
+                CryptasaCheckbox(
+                    checked = viewModel.churnAck,
+                    onCheckedChange = viewModel::acknowledgeChurn,
+                    label = stringResource(Res.string.strat_churn_ack),
+                    modifier = Modifier.fillMaxWidth().testTag(StrategyTestTags.CHURN_ACK),
+                )
+
                 viewModel.error?.let { CryptasaBanner(title = stringResource(it.res()), tone = CryptasaBannerTone.Danger, modifier = Modifier.testTag(StrategyTestTags.ERROR)) }
 
                 CryptasaTextField(
@@ -219,7 +243,8 @@ internal fun StrategyReviewScreen(viewModel: StrategyViewModel, onBack: () -> Un
                 CryptasaButton(
                     text = if (viewModel.submitting) stringResource(Res.string.strat_authorizing) else stringResource(Res.string.strat_authorize),
                     onClick = { viewModel.confirm(password) },
-                    enabled = !viewModel.submitting && password.isNotBlank(),
+                    // Gated on the mandatory churn-risk ack (KAN-167) — no sign without explicit consent.
+                    enabled = !viewModel.submitting && password.isNotBlank() && viewModel.churnAck,
                     modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xl).testTag(StrategyTestTags.AUTHORIZE),
                 )
             }

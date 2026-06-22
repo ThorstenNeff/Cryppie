@@ -58,4 +58,11 @@
   <string name="strat_revoked">Strategi avsluttet</string>
   <string name="strat_weights">Målvekter</string>
   <string name="strat_err_token">Ugyldig token-adresse</string>
+  <string name="strat_churn_title">Rebalanserer innenfor noterte tokens</string>
+  <string name="strat_churn_body">Strategien rebalanserer innenfor de tillatte tokenene — den kan bytte kurvtokenene dine til andre noterte tokens. Du kan ende opp med å holde et hvilket som helst notert token; tapet ditt forblir begrenset av budsjettet.</string>
+  <string name="strat_churn_ack">Jeg forstår at strategien kan bytte kurvtokenene mine til et hvilket som helst notert token.</string>
+  <string name="strat_sell_cap_per_token">Salgsgrense per token</string>
+  <string name="strat_value_snapshot">≈ verdi ved tildelings-snapshot</string>
+  <string name="strat_envelope">Totalt høyst</string>
+  <string name="strat_regrant_note">Når grensen er brukt opp, autoriser på nytt for å fortsette.</string>
 </resources>

@@ -58,4 +58,11 @@
   <string name="strat_revoked">Estratégia encerrada</string>
   <string name="strat_weights">Pesos alvo</string>
   <string name="strat_err_token">Endereço de token inválido</string>
+  <string name="strat_churn_title">Rebalanceia dentro dos tokens listados</string>
+  <string name="strat_churn_body">A estratégia rebalanceia dentro dos tokens permitidos — ela pode trocar seus tokens do basket por outros tokens listados. Você pode acabar com qualquer token listado; sua perda permanece limitada pelo orçamento.</string>
+  <string name="strat_churn_ack">Entendo que a estratégia pode trocar meus tokens do basket por qualquer token listado.</string>
+  <string name="strat_sell_cap_per_token">Limite de venda por token</string>
+  <string name="strat_value_snapshot">≈ valor no snapshot da concessão</string>
+  <string name="strat_envelope">Total no máximo</string>
+  <string name="strat_regrant_note">Quando o limite se esgotar, autorize novamente para continuar.</string>
 </resources>

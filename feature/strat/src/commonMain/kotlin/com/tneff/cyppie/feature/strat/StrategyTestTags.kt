@@ -19,6 +19,8 @@ object StrategyTestTags {
     const val PASSWORD = "strat_password"
     const val AUTHORIZE = "strat_authorize"
     const val ERROR = "strat_err_verify"
+    const val CHURN_RISK = "strat_churn_title"   // KAN-167: the danger churn-risk banner
+    const val CHURN_ACK = "strat_churn_ack"       // KAN-167: the mandatory churn-risk checkbox (gates authorize)
     const val DONE_SCREEN = "strat_done_screen"
 
     // Active overview (Strat2-List) + on-chain Revoke
