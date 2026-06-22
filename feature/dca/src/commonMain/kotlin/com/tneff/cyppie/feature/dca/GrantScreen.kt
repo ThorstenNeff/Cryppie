@@ -52,6 +52,7 @@ import com.tneff.cyppie.designsystem.components.CryptasaTextField
 import com.tneff.cyppie.designsystem.components.CryptasaTopAppBar
 import com.tneff.cyppie.designsystem.BidiSanitizer
 import com.tneff.cyppie.designsystem.components.DisclosureRow
+import com.tneff.cyppie.designsystem.SecureScreenEffect
 import com.tneff.cyppie.designsystem.components.SegmentedControl
 import com.tneff.cyppie.designsystem.theme.CryptasaTheme
 
@@ -66,6 +67,7 @@ import com.tneff.cyppie.designsystem.theme.CryptasaTheme
  */
 @Composable
 fun GrantScreen(viewModel: GrantViewModel, onDone: () -> Unit, onBack: () -> Unit = {}, modifier: Modifier = Modifier) {
+    SecureScreenEffect() // KAN-168 D1: this screen OWNS its protection (DCA disclosure + re-auth password + sign)
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     var password by remember { mutableStateOf("") }
