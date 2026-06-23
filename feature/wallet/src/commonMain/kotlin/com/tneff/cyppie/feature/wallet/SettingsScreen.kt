@@ -70,7 +70,12 @@ internal fun SettingsScreen(
     var activeSessionCount by remember { mutableStateOf(0) }
     LaunchedEffect(Unit) { activeSessionCount = runCatching { loadActiveSessionCount() }.getOrDefault(0) }
 
-    Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
+    // P0 FIX (QA KAN-176): wrap content + dialog in ONE Box so the dialog OVERLAYS (z-stack). Previously the
+    // two were sibling roots → in the shell's Column the fillMaxSize dialog laid out BELOW the content (off-screen)
+    // → the switch dialog never appeared, so the whole runtime switch was UI-dead. (CryptasaDialog is an in-tree
+    // overlay, not a Popup, so it MUST be a Box child to z-stack — same pattern as CopyActiveScreen's revoke dialog.)
+    Box(modifier = modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 480.dp).fillMaxSize()) {
             CryptasaTopAppBar(title = stringResource(Res.string.net_settings_title), onBack = onBack)
             Column(
@@ -117,4 +122,5 @@ internal fun SettingsScreen(
             modifier = Modifier.testTag("net_switch_title"),
         )
     }
+    } // close the outer wrapper Box (P0 fix: dialog overlays content instead of stacking below it)
 }
