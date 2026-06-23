@@ -38,6 +38,7 @@ import com.tneff.cyppie.feature.strat.BasketTarget
 import com.tneff.cyppie.feature.strat.StrategyListScreen
 import com.tneff.cyppie.feature.strat.StrategyListViewModel
 import com.tneff.cyppie.feature.strat.StrategyRoot
+import com.tneff.cyppie.feature.strat.StrategySession
 import com.tneff.cyppie.evm.Hex
 import dev.whyoleg.cryptography.random.CryptographyRandom
 import com.tneff.cyppie.auth.AuthSession
@@ -68,6 +69,7 @@ import androidx.compose.runtime.setValue
 import org.jetbrains.compose.resources.stringResource
 import com.tneff.cyppie.evm.network.ActiveNetworkStore
 import com.tneff.cyppie.feature.wallet.generated.resources.Res
+import com.tneff.cyppie.feature.wallet.generated.resources.net_no_price_testnet
 import com.tneff.cyppie.feature.wallet.generated.resources.net_testnet_banner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tneff.cyppie.evm.EvmAddress
@@ -189,11 +191,9 @@ private val marketWatchlist: List<WatchedAsset> by lazy {
 // now come from the active profile's [BackendUrls] (KAN-173 host-split: testnet routes to a separate
 // AA_ALLOW_TESTNET=1 host). A 404/unreachable surface still maps to Error (FR-4 graceful), like Market on 503.
 
-/** The fixed DCA grant routing/token config (MVP). The real allowed router/selector/spend-token are
- *  backend-published (Ph1); these mainnet defaults drive the grant UX + disclosure until then. */
-// KAN-173: chainId + router now come from the active [NetworkProfile] (router = the chain's SwapRouter02
-// `dcaRouter`). ⚠️ FLAG to Dev-2/PO: the DCA spend/buy TOKENS (USDC/WETH) + decimals + feeTier are NOT in
-// All per-env values flow from the ChainProfile (KAN-172). Mainnet stays byte-identical: profile.chain(1L)'s
+// KAN-173: the DCA grant routing/tokens come **per-env** from the active [NetworkProfile]'s primary chain —
+// router (SwapRouter02 `dcaRouter`) + spend/buy tokens (per-env USDC/WETH, Dev-2 KAN-172). decimals (USDC = 6)
+// and feeTier (0.3% pool) are network-independent → constants. Mainnet stays byte-identical: profile.chain(1L)'s
 // dcaRouter/spendToken/buyToken == the prior hardcoded mainnet constants. The fallbacks are fail-closed zero-
 // addresses, so an unsourced testnet chain can't silently route a DCA to the wrong/empty target.
 private const val FAIL_CLOSED_ADDRESS = "0x0000000000000000000000000000000000000000"
@@ -385,6 +385,9 @@ private fun WalletShellContent(
     val dcaGrantParams = remember(profile) { dcaGrantParamsFor(profile) }
     // KAN-173 safety fix: the testnet marker mirrored into the high-stakes sign/revoke dialogs (null on mainnet).
     val testnetMarker = if (activeEnv.isTestnet) stringResource(Res.string.net_testnet_banner) else null
+    // KAN-173: "No price on testnet" — the mainnet-only price sources can't value testnet holdings (the Portfolio
+    // metrics show "—"). Market prices are global (env-independent) so they're unaffected; only Portfolio shows this.
+    val testnetPriceNote = if (activeEnv.isTestnet) stringResource(Res.string.net_no_price_testnet) else null
     val repository = remember(seedSource, profile) { buildRepository(seedSource, defaultRpcByChain, defaultNftByChain) }
     // KAN-173 (Dev-2 coordination): iterate the ACTIVE profile's chains, not EvmChain.entries — so when Dev-2 adds
     // testnet EvmChain entries they don't auto-iterate on mainnet (mainnet stays byte-identical).
@@ -518,6 +521,7 @@ private fun WalletShellContent(
                 state = pfViewModel.uiState,
                 onRetry = pfViewModel::refresh,
                 onBack = { dest = WalletDest.Home },
+                testnetPriceNote = testnetPriceNote, // KAN-173: "No price on testnet" over the metrics
             )
         }
         WalletDest.WalletConnect -> {
@@ -692,7 +696,9 @@ private fun WalletShellContent(
             // the GRANT path uses Dev-2's real StrategyGrantService (KAN-165).
             val stratListVm: StrategyListViewModel = viewModel(key = "strat_list") {
                 StrategyListViewModel(
-                    listStrategies = { emptyList() }, // TODO(KAN-166 follow): GET strat sessions when backend lands it
+                    // KAN-173: the active-net filter is in place (like Copy/DCA) — a no-op on today's empty stub, but
+                    // ready the moment the GET /v1/strategy/sessions endpoint is wired (StrategySession.chainId set).
+                    listStrategies = { emptyList<StrategySession>().filter { it.chainId in profile.chainIds } }, // TODO(KAN-166): real list
                     revokeStrategy = { _, _ -> },      // TODO: RevokeBroadcaster(strategy permissionId) when list lands
                     reauth = dcaReauth,
                     setPaused = { _, _ -> },

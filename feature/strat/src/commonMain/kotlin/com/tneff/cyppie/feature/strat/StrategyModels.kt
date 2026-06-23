@@ -24,6 +24,9 @@ data class StrategySession(
     // Strat3-Detail: the actual current allocation (vs [targets]) + a display-only performance string.
     val currentWeights: List<BasketTarget> = emptyList(),
     val performance: String? = null,
+    // KAN-173: the session's chain (backend supplies it in /v1/strategy/sessions) → the app filters the list to
+    // the active env's chains (like Copy/DCA). Default mainnet so the model is back-compatible until the list lands.
+    val chainId: Long = 1L,
 )
 
 /** Float-free sum of non-negative base-10 strings (for the ≈value envelope total). Defensive → "0" on non-digits. */

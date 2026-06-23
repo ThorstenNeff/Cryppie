@@ -60,6 +60,7 @@ fun PortfolioOverviewScreen(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    testnetPriceNote: String? = null, // KAN-173: non-null on testnet → "No price on testnet" over the metrics
 ) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
@@ -109,13 +110,13 @@ fun PortfolioOverviewScreen(
                 )
             }
 
-            is PortfolioOverviewUiState.Content -> PortfolioContent(state.overview)
+            is PortfolioOverviewUiState.Content -> PortfolioContent(state.overview, testnetPriceNote)
         }
     }
 }
 
 @Composable
-private fun PortfolioContent(overview: PortfolioOverview) {
+private fun PortfolioContent(overview: PortfolioOverview, testnetPriceNote: String? = null) {
     val spacing = CryptasaTheme.spacing
     val portfolio = overview.portfolio
     val twoColumn = currentWindowAdaptiveInfo().windowSizeClass
@@ -130,6 +131,11 @@ private fun PortfolioContent(overview: PortfolioOverview) {
 
     val metrics: @Composable Modifier.() -> Unit = {
         Column(modifier = this, verticalArrangement = Arrangement.spacedBy(spacing.md)) {
+            // KAN-173: on testnet the mainnet-only price sources can't value testnet holdings → the metrics show
+            // "—". An explicit "No price on testnet" note (passed resolved from the shell) explains it cleanly.
+            testnetPriceNote?.let {
+                CryptasaBanner(title = it, tone = CryptasaBannerTone.Info, modifier = Modifier.testTag("net_no_price_testnet"))
+            }
             if (showCaveat) {
                 CryptasaBanner(
                     title = stringResource(Res.string.pf_approximate),
