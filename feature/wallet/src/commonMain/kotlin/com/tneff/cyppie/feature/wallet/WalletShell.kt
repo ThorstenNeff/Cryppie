@@ -320,7 +320,10 @@ private suspend fun computePerformance(
  */
 @Composable
 fun WalletShell(onLock: () -> Unit) {
-    val networkStore = remember { ActiveNetworkStore() } // TODO(KAN-173): platform NetworkPreferenceStore for persistence
+    // KAN-173: the active env persists across restarts via the platform NetworkPreferenceStore (SharedPrefs/
+    // NSUserDefaults/java.util.prefs). ActiveNetworkStore loads the persisted env at construction.
+    val networkPreferences = rememberNetworkPreferenceStore()
+    val networkStore = remember(networkPreferences) { ActiveNetworkStore(networkPreferences) }
     val activeEnv by networkStore.environment.collectAsState()
     key(activeEnv) {
         Column(Modifier.fillMaxSize()) {
