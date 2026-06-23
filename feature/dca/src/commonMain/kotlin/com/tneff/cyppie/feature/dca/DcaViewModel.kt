@@ -39,6 +39,9 @@ class DcaViewModel(
     // enabled session BEFORE signing (throws on mismatch → fail-closed). The app shell binds it to
     // `verifyDcaBuy(pending, owner, spendToken, router, swapSelector)`.
     private val verifyBuy: (PendingDca) -> Unit = {},
+    // KAN-173: the active network's chain ids — sessions/pending ops on other chains are filtered out (the list
+    // endpoints return all chains; client-side filter is the interim). Empty = no filter (back-compat).
+    private val activeChainIds: Set<Long> = emptySet(),
 ) : ViewModel() {
 
     var uiState: DcaUiState by mutableStateOf(DcaUiState.Loading); private set
@@ -54,9 +57,10 @@ class DcaViewModel(
         uiState = DcaUiState.Loading
         viewModelScope.launch {
             uiState = runCatching {
+                fun onActiveNet(chainId: Long) = activeChainIds.isEmpty() || chainId in activeChainIds
                 DcaUiState.Content(
-                    sessions = api.listSessions(),
-                    pending = api.pendingDca(),
+                    sessions = api.listSessions().filter { onActiveNet(it.chainId) },   // KAN-173: active-net only
+                    pending = api.pendingDca().filter { onActiveNet(it.chainId) },        // KAN-173: active-net only
                     paused = runCatching { api.aaStatus().paused }.getOrDefault(true), // P1-4 fail-closed: unknown = paused
                 )
             }.getOrElse { DcaUiState.Error }

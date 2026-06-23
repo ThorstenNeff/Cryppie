@@ -59,6 +59,7 @@ import com.tneff.cyppie.feature.wallet.generated.resources.home_portfolio
 import com.tneff.cyppie.feature.wallet.generated.resources.home_strat
 import com.tneff.cyppie.feature.wallet.generated.resources.home_receive
 import com.tneff.cyppie.feature.wallet.generated.resources.home_refresh_cd
+import com.tneff.cyppie.feature.wallet.generated.resources.net_settings_title
 import com.tneff.cyppie.feature.wallet.generated.resources.home_retry
 import com.tneff.cyppie.feature.wallet.generated.resources.home_title
 import com.tneff.cyppie.feature.wallet.generated.resources.wallet_action_connect
@@ -87,6 +88,7 @@ fun WalletHomeScreen(
     onDca: () -> Unit = {},
     onCopy: () -> Unit = {},
     onStrat: () -> Unit = {},
+    onSettings: () -> Unit = {},
     viewModel: WalletHomeViewModel = koinViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -118,16 +120,30 @@ fun WalletHomeScreen(
                     style = CryptasaTheme.typography.titleLarge,
                     color = colors.onSurface,
                 )
-                val refreshCd = stringResource(Res.string.home_refresh_cd)
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(CryptasaTheme.radius.full))
-                        .clickableIcon(contentDescription = refreshCd, onClick = { viewModel.refresh() })
-                        .testTag(WalletTestTags.HOME_REFRESH),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(CryptasaIcons.Refresh, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                // Right-side actions: network Settings (gear, KAN-173) + refresh.
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val settingsCd = stringResource(Res.string.net_settings_title)
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(CryptasaTheme.radius.full))
+                            .clickableIcon(contentDescription = settingsCd, onClick = onSettings)
+                            .testTag("net_settings_title"),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(CryptasaIcons.Settings, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                    }
+                    val refreshCd = stringResource(Res.string.home_refresh_cd)
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(CryptasaTheme.radius.full))
+                            .clickableIcon(contentDescription = refreshCd, onClick = { viewModel.refresh() })
+                            .testTag(WalletTestTags.HOME_REFRESH),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(CryptasaIcons.Refresh, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                    }
                 }
             }
 

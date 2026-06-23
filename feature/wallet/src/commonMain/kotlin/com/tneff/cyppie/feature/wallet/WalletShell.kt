@@ -122,7 +122,7 @@ import com.tneff.cyppie.walletcore.EvmChain
 import com.tneff.cyppie.walletcore.TokenCatalog
 import com.tneff.cyppie.walletcore.WalletRepository
 
-private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant, Copy, CopyFollow, Strat, StratNew }
+private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, WalletConnect, Market, MarketDetail, Dca, DcaGrant, Copy, CopyFollow, Strat, StratNew, Settings }
 
 /**
  * KAN-112/ADR-0021: all Alchemy/RPC traffic goes through the local `:server` key-proxy — the API key
@@ -439,7 +439,16 @@ private fun WalletShellContent(
             onDca = { dest = WalletDest.Dca },
             onCopy = { dest = WalletDest.Copy },
             onStrat = { dest = WalletDest.Strat },
+            onSettings = { dest = WalletDest.Settings }, // KAN-173: gear → network Settings
             viewModel = viewModel,
+        )
+        WalletDest.Settings -> SettingsScreen(
+            activeEnv = activeEnv,
+            onSwitchNetwork = onSwitchNetwork,
+            onBack = { dest = WalletDest.Home },
+            // TODO(KAN-173 follow): aggregate the active DCA/Copy/Strategy session count on the current net for
+            // the "they keep running" note. MVP omits the line (count = 0); the graded mainnet/testnet framing stands.
+            activeSessionCount = 0,
         )
         WalletDest.Receive -> {
             // Same EVM address across chains (KAN-78); the screen re-labels per chain itself.
@@ -558,6 +567,7 @@ private fun WalletShellContent(
                             // backend-supplied value — binds each buy's output token to what the user authorized.
                             verifyDcaBuy(pending, dcaOwner.value, dcaGrantParams.spendToken, dcaGrantParams.buyToken, dcaGrantParams.router, dcaGrantParams.swapSelector)
                         },
+                        activeChainIds = profile.chainIds.toSet(), // KAN-173: only active-net sessions/pending
                     )
                 }
                 DcaOverviewScreen(
@@ -596,7 +606,9 @@ private fun WalletShellContent(
             // FLAG_SECURE is owned by CopyActiveScreen itself (KAN-168) — not wired here, so it can't be lost.
             val copySessionsVm: CopySessionsViewModel = viewModel(key = "copy_sessions") {
                 CopySessionsViewModel(
-                    listSessions = { copyApi.listCopySessions() },
+                    // KAN-173: filter to the active env's chains (the endpoint returns all chains; client-side
+                    // filter is the interim until every list call passes ?chainId=). No stale cross-net sessions.
+                    listSessions = { copyApi.listCopySessions().filter { it.chainId in profile.chainIds } },
                     // No-blind revoke: build removeSession on-device → verifyRevokeUserOp → owner-sign (the
                     // broadcaster owns the seed-zeroize) → submit → poll. owner = account#0 (the 7702 SCA).
                     revokeSession = { session, seed ->
