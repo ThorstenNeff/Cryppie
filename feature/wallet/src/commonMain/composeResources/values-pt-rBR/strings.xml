@@ -142,4 +142,19 @@
   <string name="home_dca">Auto-Invest</string>
   <string name="home_copy">Copy trading</string>
   <string name="home_strat">Estratégias</string>
+  <string name="net_settings_title">Configurações</string>
+  <string name="net_section">Rede</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">Rede ativa — fundos reais.</string>
+  <string name="net_testnet_desc">Rede de teste — sem dinheiro real.</string>
+  <string name="net_current">Rede atual</string>
+  <string name="net_testnet_banner">TESTNET — sem dinheiro real</string>
+  <string name="net_switch_title">Trocar de rede?</string>
+  <string name="net_to_mainnet_title">Entrando no modo de fundos reais</string>
+  <string name="net_to_mainnet_body">Você está mudando para a Mainnet — as transações usam fundos reais.</string>
+  <string name="net_to_testnet_body">Você está mudando para a Testnet — nenhum dinheiro real é usado.</string>
+  <string name="net_active_sessions">%1$d sessões ativas continuam em execução na %2$s — trocar muda apenas o que você vê.</string>
+  <string name="net_switch_confirm">Trocar</string>
+  <string name="net_no_price_testnet">Sem preço na testnet</string>
 </resources>

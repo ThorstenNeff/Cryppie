@@ -58,13 +58,21 @@ import com.tneff.cyppie.feature.dca.GrantScreen
 import com.tneff.cyppie.feature.dca.GrantViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import org.jetbrains.compose.resources.stringResource
+import com.tneff.cyppie.evm.network.ActiveNetworkStore
+import com.tneff.cyppie.feature.wallet.generated.resources.Res
+import com.tneff.cyppie.feature.wallet.generated.resources.net_testnet_banner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tneff.cyppie.evm.EvmAddress
+import com.tneff.cyppie.evm.network.NetworkEnvironment
+import com.tneff.cyppie.evm.network.NetworkProfile
 import com.tneff.cyppie.feature.portfolio.PortfolioOverview
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewScreen
 import com.tneff.cyppie.feature.portfolio.PortfolioOverviewViewModel
@@ -123,34 +131,36 @@ private enum class WalletDest { Home, Receive, AddToken, Nfts, Send, Portfolio, 
  * it answers 503 → the clients map that to `AllProvidersFailed` and the UI degrades cleanly (FR-4).
  * (Android-emulator caveat: the host proxy is reachable at `10.0.2.2:8080`, not `localhost`.)
  */
-private const val PROXY_BASE_URL = "http://localhost:8080"
-private val alchemyProxy = AlchemyProxyConfig(PROXY_BASE_URL)
+// KAN-173 (PRD-09): every network-dependent client/config is derived **per active [NetworkProfile]** (not a
+// file-level singleton) so the `key(activeEnv){ WalletShell }` soft-relaunch rebuilds them all on a switch —
+// no stale cross-net display. The proxy base + per-chain slugs + chain-id set all flow from the profile.
+// (Slug routing resolves env-agnostically via NetworkProfiles.chainProfile, since chain-ids are disjoint
+// across envs — so the proxy only needs the per-env base URL.)
+private fun alchemyProxyFor(profile: NetworkProfile): AlchemyProxyConfig =
+    AlchemyProxyConfig(profile.backend.proxyBaseUrl)
 
-private val defaultRpcByChain: Map<Long, EvmRpcClient> by lazy {
-    AlchemyNetworks.supportedChainIds.associateWith { chainId ->
-        EvmRpcClient.create(listOf(RpcEndpoint("proxy", alchemyProxy.rpcUrl(chainId))))
+private fun rpcByChainFor(profile: NetworkProfile, proxy: AlchemyProxyConfig): Map<Long, EvmRpcClient> =
+    profile.chainIds.associateWith { chainId ->
+        EvmRpcClient.create(listOf(RpcEndpoint("proxy", proxy.rpcUrl(chainId))))
     }
-}
 
 /** NFT read clients per chain via the proxy (KAN-105 grid now has real data through the key-proxy). */
-private val defaultNftByChain: Map<Long, NftReadClient> by lazy {
-    AlchemyNetworks.supportedChainIds.associateWith { chainId ->
-        AlchemyNftClient(chainId, alchemyProxy.nftBaseUrl(chainId))
+private fun nftByChainFor(profile: NetworkProfile, proxy: AlchemyProxyConfig): Map<Long, NftReadClient> =
+    profile.chainIds.associateWith { chainId ->
+        AlchemyNftClient(chainId, proxy.nftBaseUrl(chainId))
     }
-}
 
-private fun buildRepository(seedSource: SeedSource): WalletRepository =
-    WalletRepository(AccountManager(EvmKeyManager(seedSource)), defaultRpcByChain, defaultNftByChain)
+private fun buildRepository(seedSource: SeedSource, rpcByChain: Map<Long, EvmRpcClient>, nftByChain: Map<Long, NftReadClient>): WalletRepository =
+    WalletRepository(AccountManager(EvmKeyManager(seedSource)), rpcByChain, nftByChain)
 
-/** Curated tokens + native ETH per supported chain — the priced/displayed set (KAN-90 known-good). */
-private val portfolioKnownGood: Set<TokenKey> by lazy {
-    AlchemyNetworks.supportedChainIds.flatMap { chainId ->
+/** Curated tokens + native ETH per active-env chain — the priced/displayed set (KAN-90 known-good). */
+private fun portfolioKnownGoodFor(profile: NetworkProfile): Set<TokenKey> =
+    profile.chainIds.flatMap { chainId ->
         val curated = EvmChain.fromChainId(chainId)
             ?.let { chain -> TokenCatalog.forChain(chain).map { TokenKey(chainId, it.address) } }
             .orEmpty()
         curated + TokenKey(chainId, null) // native ETH
     }.toSet()
-}
 
 @OptIn(kotlin.time.ExperimentalTime::class)
 private fun nowEpochSeconds(): Long = kotlin.time.Clock.System.now().epochSeconds
@@ -158,13 +168,12 @@ private fun nowEpochSeconds(): Long = kotlin.time.Clock.System.now().epochSecond
 /** KAN-131 — the live market-data API: [BridgeMarketDataApi] over the proxy CoinGecko (key injected
  *  server-side) + keyless Binance. No CoinGecko key → 503 → MD screens degrade cleanly (FR-4); Binance
  *  candles still render. */
-private val marketDataApi: MarketDataApi by lazy {
+private fun marketDataApiFor(proxy: AlchemyProxyConfig): MarketDataApi =
     BridgeMarketDataApi(
-        coinGecko = CoinGeckoMarketClient(alchemyProxy.coinGeckoBaseUrl()),
+        coinGecko = CoinGeckoMarketClient(proxy.coinGeckoBaseUrl()),
         binance = BinanceMarketClient(),
         clockEpochSeconds = ::nowEpochSeconds,
     )
-}
 
 /** MD-3 watchlist (curated MVP): native ETH + the chain-1 catalog majors. Labels are display-only;
  *  assets the market catalog can't map degrade per-row (FR-4) — the row still renders. */
@@ -176,25 +185,24 @@ private val marketWatchlist: List<WatchedAsset> by lazy {
     listOf(eth) + erc20s
 }
 
-/**
- * PRD-05 Ph1 (KAN-138/KAN-141) — DCA / AA endpoints.
- * - [KEYCLOAK_BASE_URL]: the SIWE realm (KAN-141, real).
- * - [USER_SERVICE_BASE_URL]: the JWT User-Service (Ph0 §4) — per the runbook its paths live under
- *   `auth.cyppie.com/v1/...` (api.cyppie.com is the Alchemy key-proxy, a different host). The exact base
- *   URL is fixed at deploy; until then a 404/unreachable surface maps to Error (FR-4 graceful), exactly
- *   like Market degrades on a 503. The nav + SIWE flow are live; only the live data awaits the backend.
- */
-private const val KEYCLOAK_BASE_URL = "https://auth.cyppie.com"
-private const val USER_SERVICE_BASE_URL = "https://auth.cyppie.com"
+// PRD-05 Ph1 (KAN-138/KAN-141) — DCA / AA endpoints: the SIWE Keycloak realm + the JWT User-Service base URLs
+// now come from the active profile's [BackendUrls] (KAN-173 host-split: testnet routes to a separate
+// AA_ALLOW_TESTNET=1 host). A 404/unreachable surface still maps to Error (FR-4 graceful), like Market on 503.
 
 /** The fixed DCA grant routing/token config (MVP). The real allowed router/selector/spend-token are
  *  backend-published (Ph1); these mainnet defaults drive the grant UX + disclosure until then. */
-private val dcaGrantParams: DcaGrantParams by lazy {
-    DcaGrantParams(
-        chainId = 1L,
-        router = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",     // Uniswap UniversalRouter (mainnet) — placeholder
+// KAN-173: chainId + router now come from the active [NetworkProfile] (router = the chain's SwapRouter02
+// `dcaRouter`). ⚠️ FLAG to Dev-2/PO: the DCA spend/buy TOKENS (USDC/WETH) + decimals + feeTier are NOT in
+// ChainProfile yet — kept as mainnet constants here. On testnet they'd be wrong (testnet USDC/WETH differ);
+// the DCA grant UX needs per-env token defaults in the profile (or a TokenCatalog lookup) before testnet DCA.
+// Mainnet stays byte-identical: profile.chain(1L).dcaRouter == the prior hardcoded SwapRouter02.
+private fun dcaGrantParamsFor(profile: NetworkProfile): DcaGrantParams {
+    val chainId = profile.chainIds.first()
+    return DcaGrantParams(
+        chainId = chainId,
+        router = profile.chain(chainId)?.dcaRouter ?: "0x0000000000000000000000000000000000000000", // fail-closed if unsourced
         swapSelector = "0x3593564c",                                // execute(bytes,bytes[],uint256)
-        spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC (mainnet)
+        spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC (mainnet) — TODO per-env (KAN-172 follow)
         spendTokenDecimals = 6,                                      // USDC = 6
         buyToken = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",     // WETH (mainnet) — the DCA target (advisory; KAN-168 D2)
         feeTier = 3000,                                              // Uniswap V3 0.3% pool for the scheduled buys (KAN-163)
@@ -221,21 +229,27 @@ private const val ONE_DAY_SECONDS = 86_400L
  * — any failure leaves pnl null and the priced overview still renders. Proxy/RPC down → the clients fail
  * → the VM maps it to Error (FR-4 graceful, no crash).
  */
-private fun buildPortfolioLoader(accounts: () -> List<EvmAddress>): suspend () -> PortfolioOverview {
-    val dataClient = AlchemyDataClient(alchemyProxy.dataBaseUrl())
-    val priceSource = AlchemyPriceSource(AlchemyPriceClient(alchemyProxy.pricesBaseUrl())) { nowEpochSeconds() }
-    val transfersByChain = AlchemyNetworks.supportedChainIds.associateWith { chainId ->
-        AlchemyTransfersClient(alchemyProxy.rpcUrl(chainId), chainId)
+private fun buildPortfolioLoader(
+    accounts: () -> List<EvmAddress>,
+    proxy: AlchemyProxyConfig,
+    chainIds: List<Long>,
+    rpcByChain: Map<Long, EvmRpcClient>,
+    knownGood: Set<TokenKey>,
+): suspend () -> PortfolioOverview {
+    val dataClient = AlchemyDataClient(proxy.dataBaseUrl())
+    val priceSource = AlchemyPriceSource(AlchemyPriceClient(proxy.pricesBaseUrl())) { nowEpochSeconds() }
+    val transfersByChain = chainIds.associateWith { chainId ->
+        AlchemyTransfersClient(proxy.rpcUrl(chainId), chainId)
     }
     val service = PortfolioService(
-        fetchErc20Holdings = { holders, chainIds -> dataClient.tokenHoldings(holders, chainIds) },
-        fetchNativeBalance = { chainId, account -> defaultRpcByChain.getValue(chainId).getBalance(account) },
+        fetchErc20Holdings = { holders, cids -> dataClient.tokenHoldings(holders, cids) },
+        fetchNativeBalance = { chainId, account -> rpcByChain.getValue(chainId).getBalance(account) },
         priceSource = priceSource,
-        config = PortfolioConfig(knownGood = portfolioKnownGood, currency = "usd"),
+        config = PortfolioConfig(knownGood = knownGood, currency = "usd"),
         clockEpochSeconds = { nowEpochSeconds() },
     )
     return {
-        val portfolio = service.load(accounts(), AlchemyNetworks.supportedChainIds, vs = "usd")
+        val portfolio = service.load(accounts(), chainIds, vs = "usd")
         // P&L + 24h are heavier (full transfer history + price history per holding) + must never block the
         // priced overview; a failure (proxy down, no history) leaves them null and FR-9-≈ renders cleanly.
         runCatching { computePerformance(portfolio, priceSource, transfersByChain) }
@@ -297,21 +311,78 @@ private suspend fun computePerformance(
 }
 
 /**
- * KAN-103 — the live wallet shell behind the app-shell Home destination. Builds a [WalletRepository]
- * from the unlocked [SeedSession] (account derivation + read RPC) and hosts Home → Receive / Add-token.
- * Curated [TokenCatalog] tokens are queried per chain (per-token decimals in the rows, KAN-89 M1 gate).
- * Non-web (no seed on web); if the session is somehow gone, it asks the shell to re-lock.
+ * KAN-173 (PRD-09) — the network-aware wallet shell entry. Owns the [ActiveNetworkStore] (the reactive,
+ * persisted active [NetworkEnvironment]) and **keys the whole shell on it** so a network switch triggers a
+ * soft-relaunch: `key(activeEnv){ WalletShellContent(...) }` recreates the entire VM/DI graph bound to the new
+ * env → no stale cross-net display, session lists naturally re-fetch (RECON §3). The app-shell-wide TESTNET
+ * strip (KAN-175, non-disableable) wraps every destination here. Persistence: interim in-memory until the
+ * platform [NetworkPreferenceStore] `actual` lands (KAN-172 Stage 2) — TODO wire it for switch-survives-restart.
  */
 @Composable
 fun WalletShell(onLock: () -> Unit) {
+    val networkStore = remember { ActiveNetworkStore() } // TODO(KAN-173): platform NetworkPreferenceStore for persistence
+    val activeEnv by networkStore.environment.collectAsState()
+    key(activeEnv) {
+        Column(Modifier.fillMaxSize()) {
+            if (activeEnv.isTestnet) TestnetIndicatorStrip()
+            WalletShellContent(
+                profile = activeEnv.profile,
+                activeEnv = activeEnv,
+                onSwitchNetwork = networkStore::switch,
+                onLock = onLock,
+            )
+        }
+    }
+}
+
+/**
+ * KAN-175 §3 — the app-shell-wide, **non-disableable** TESTNET indicator. Rendered only while testnet is the
+ * active env, above every wallet destination. Reuses the [CryptasaBanner] warning (amber) style; the text WRAPS
+ * (full-width banner, no `maxLines`) so "TESTNET — no real money" never truncates across widths / 14 locales
+ * (UX safety note 1). Bound to the active env (no preference toggles it off).
+ */
+@Composable
+private fun TestnetIndicatorStrip() {
+    CryptasaBanner(
+        title = stringResource(Res.string.net_testnet_banner),
+        tone = CryptasaBannerTone.Warning,
+        modifier = Modifier.fillMaxWidth().testTag("net_testnet_banner"),
+    )
+}
+
+/**
+ * KAN-103 — the live wallet shell behind the app-shell Home destination. Builds a [WalletRepository]
+ * from the unlocked [SeedSession] (account derivation + read RPC) and hosts Home → Receive / Add-token.
+ * Curated [TokenCatalog] tokens are queried per chain (per-token decimals in the rows, KAN-89 M1 gate).
+ * Non-web (no seed on web); if the session is somehow gone, it asks the shell to re-lock. All network-dependent
+ * config flows from [profile] (KAN-173); [onSwitchNetwork] persists+emits a new env (drives the soft-relaunch).
+ */
+@Composable
+private fun WalletShellContent(
+    profile: NetworkProfile,
+    activeEnv: NetworkEnvironment,
+    onSwitchNetwork: (NetworkEnvironment) -> Unit,
+    onLock: () -> Unit,
+) {
     val seedSource = SeedSession.current
     if (seedSource == null) {
         LaunchedEffect(Unit) { onLock() }
         return
     }
-    val repository = remember(seedSource) { buildRepository(seedSource) }
-    val tokensByChain = remember {
-        EvmChain.entries.associateWith { chain -> TokenCatalog.forChain(chain).map { it.address } }
+    // KAN-173 (PRD-09): every network-dependent client/config is derived per active [profile] + remembered ON it,
+    // so the `key(activeEnv){ WalletShell }` soft-relaunch rebuilds them all on a switch (no stale cross-net state).
+    val alchemyProxy = remember(profile) { alchemyProxyFor(profile) }
+    val defaultRpcByChain = remember(profile) { rpcByChainFor(profile, alchemyProxy) }
+    val defaultNftByChain = remember(profile) { nftByChainFor(profile, alchemyProxy) }
+    val portfolioKnownGood = remember(profile) { portfolioKnownGoodFor(profile) }
+    val marketDataApi = remember(profile) { marketDataApiFor(alchemyProxy) }
+    val dcaGrantParams = remember(profile) { dcaGrantParamsFor(profile) }
+    val repository = remember(seedSource, profile) { buildRepository(seedSource, defaultRpcByChain, defaultNftByChain) }
+    // KAN-173 (Dev-2 coordination): iterate the ACTIVE profile's chains, not EvmChain.entries — so when Dev-2 adds
+    // testnet EvmChain entries they don't auto-iterate on mainnet (mainnet stays byte-identical).
+    val tokensByChain = remember(profile) {
+        profile.chainIds.mapNotNull { EvmChain.fromChainId(it) }
+            .associateWith { chain -> TokenCatalog.forChain(chain).map { it.address } }
     }
     val viewModel: WalletHomeViewModel = viewModel { WalletHomeViewModel(repository, tokensByChain) }
     var dest by rememberSaveable { mutableStateOf(WalletDest.Home) }
@@ -325,7 +396,7 @@ fun WalletShell(onLock: () -> Unit) {
     // refresh (P1-7). Defaults wire the real Keycloak (auth.cyppie.com) + the shared jsonHttpClient.
     val authSession = remember(seedSource) {
         AuthSession(
-            keycloak = KeycloakClient(KEYCLOAK_BASE_URL),
+            keycloak = KeycloakClient(profile.backend.keycloakBaseUrl),
             siweSigner = Eip191SiweSigner(),
             vault = InMemoryTokenVault(),
             owner = dcaOwner,
@@ -334,7 +405,7 @@ fun WalletShell(onLock: () -> Unit) {
         )
     }
     // The User-Service client: bearer = the session JWT (fail-closed — KtorDcaApi.bearer() throws on blank).
-    val dcaApi = remember(seedSource) { KtorDcaApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
+    val dcaApi = remember(seedSource) { KtorDcaApi(profile.backend.userServiceBaseUrl, bearerToken = { authSession.token() ?: "" }) }
     val aaSigner = remember { AaSigner() }
     // KAN-159: the shared on-device enable-broadcast orchestration (verify→sign→submit→poll) — reused by
     // the DCA grant call-site (and Copy via FollowGrantService). Owns the seed-zeroize over the sign window.
@@ -344,11 +415,11 @@ fun WalletShell(onLock: () -> Unit) {
     val revokeBroadcaster = remember(aaSigner) { RevokeBroadcaster(aaSigner) }
     // Copy-trading (PRD-06, KAN-154/155): same JWT User-Service + Dev-2's on-device verify→sign→submit grant
     // service (prepareGrant runs verifyGrant; authorizeGrant runs verifyEnableUserOp before owner-signing).
-    val copyApi = remember(seedSource) { KtorCopyApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
+    val copyApi = remember(seedSource) { KtorCopyApi(profile.backend.userServiceBaseUrl, bearerToken = { authSession.token() ?: "" }) }
     val followService = remember(copyApi) { FollowGrantService(copyApi) }
     // Smart-Strategies (PRD-07b, KAN-165/166): same JWT User-Service + Dev-2's on-device verify→sign→submit grant
     // service (prepareGrant runs verifyBasketGrant on the canonical per-token sell-caps; authorizeGrant broadcasts).
-    val strategyApi = remember(seedSource) { KtorStrategyApi(USER_SERVICE_BASE_URL, bearerToken = { authSession.token() ?: "" }) }
+    val strategyApi = remember(seedSource) { KtorStrategyApi(profile.backend.userServiceBaseUrl, bearerToken = { authSession.token() ?: "" }) }
     val strategyService = remember(strategyApi) { StrategyGrantService(strategyApi) }
     // AA-op signing uses a FRESH per-op re-auth source (explicit consent per funds-moving signature), like
     // Send/WC — distinct from the light post-unlock SIWE consent (ambient session, identity only).
@@ -419,7 +490,7 @@ fun WalletShell(onLock: () -> Unit) {
         WalletDest.Portfolio -> {
             // PF-1 overview (KAN-107) over the live proxy assembler; aggregates the shown accounts.
             val pfViewModel: PortfolioOverviewViewModel = viewModel(key = "portfolio") {
-                PortfolioOverviewViewModel(buildPortfolioLoader { viewModel.accounts.map { it.address } })
+                PortfolioOverviewViewModel(buildPortfolioLoader({ viewModel.accounts.map { it.address } }, alchemyProxy, profile.chainIds, defaultRpcByChain, portfolioKnownGood))
             }
             PortfolioOverviewScreen(
                 state = pfViewModel.uiState,

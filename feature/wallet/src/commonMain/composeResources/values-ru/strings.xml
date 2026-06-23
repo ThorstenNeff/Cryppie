@@ -142,4 +142,19 @@
   <string name="home_dca">Авто-инвест</string>
   <string name="home_copy">Копи-трейдинг</string>
   <string name="home_strat">Стратегии</string>
+  <string name="net_settings_title">Настройки</string>
+  <string name="net_section">Сеть</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">Основная сеть — реальные средства.</string>
+  <string name="net_testnet_desc">Тестовая сеть — без реальных денег.</string>
+  <string name="net_current">Текущая сеть</string>
+  <string name="net_testnet_banner">TESTNET — без реальных денег</string>
+  <string name="net_switch_title">Сменить сеть?</string>
+  <string name="net_to_mainnet_title">Переход в режим реальных средств</string>
+  <string name="net_to_mainnet_body">Вы переходите на Mainnet — транзакции используют реальные средства.</string>
+  <string name="net_to_testnet_body">Вы переходите на Testnet — реальные деньги не используются.</string>
+  <string name="net_active_sessions">%1$d активных сессий продолжают работать в %2$s — смена меняет только то, что вы видите.</string>
+  <string name="net_switch_confirm">Сменить</string>
+  <string name="net_no_price_testnet">Нет цены в тестовой сети</string>
 </resources>

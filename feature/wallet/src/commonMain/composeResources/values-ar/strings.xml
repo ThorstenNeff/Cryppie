@@ -142,4 +142,19 @@
   <string name="home_dca">استثمار تلقائي</string>
   <string name="home_copy">نسخ التداول</string>
   <string name="home_strat">الاستراتيجيات</string>
+  <string name="net_settings_title">الإعدادات</string>
+  <string name="net_section">الشبكة</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">شبكة مباشرة — أموال حقيقية.</string>
+  <string name="net_testnet_desc">شبكة اختبار — لا توجد أموال حقيقية.</string>
+  <string name="net_current">الشبكة الحالية</string>
+  <string name="net_testnet_banner">TESTNET — لا توجد أموال حقيقية</string>
+  <string name="net_switch_title">تبديل الشبكة؟</string>
+  <string name="net_to_mainnet_title">الدخول إلى وضع الأموال الحقيقية</string>
+  <string name="net_to_mainnet_body">أنت تنتقل إلى Mainnet — المعاملات تستخدم أموالاً حقيقية.</string>
+  <string name="net_to_testnet_body">أنت تنتقل إلى Testnet — لا تُستخدم أموال حقيقية.</string>
+  <string name="net_active_sessions">%1$d جلسة نشطة تستمر في العمل على %2$s — التبديل يغيّر فقط ما تراه.</string>
+  <string name="net_switch_confirm">تبديل</string>
+  <string name="net_no_price_testnet">لا يوجد سعر على شبكة الاختبار</string>
 </resources>

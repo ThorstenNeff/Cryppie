@@ -142,4 +142,19 @@
   <string name="home_dca">Auto-Invest</string>
   <string name="home_copy">Copy Trading</string>
   <string name="home_strat">Strategier</string>
+  <string name="net_settings_title">Indstillinger</string>
+  <string name="net_section">Netværk</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">Live-netværk — rigtige midler.</string>
+  <string name="net_testnet_desc">Testnetværk — ingen rigtige penge.</string>
+  <string name="net_current">Aktuelt netværk</string>
+  <string name="net_testnet_banner">TESTNET — ingen rigtige penge</string>
+  <string name="net_switch_title">Skift netværk?</string>
+  <string name="net_to_mainnet_title">Skifter til tilstand med rigtige midler</string>
+  <string name="net_to_mainnet_body">Du skifter til Mainnet — transaktioner bruger rigtige midler.</string>
+  <string name="net_to_testnet_body">Du skifter til Testnet — der bruges ingen rigtige penge.</string>
+  <string name="net_active_sessions">%1$d aktive sessioner kører videre på %2$s — et skift ændrer kun, hvad du ser.</string>
+  <string name="net_switch_confirm">Skift</string>
+  <string name="net_no_price_testnet">Ingen pris på testnet</string>
 </resources>

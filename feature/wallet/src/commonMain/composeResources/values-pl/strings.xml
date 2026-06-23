@@ -142,4 +142,19 @@
   <string name="home_dca">Auto-Inwestycja</string>
   <string name="home_copy">Copy trading</string>
   <string name="home_strat">Strategie</string>
+  <string name="net_settings_title">Ustawienia</string>
+  <string name="net_section">Sieć</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">Sieć produkcyjna — prawdziwe środki.</string>
+  <string name="net_testnet_desc">Sieć testowa — żadnych prawdziwych pieniędzy.</string>
+  <string name="net_current">Bieżąca sieć</string>
+  <string name="net_testnet_banner">TESTNET — żadnych prawdziwych pieniędzy</string>
+  <string name="net_switch_title">Przełączyć sieć?</string>
+  <string name="net_to_mainnet_title">Tryb prawdziwych środków</string>
+  <string name="net_to_mainnet_body">Przełączasz się na Mainnet — transakcje używają prawdziwych środków.</string>
+  <string name="net_to_testnet_body">Przełączasz się na Testnet — nie są używane żadne prawdziwe pieniądze.</string>
+  <string name="net_active_sessions">%1$d aktywnych sesji działa dalej w sieci %2$s — przełączenie zmienia tylko to, co widzisz.</string>
+  <string name="net_switch_confirm">Przełącz</string>
+  <string name="net_no_price_testnet">Brak ceny w sieci testowej</string>
 </resources>

@@ -142,4 +142,19 @@
   <string name="home_dca">Otomatik Yatırım</string>
   <string name="home_copy">Kopya İşlem</string>
   <string name="home_strat">Stratejiler</string>
+  <string name="net_settings_title">Ayarlar</string>
+  <string name="net_section">Ağ</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">Canlı ağ — gerçek paralar.</string>
+  <string name="net_testnet_desc">Test ağı — gerçek para yok.</string>
+  <string name="net_current">Geçerli ağ</string>
+  <string name="net_testnet_banner">TESTNET — gerçek para yok</string>
+  <string name="net_switch_title">Ağ değiştirilsin mi?</string>
+  <string name="net_to_mainnet_title">Gerçek para moduna geçiliyor</string>
+  <string name="net_to_mainnet_body">Mainnet ağına geçiyorsunuz — işlemler gerçek para kullanır.</string>
+  <string name="net_to_testnet_body">Testnet ağına geçiyorsunuz — gerçek para kullanılmaz.</string>
+  <string name="net_active_sessions">%1$d etkin oturum %2$s üzerinde çalışmaya devam ediyor — geçiş yalnızca ne gördüğünüzü değiştirir.</string>
+  <string name="net_switch_confirm">Değiştir</string>
+  <string name="net_no_price_testnet">Testnet'te fiyat yok</string>
 </resources>

@@ -142,4 +142,19 @@
   <string name="home_dca">自动定投</string>
   <string name="home_copy">跟单交易</string>
   <string name="home_strat">策略</string>
+  <string name="net_settings_title">设置</string>
+  <string name="net_section">网络</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">实时网络 — 真实资金。</string>
+  <string name="net_testnet_desc">测试网络 — 非真实金钱。</string>
+  <string name="net_current">当前网络</string>
+  <string name="net_testnet_banner">TESTNET — 非真实金钱</string>
+  <string name="net_switch_title">切换网络？</string>
+  <string name="net_to_mainnet_title">进入真实资金模式</string>
+  <string name="net_to_mainnet_body">你正在切换到 Mainnet — 交易将使用真实资金。</string>
+  <string name="net_to_testnet_body">你正在切换到 Testnet — 不会使用真实金钱。</string>
+  <string name="net_active_sessions">%1$d 个活跃会话仍在 %2$s 上运行 — 切换只改变你所看到的内容。</string>
+  <string name="net_switch_confirm">切换</string>
+  <string name="net_no_price_testnet">测试网无价格</string>
 </resources>

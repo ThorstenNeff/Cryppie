@@ -142,4 +142,19 @@
   <string name="home_dca">Auto-Invest</string>
   <string name="home_copy">Copy-Trading</string>
   <string name="home_strat">Strategien</string>
+  <string name="net_settings_title">Einstellungen</string>
+  <string name="net_section">Netzwerk</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">Live-Netzwerk — echte Mittel.</string>
+  <string name="net_testnet_desc">Testnetzwerk — kein echtes Geld.</string>
+  <string name="net_current">Aktuelles Netzwerk</string>
+  <string name="net_testnet_banner">TESTNET — kein echtes Geld</string>
+  <string name="net_switch_title">Netzwerk wechseln?</string>
+  <string name="net_to_mainnet_title">Echtgeld-Modus</string>
+  <string name="net_to_mainnet_body">Du wechselst zu Mainnet — Transaktionen nutzen echtes Geld.</string>
+  <string name="net_to_testnet_body">Du wechselst zu Testnet — es wird kein echtes Geld verwendet.</string>
+  <string name="net_active_sessions">%1$d aktive Sessions laufen auf %2$s weiter — der Wechsel ändert nur, was du siehst.</string>
+  <string name="net_switch_confirm">Wechseln</string>
+  <string name="net_no_price_testnet">Kein Preis im Testnet</string>
 </resources>

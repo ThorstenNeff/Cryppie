@@ -142,4 +142,19 @@
   <string name="home_dca">Tự động đầu tư</string>
   <string name="home_copy">Sao chép giao dịch</string>
   <string name="home_strat">Chiến lược</string>
+  <string name="net_settings_title">Cài đặt</string>
+  <string name="net_section">Mạng</string>
+  <string name="net_mainnet">Mainnet</string>
+  <string name="net_testnet">Testnet</string>
+  <string name="net_mainnet_desc">Mạng trực tiếp — tiền thật.</string>
+  <string name="net_testnet_desc">Mạng thử nghiệm — không có tiền thật.</string>
+  <string name="net_current">Mạng hiện tại</string>
+  <string name="net_testnet_banner">TESTNET — không có tiền thật</string>
+  <string name="net_switch_title">Chuyển mạng?</string>
+  <string name="net_to_mainnet_title">Vào chế độ tiền thật</string>
+  <string name="net_to_mainnet_body">Bạn đang chuyển sang Mainnet — giao dịch sử dụng tiền thật.</string>
+  <string name="net_to_testnet_body">Bạn đang chuyển sang Testnet — không sử dụng tiền thật.</string>
+  <string name="net_active_sessions">%1$d phiên đang hoạt động vẫn chạy trên %2$s — việc chuyển chỉ thay đổi những gì bạn thấy.</string>
+  <string name="net_switch_confirm">Chuyển</string>
+  <string name="net_no_price_testnet">Không có giá trên testnet</string>
 </resources>

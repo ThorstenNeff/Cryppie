@@ -33,8 +33,9 @@ run {
             "feature:wallet",
             file("feature/wallet/src/commonMain/composeResources"),
             // send_ + wc_ live here too: the Send UI (KAN-110) and the WalletConnect UI (KAN-126)
-            // are both part of :feature:wallet (reuse the Send-Confirm disclosure).
-            listOf("wallet_", "receive_", "home_", "token_", "nft_", "send_", "wc_", "common_"),
+            // are both part of :feature:wallet (reuse the Send-Confirm disclosure). net_ = the PRD-09
+            // network-switching UI (Settings/selector/TESTNET-strip/switch-warning, KAN-173).
+            listOf("wallet_", "receive_", "home_", "token_", "nft_", "send_", "wc_", "net_", "common_"),
         ),
         Triple(
             "feature:portfolio",

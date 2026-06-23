@@ -66,7 +66,10 @@ class WalletHomeViewModel(
         viewModelScope.launch {
             uiState = WalletHomeUiState.Loading
             uiState = runCatching {
-                val tokens = EvmChain.entries.associateWith { tokensByChain[it].orEmpty() }
+                // KAN-173: use the (profile-scoped) tokensByChain as-is — don't re-iterate EvmChain.entries
+                // (which would pull in testnet chains once Dev-2 adds them; the shell already scopes this map
+                // to the active env's chains, keeping mainnet byte-identical).
+                val tokens = tokensByChain
                 val balances = repository.accountPortfolio(selectedAccount, tokens)
                 if (balances.isEmpty()) {
                     WalletHomeUiState.Empty
