@@ -78,6 +78,7 @@ fun DcaOverviewScreen(
     onCreate: () -> Unit = {},
     onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
+    testnetMarker: String? = null, // KAN-173: non-null on testnet → mirrored at the per-buy sign point
 ) {
     SecureScreenEffect() // KAN-168 D1: the per-buy sign dialog (password + on-device sign) + amounts → screen-owned
     val colors = CryptasaTheme.colors
@@ -117,6 +118,7 @@ fun DcaOverviewScreen(
                                     onStartSign = { signingId = dca.id; password = "" },
                                     onConfirm = { viewModel.signPending(dca, password); signingId = null; password = "" },
                                     onCancel = { signingId = null; password = "" },
+                                    testnetMarker = testnetMarker,
                                 )
                             }
                         }
@@ -145,6 +147,7 @@ private fun PendingCard(
     onStartSign: () -> Unit,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
+    testnetMarker: String? = null, // KAN-173: non-null on testnet → shown at the sign point
 ) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
@@ -158,6 +161,9 @@ private fun PendingCard(
         DisclosureRow(stringResource(Res.string.dca_spend), BidiSanitizer.sanitize(dca.amountIn), ltr = true, valueTestTag = "dca_amount_in")
         DisclosureRow(stringResource(Res.string.dca_pay_token), BidiSanitizer.sanitize(dca.tokenIn), ltr = true, truncate = false)
         if (isSigning) {
+            // KAN-173 safety fix: mirror the testnet marker at the exact sign point (Scope B — unmistakable
+            // network context when authorizing a buy, even if a modal would dim the app-shell strip).
+            testnetMarker?.let { CryptasaBanner(title = it, tone = CryptasaBannerTone.Warning, modifier = Modifier.testTag("net_testnet_banner")) }
             // Re-auth gate (ADR-0009) — a correct password yields a fresh seed source that AaSigner zeroizes.
             CryptasaTextField(
                 value = password,

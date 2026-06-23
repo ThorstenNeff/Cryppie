@@ -380,6 +380,8 @@ private fun WalletShellContent(
     val portfolioKnownGood = remember(profile) { portfolioKnownGoodFor(profile) }
     val marketDataApi = remember(profile) { marketDataApiFor(alchemyProxy) }
     val dcaGrantParams = remember(profile) { dcaGrantParamsFor(profile) }
+    // KAN-173 safety fix: the testnet marker mirrored into the high-stakes sign/revoke dialogs (null on mainnet).
+    val testnetMarker = if (activeEnv.isTestnet) stringResource(Res.string.net_testnet_banner) else null
     val repository = remember(seedSource, profile) { buildRepository(seedSource, defaultRpcByChain, defaultNftByChain) }
     // KAN-173 (Dev-2 coordination): iterate the ACTIVE profile's chains, not EvmChain.entries — so when Dev-2 adds
     // testnet EvmChain entries they don't auto-iterate on mainnet (mainnet stays byte-identical).
@@ -449,9 +451,14 @@ private fun WalletShellContent(
             activeEnv = activeEnv,
             onSwitchNetwork = onSwitchNetwork,
             onBack = { dest = WalletDest.Home },
-            // TODO(KAN-173 follow): aggregate the active DCA/Copy/Strategy session count on the current net for
-            // the "they keep running" note. MVP omits the line (count = 0); the graded mainnet/testnet framing stands.
-            activeSessionCount = 0,
+            // KAN-173 safety fix: the live active-session count on the CURRENT net (Copy + DCA; Strategy list is a
+            // backend-follow stub) → the switch-warning's "N keep running on <net>" note. Best-effort (any failure → 0).
+            loadActiveSessionCount = {
+                val onNet = profile.chainIds.toSet()
+                val copy = runCatching { copyApi.listCopySessions().count { it.chainId in onNet } }.getOrDefault(0)
+                val dca = runCatching { dcaApi.listSessions().count { it.chainId in onNet } }.getOrDefault(0)
+                copy + dca
+            },
         )
         WalletDest.Receive -> {
             // Same EVM address across chains (KAN-78); the screen re-labels per chain itself.
@@ -577,6 +584,7 @@ private fun WalletShellContent(
                     viewModel = dcaVm,
                     onCreate = { dest = WalletDest.DcaGrant },
                     onBack = { dest = WalletDest.Home },
+                    testnetMarker = testnetMarker, // KAN-173: mirror the testnet marker at the per-buy sign
                 )
             }
         }
@@ -626,6 +634,7 @@ private fun WalletShellContent(
                 formatSince = { iso8601Utc(it).take(10) }, // YYYY-MM-DD (readable-time polish = KAN-148 follow)
                 onCopyTrader = { dest = WalletDest.CopyFollow },
                 onBack = { dest = WalletDest.Home },
+                testnetMarker = testnetMarker, // KAN-173: mirror the testnet marker into the revoke dialog
             )
         }
         WalletDest.CopyFollow -> {

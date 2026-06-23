@@ -82,6 +82,7 @@ fun CopyActiveScreen(
     onCopyTrader: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    testnetMarker: String? = null, // KAN-173: non-null on testnet → mirrored into the revoke dialog
 ) {
     SecureScreenEffect() // KAN-168: this screen OWNS its protection (trader addresses + the revoke re-auth/sign)
     val colors = CryptasaTheme.colors
@@ -139,7 +140,7 @@ fun CopyActiveScreen(
 
         // Revoke-Confirm (Copy-Revoke-Confirm) — blocking dialog on top of the list.
         viewModel.revokeTarget?.let {
-            CopyRevokeDialog(viewModel = viewModel)
+            CopyRevokeDialog(viewModel = viewModel, testnetMarker = testnetMarker)
         }
     }
 }
@@ -204,7 +205,7 @@ private fun CopySessionCard(
  * fail-safe: a failure keeps the dialog + the session (the VM never removes a row without a confirmed receipt).
  */
 @Composable
-private fun CopyRevokeDialog(viewModel: CopySessionsViewModel) {
+private fun CopyRevokeDialog(viewModel: CopySessionsViewModel, testnetMarker: String? = null) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     var password by remember { mutableStateOf("") }
@@ -218,6 +219,9 @@ private fun CopyRevokeDialog(viewModel: CopySessionsViewModel) {
             modifier = Modifier.padding(spacing.xl).widthIn(max = 480.dp).fillMaxWidth(),
         ) {
             Column(Modifier.padding(spacing.xl), verticalArrangement = Arrangement.spacedBy(spacing.md)) {
+                // KAN-173 safety fix: the modal renders over the dimmed app-shell TESTNET strip → mirror the
+                // testnet marker in-dialog so the network context is unmistakable at sign time (Scope B).
+                testnetMarker?.let { CryptasaBanner(title = it, tone = CryptasaBannerTone.Warning, modifier = Modifier.testTag("net_testnet_banner")) }
                 Text(
                     stringResource(Res.string.copy_revoke_title),
                     style = CryptasaTheme.typography.titleSmall, color = colors.onSurface,

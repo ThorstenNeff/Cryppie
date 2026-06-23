@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,12 +59,16 @@ internal fun SettingsScreen(
     onSwitchNetwork: (NetworkEnvironment) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    activeSessionCount: Int = 0,
+    loadActiveSessionCount: suspend () -> Int = { 0 },
 ) {
     val colors = CryptasaTheme.colors
     val spacing = CryptasaTheme.spacing
     // The network the user tapped to switch TO (null = no pending switch / dialog closed).
     var pendingSwitch by remember { mutableStateOf<NetworkEnvironment?>(null) }
+    // KAN-173 safety fix: load the active Copy+DCA session count on the current net so the switch-warning's
+    // "they keep running on <net>" note actually fires (best-effort; a failure leaves it 0 → the note is omitted).
+    var activeSessionCount by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) { activeSessionCount = runCatching { loadActiveSessionCount() }.getOrDefault(0) }
 
     Box(modifier = modifier.fillMaxSize().background(colors.surface), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 480.dp).fillMaxSize()) {
