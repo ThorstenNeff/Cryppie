@@ -136,8 +136,10 @@ object NetworkProfiles {
                 alchemySlug = "base-sepolia",
                 // V4 UniversalRouter (Copy/Strategy) — Context7-verified vs official Uniswap V4 deployments.
                 universalRouter = "0x492e6456d9528771018deb9e87ef7750ef184104",
-                // dcaRouter = V3 SwapRouter02 — FLAGGED to PO (not in repo [e2e used 0x…c0de stub], not on the V4
-                // page, Context7 has no V3 testnet deployment). Stays null → DCA fail-closed on testnet until sourced.
+                // V3 SwapRouter02 (DCA buy) — Backend-verified vs two official Uniswap V3 sources + eth_getCode
+                // (24497 B, canonical, not a fork). NB testnet pools may lack liquidity → live swaps can revert
+                // (KAN-153), but the router-config path is correct.
+                dcaRouter = "0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4",
                 wrappedNative = "0x4200000000000000000000000000000000000006", // WETH — OP-stack predeploy (same as Base)
             ),
             ChainProfile(

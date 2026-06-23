@@ -50,8 +50,9 @@ class NetworkEnvironmentTest {
         // V4 UniversalRouter — Context7-verified vs official Uniswap V4 deployments (Copy/Strategy).
         assertEquals("0x492e6456d9528771018deb9e87ef7750ef184104", t.universalRouter(84532L))
         assertEquals("0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b", t.universalRouter(11155111L))
-        // dcaRouter (V3 SwapRouter02) stays unfilled (flagged) → DCA fail-closed on testnet until sourced.
-        assertNull(t.chain(84532L)?.dcaRouter)
+        // V3 SwapRouter02 (DCA) — Backend-verified for Base Sepolia; Sepolia stays unfilled (parked).
+        assertEquals("0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4", t.chain(84532L)?.dcaRouter)
+        assertNull(t.chain(11155111L)?.dcaRouter)
         // CREATE2-uniform AA addresses are the same value on testnet
         assertEquals(NetworkEnvironment.MAINNET.profile.aa, t.aa)
         // testnet chain ids join the hard-gate union
