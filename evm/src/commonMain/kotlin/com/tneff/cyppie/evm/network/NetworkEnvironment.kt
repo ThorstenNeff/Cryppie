@@ -39,6 +39,8 @@ data class ChainProfile(
     val universalRouter: String,
     /** Uniswap SwapRouter02 — the DCA buy router for this chain; `null` where not yet wired/sourced. */
     val dcaRouter: String? = null,
+    /** Wrapped-native (WETH) for this chain — drives native-token pricing; `null` where not yet sourced. */
+    val wrappedNative: String? = null,
 )
 
 /**
@@ -101,11 +103,13 @@ object NetworkProfiles {
                 alchemySlug = "eth-mainnet",
                 universalRouter = "0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af",
                 dcaRouter = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45", // Uniswap SwapRouter02 (mainnet)
+                wrappedNative = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH (mainnet)
             ),
             ChainProfile(
                 chainId = 8453L,
                 alchemySlug = "base-mainnet",
                 universalRouter = "0x6fF5693b99212Da76ad316178A184AB56D299b43",
+                wrappedNative = "0x4200000000000000000000000000000000000006", // WETH (Base predeploy)
             ),
         ),
         aa = AaAddresses(),
@@ -131,11 +135,13 @@ object NetworkProfiles {
                 chainId = 84532L,
                 alchemySlug = "base-sepolia",
                 universalRouter = TESTNET_TODO_ADDRESS, // TODO(KAN-172): Base-Sepolia UniversalRouter (Uniswap docs)
+                wrappedNative = "0x4200000000000000000000000000000000000006", // WETH — OP-stack predeploy (same as Base)
             ),
             ChainProfile(
                 chainId = 11155111L,
                 alchemySlug = "eth-sepolia",
                 universalRouter = TESTNET_TODO_ADDRESS, // TODO(KAN-172): Sepolia UniversalRouter (Uniswap docs)
+                // wrappedNative TODO(KAN-172): Sepolia WETH (flag to PO — not confidently verifiable)
             ),
         ),
         aa = AaAddresses(), // CREATE2-uniform → same as mainnet (verify deployed on the testnet at boot)

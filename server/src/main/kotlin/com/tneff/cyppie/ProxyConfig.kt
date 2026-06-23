@@ -56,8 +56,13 @@ data class ProxyConfig(
             val key = System.getProperty("alchemyApiKey")?.takeIf { it.isNotBlank() }
                 ?: System.getenv("ALCHEMY_API_KEY")?.takeIf { it.isNotBlank() }
             fun env(name: String): String? = System.getProperty(name) ?: System.getenv(name)
+            // ADR-0027: env-driven allow-list so a testnet host can serve eth-sepolia/base-sepolia without a
+            // code change. Comma-separated `ALLOWED_NETWORKS`; unset → mainnet default. The prod money-path host
+            // leaves it unset (mainnet-only); the testnet host sets `eth-sepolia,base-sepolia`.
+            val networks = env("ALLOWED_NETWORKS")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()
             return ProxyConfig(
                 alchemyApiKey = key,
+                allowedNetworks = networks ?: DEFAULT_NETWORKS,
                 coinGeckoApiKey = (System.getProperty("coinGeckoApiKey") ?: System.getenv("COINGECKO_API_KEY"))?.takeIf { it.isNotBlank() },
                 rateLimitPerMinute = env("PROXY_RATE_LIMIT")?.toIntOrNull() ?: DEFAULT_RATE_LIMIT,
                 trustedProxyHops = env("PROXY_TRUSTED_HOPS")?.toIntOrNull() ?: 0,

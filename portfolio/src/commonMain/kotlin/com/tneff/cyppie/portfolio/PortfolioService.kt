@@ -66,16 +66,18 @@ class PortfolioService(
         fun priceTokenFor(token: PortfolioToken): PortfolioToken? =
             if (token.isNative) NATIVE[token.chainId]?.weth else token
 
-        // Audited WETH addresses (KAN-90) — native ETH is valued at the WETH price.
-        private val NATIVE: Map<Long, NativeMeta> = mapOf(
-            1L to NativeMeta(
-                eth = PortfolioToken(1L, null, "ETH", 18),
-                weth = PortfolioToken(1L, EvmAddress.parse("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"), "WETH", 18),
-            ),
-            8453L to NativeMeta(
-                eth = PortfolioToken(8453L, null, "ETH", 18),
-                weth = PortfolioToken(8453L, EvmAddress.parse("0x4200000000000000000000000000000000000006"), "WETH", 18),
-            ),
-        )
+        // Native ETH is valued at the chain's WETH price (KAN-90). WETH addresses come from the ADR-0027
+        // NetworkProfiles registry (single-source, no per-table drift) — chains without a sourced WETH (e.g.
+        // Sepolia) get no native pricing entry and degrade cleanly. Mainnet 1/8453 values are unchanged.
+        private val NATIVE: Map<Long, NativeMeta> =
+            com.tneff.cyppie.evm.network.NetworkProfiles.all
+                .flatMap { it.chains }
+                .filter { it.wrappedNative != null }
+                .associate { c ->
+                    c.chainId to NativeMeta(
+                        eth = PortfolioToken(c.chainId, null, "ETH", 18),
+                        weth = PortfolioToken(c.chainId, EvmAddress.parse(c.wrappedNative!!), "WETH", 18),
+                    )
+                }
     }
 }
