@@ -134,14 +134,18 @@ object NetworkProfiles {
             ChainProfile(
                 chainId = 84532L,
                 alchemySlug = "base-sepolia",
-                universalRouter = TESTNET_TODO_ADDRESS, // TODO(KAN-172): Base-Sepolia UniversalRouter (Uniswap docs)
+                // V4 UniversalRouter (Copy/Strategy) — Context7-verified vs official Uniswap V4 deployments.
+                universalRouter = "0x492e6456d9528771018deb9e87ef7750ef184104",
+                // dcaRouter = V3 SwapRouter02 — FLAGGED to PO (not in repo [e2e used 0x…c0de stub], not on the V4
+                // page, Context7 has no V3 testnet deployment). Stays null → DCA fail-closed on testnet until sourced.
                 wrappedNative = "0x4200000000000000000000000000000000000006", // WETH — OP-stack predeploy (same as Base)
             ),
             ChainProfile(
                 chainId = 11155111L,
                 alchemySlug = "eth-sepolia",
-                universalRouter = TESTNET_TODO_ADDRESS, // TODO(KAN-172): Sepolia UniversalRouter (Uniswap docs)
-                // wrappedNative TODO(KAN-172): Sepolia WETH (flag to PO — not confidently verifiable)
+                // V4 UniversalRouter — Context7-verified vs official Uniswap V4 deployments.
+                universalRouter = "0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b",
+                // dcaRouter (V3) + wrappedNative (Sepolia is NOT OP-stack, WETH ≠ 0x4200…) FLAGGED to PO — not verifiable.
             ),
         ),
         aa = AaAddresses(), // CREATE2-uniform → same as mainnet (verify deployed on the testnet at boot)
