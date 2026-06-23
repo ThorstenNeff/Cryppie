@@ -122,11 +122,10 @@ object NetworkProfiles {
     )
 
     /**
-     * Base Sepolia (84532) + Sepolia (11155111). chain-ids + Alchemy slugs + the CREATE2-uniform AA addresses are
-     * real (deterministic). The per-chain [ChainProfile.universalRouter] / [ChainProfile.dcaRouter] and the testnet
-     * [BackendUrls] are **placeholders** (`0x0…0` / the testnet host) — fill from the official testnet deployment
-     * before testnet goes live. A zero-address router pins fail-closed (a real tx won't match), so an unfilled
-     * testnet stays safe rather than silently mis-routing.
+     * v1 testnet = **Base Sepolia (84532) only** (PO 2026-06-23: Eth-Sepolia 11155111 is not a backend-supported
+     * chain — backend `CHAINS=1/8453/84532`). All addresses are verified: V4 UniversalRouter (Context7 vs official
+     * Uniswap V4 deployments) + V3 SwapRouter02 (Backend-verified, canonical) + WETH (OP-stack predeploy) + the
+     * CREATE2-uniform AA pins. Sepolia is a deferred follow (re-add a ChainProfile here when the backend supports it).
      */
     val TESTNET = NetworkProfile(
         environment = NetworkEnvironment.TESTNET,
@@ -142,13 +141,6 @@ object NetworkProfiles {
                 dcaRouter = "0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4",
                 wrappedNative = "0x4200000000000000000000000000000000000006", // WETH — OP-stack predeploy (same as Base)
             ),
-            ChainProfile(
-                chainId = 11155111L,
-                alchemySlug = "eth-sepolia",
-                // V4 UniversalRouter — Context7-verified vs official Uniswap V4 deployments.
-                universalRouter = "0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b",
-                // dcaRouter (V3) + wrappedNative (Sepolia is NOT OP-stack, WETH ≠ 0x4200…) FLAGGED to PO — not verifiable.
-            ),
         ),
         aa = AaAddresses(), // CREATE2-uniform → same as mainnet (verify deployed on the testnet at boot)
         backend = BackendUrls(
@@ -158,9 +150,6 @@ object NetworkProfiles {
             aaTriggerBaseUrl = "https://auth.cyppie.com",       // TODO(KAN-172): separate testnet aa-trigger host
         ),
     )
-
-    /** Obvious, fail-closed placeholder for an un-sourced testnet per-chain address (never a guessed real one). */
-    private const val TESTNET_TODO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
     /** Every known profile. Chain ids are disjoint across envs, so a chain id resolves to exactly one. */
     val all: List<NetworkProfile> = listOf(MAINNET, TESTNET)
