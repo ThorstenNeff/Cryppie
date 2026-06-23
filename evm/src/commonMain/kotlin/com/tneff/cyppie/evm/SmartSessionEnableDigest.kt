@@ -32,8 +32,10 @@ object SmartSessionEnableDigest {
     /** `SMART_SESSIONS_ADDRESS` — CREATE2-deterministic, identical on ETH + Base. Client-pinned. */
     const val SMART_SESSION_ADDRESS: String = "0x00000000008bDABA73cD9815d79069c247Eb4bDA"
 
-    /** The only chains the AA stack supports (ADR-0024). A `chainId` outside this fails closed. */
-    val SUPPORTED_CHAIN_IDS: Set<Long> = setOf(1L, 8453L)
+    /** The chains the AA stack supports (ADR-0024/0027). A `chainId` outside this fails closed. Sourced from the
+     *  [com.tneff.cyppie.evm.network.NetworkProfiles] registry (single-source, union of all envs); mainnet `{1,8453}`
+     *  unchanged, testnet `{84532,11155111}` added behind the active-env data gating. */
+    val SUPPORTED_CHAIN_IDS: Set<Long> = com.tneff.cyppie.evm.network.NetworkProfiles.allChainIds
 
     private const val DOMAIN_NAME = "SmartSession"
     private const val DOMAIN_VERSION = "1"

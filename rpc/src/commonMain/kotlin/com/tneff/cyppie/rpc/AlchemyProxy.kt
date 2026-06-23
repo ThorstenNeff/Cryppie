@@ -1,15 +1,25 @@
 package com.tneff.cyppie.rpc
 
-/** Chain-id ↔ Alchemy network slug mapping, shared by the Alchemy clients and the proxy routing. */
+/**
+ * Chain-id ↔ Alchemy network slug mapping — the single source for the slug duplication (ADR-0027). Sourced from
+ * the [com.tneff.cyppie.evm.network.NetworkProfiles] registry; the Alchemy clients delegate here so there is one
+ * map, not four. Slug values are per-chain (disjoint across envs), so [of]/[chainId] resolve env-agnostically;
+ * mainnet `{1→eth-mainnet, 8453→base-mainnet}` is unchanged.
+ */
 object AlchemyNetworks {
-    fun of(chainId: Long): String? = when (chainId) {
-        1L -> "eth-mainnet"
-        8453L -> "base-mainnet"
-        else -> null
-    }
+    fun of(chainId: Long): String? =
+        com.tneff.cyppie.evm.network.NetworkProfiles.chainProfile(chainId)?.alchemySlug
 
-    /** Chains the proxy/clients support today (Ethereum + Base, PRD-02/03). */
-    val supportedChainIds: List<Long> = listOf(1L, 8453L)
+    fun chainId(slug: String): Long? =
+        com.tneff.cyppie.evm.network.NetworkProfiles.all
+            .firstNotNullOfOrNull { p -> p.chains.firstOrNull { it.alchemySlug == slug }?.chainId }
+
+    /**
+     * The chains the client builds RPC/NFT clients for **on mainnet** (the default). Under runtime env-switching
+     * the app shell iterates `activeNetworkStore.profile.chainIds` instead — this stays mainnet so behavior is
+     * unchanged until the shell wires the active env (PRD-09 Dev-1).
+     */
+    val supportedChainIds: List<Long> = com.tneff.cyppie.evm.network.NetworkProfiles.MAINNET.chainIds
 }
 
 /**

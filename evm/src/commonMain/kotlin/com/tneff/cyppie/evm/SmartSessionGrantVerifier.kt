@@ -82,12 +82,10 @@ object SmartSessionGrantVerifier {
     /** UniversalRouter `execute(bytes,bytes[],uint256)`. */
     const val UNIVERSAL_ROUTER_EXECUTE_SELECTOR: String = "0x3593564c"
 
-    /** The Uniswap UniversalRouter (V4) per supported chain; null if the chain is unsupported. */
-    fun universalRouter(chainId: Long): String? = when (chainId) {
-        1L -> "0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af" // Ethereum (doc-confirmed)
-        8453L -> "0x6fF5693b99212Da76ad316178A184AB56D299b43" // Base (confirmed by the Copy-KAT digest reconcile)
-        else -> null
-    }
+    /** The Uniswap UniversalRouter (V4) per supported chain; null if unsupported. Sourced from the
+     *  [com.tneff.cyppie.evm.network.NetworkProfiles] registry (ADR-0027 single-source) — mainnet values unchanged. */
+    fun universalRouter(chainId: Long): String? =
+        com.tneff.cyppie.evm.network.NetworkProfiles.chainProfile(chainId)?.universalRouter
 
     /** A pinned action: the contract [target] + the 4-byte [selector] the session is allowed to call. */
     data class ActionPin(val target: String, val selector: String)

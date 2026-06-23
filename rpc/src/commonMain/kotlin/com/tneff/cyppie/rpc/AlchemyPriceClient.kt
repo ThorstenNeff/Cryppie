@@ -109,17 +109,9 @@ class AlchemyPriceClient(
     }
 
     private companion object {
-        fun alchemyNetwork(chainId: Long): String? = when (chainId) {
-            1L -> "eth-mainnet"
-            8453L -> "base-mainnet"
-            else -> null
-        }
-
-        fun networkChainId(network: String?): Long? = when (network) {
-            "eth-mainnet" -> 1L
-            "base-mainnet" -> 8453L
-            else -> null
-        }
+        // ADR-0027: delegate to the single AlchemyNetworks source (no per-client slug copy).
+        fun alchemyNetwork(chainId: Long): String? = AlchemyNetworks.of(chainId)
+        fun networkChainId(network: String?): Long? = network?.let { AlchemyNetworks.chainId(it) }
     }
 }
 

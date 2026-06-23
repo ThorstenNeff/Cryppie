@@ -41,9 +41,12 @@ kotlin {
             // Runtime JSON only (parseToJsonElement) for the EIP-712 typed-data digest (KAN-143) — no
             // @Serializable / compiler plugin needed. Web-safe (same lib :rpc/:market use cross-target).
             implementation(libs.kotlinx.serialization.json)
+            // StateFlow for ActiveNetworkStore (ADR-0027 reactive active-env). core-only, web-safe.
+            implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
