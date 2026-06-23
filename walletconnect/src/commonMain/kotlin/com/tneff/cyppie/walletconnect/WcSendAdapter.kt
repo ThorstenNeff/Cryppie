@@ -130,11 +130,16 @@ fun approvedAddressesFrom(accounts: List<String>): Set<EvmAddress> =
  * Returns the [PreparedSend] whose `disclosure` the approval UI shows; signing happens afterwards via
  * [SendOrchestrator.signAndBroadcast] over the unlocked seed (post-approval, no fee filled after — #1).
  * Kept as an extension so `:send` carries no WC dependency.
+ *
+ * [approvedChainIds] is **required** (no default) at this production seam — KAN-122 #4 hardening: the empty
+ * set means "any chain" in the low-level [WcSendAdapter.toSendInput], so a forgotten binding here would
+ * silently re-open the replay/chain guard. Forcing the caller to pass `controller.approvedChains(topic)`
+ * makes that a compile error, not a latent gap.
  */
 suspend fun SendOrchestrator.prepareWalletConnectSend(
     params: SendTransactionParams,
     approvedAccounts: List<EvmAccount>,
-    approvedChainIds: Set<Long> = emptySet(),
+    approvedChainIds: Set<Long>,
 ): PreparedSend {
     // The session-approved accounts bind `from` (#3) here AND resolve the signing index in prepare().
     val input = WcSendAdapter.toSendInput(params, approvedAccounts.map { it.address }.toSet(), approvedChainIds)
