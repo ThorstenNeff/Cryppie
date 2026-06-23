@@ -41,6 +41,10 @@ data class ChainProfile(
     val dcaRouter: String? = null,
     /** Wrapped-native (WETH) for this chain — drives native-token pricing; `null` where not yet sourced. */
     val wrappedNative: String? = null,
+    /** DCA grant default spend token (USDC) for this chain — per-env so testnet-DCA uses the right token. */
+    val dcaSpendToken: String? = null,
+    /** DCA grant default buy token (WETH) for this chain. */
+    val dcaBuyToken: String? = null,
 )
 
 /**
@@ -104,12 +108,16 @@ object NetworkProfiles {
                 universalRouter = "0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af",
                 dcaRouter = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45", // Uniswap SwapRouter02 (mainnet)
                 wrappedNative = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH (mainnet)
+                dcaSpendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC (mainnet)
+                dcaBuyToken = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH (mainnet)
             ),
             ChainProfile(
                 chainId = 8453L,
                 alchemySlug = "base-mainnet",
                 universalRouter = "0x6fF5693b99212Da76ad316178A184AB56D299b43",
                 wrappedNative = "0x4200000000000000000000000000000000000006", // WETH (Base predeploy)
+                dcaSpendToken = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC (Base)
+                dcaBuyToken = "0x4200000000000000000000000000000000000006", // WETH (Base)
             ),
         ),
         aa = AaAddresses(),
@@ -140,6 +148,8 @@ object NetworkProfiles {
                 // (KAN-153), but the router-config path is correct.
                 dcaRouter = "0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4",
                 wrappedNative = "0x4200000000000000000000000000000000000006", // WETH — OP-stack predeploy (same as Base)
+                dcaSpendToken = "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC (Base Sepolia, repo+setup-verified)
+                dcaBuyToken = "0x4200000000000000000000000000000000000006", // WETH (Base Sepolia predeploy)
             ),
         ),
         aa = AaAddresses(), // CREATE2-uniform → same as mainnet (verify deployed on the testnet at boot)

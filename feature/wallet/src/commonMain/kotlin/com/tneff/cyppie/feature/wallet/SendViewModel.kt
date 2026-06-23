@@ -321,4 +321,5 @@ class SendViewModel(
 fun explorerTxUrl(chain: EvmChain, txHash: String): String = when (chain) {
     EvmChain.ETHEREUM -> "https://etherscan.io/tx/$txHash"
     EvmChain.BASE -> "https://basescan.org/tx/$txHash"
+    EvmChain.BASE_SEPOLIA -> "https://sepolia.basescan.org/tx/$txHash"
 }

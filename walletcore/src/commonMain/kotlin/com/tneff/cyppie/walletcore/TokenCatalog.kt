@@ -41,6 +41,9 @@ object TokenCatalog {
         curated(EvmChain.BASE, "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "USDC", "USD Coin", 6),
         curated(EvmChain.BASE, "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb", "DAI", "Dai Stablecoin", 18),
         curated(EvmChain.BASE, "0x4200000000000000000000000000000000000006", "WETH", "Wrapped Ether", 18),
+        // Base Sepolia (chainId 84532, testnet) — USDC repo+setup-verified, WETH OP-stack predeploy (KAN-172/PRD-09).
+        curated(EvmChain.BASE_SEPOLIA, "0x036CbD53842c5426634e7929541eC2318f3dCF7e", "USDC", "USD Coin", 6),
+        curated(EvmChain.BASE_SEPOLIA, "0x4200000000000000000000000000000000000006", "WETH", "Wrapped Ether", 18),
     )
 
     /** Curated tokens for [chain]. */

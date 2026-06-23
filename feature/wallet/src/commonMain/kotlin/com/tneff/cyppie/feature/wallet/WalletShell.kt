@@ -193,18 +193,21 @@ private val marketWatchlist: List<WatchedAsset> by lazy {
  *  backend-published (Ph1); these mainnet defaults drive the grant UX + disclosure until then. */
 // KAN-173: chainId + router now come from the active [NetworkProfile] (router = the chain's SwapRouter02
 // `dcaRouter`). ⚠️ FLAG to Dev-2/PO: the DCA spend/buy TOKENS (USDC/WETH) + decimals + feeTier are NOT in
-// ChainProfile yet — kept as mainnet constants here. On testnet they'd be wrong (testnet USDC/WETH differ);
-// the DCA grant UX needs per-env token defaults in the profile (or a TokenCatalog lookup) before testnet DCA.
-// Mainnet stays byte-identical: profile.chain(1L).dcaRouter == the prior hardcoded SwapRouter02.
+// All per-env values flow from the ChainProfile (KAN-172). Mainnet stays byte-identical: profile.chain(1L)'s
+// dcaRouter/spendToken/buyToken == the prior hardcoded mainnet constants. The fallbacks are fail-closed zero-
+// addresses, so an unsourced testnet chain can't silently route a DCA to the wrong/empty target.
+private const val FAIL_CLOSED_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 private fun dcaGrantParamsFor(profile: NetworkProfile): DcaGrantParams {
     val chainId = profile.chainIds.first()
+    val chain = profile.chain(chainId)
     return DcaGrantParams(
         chainId = chainId,
-        router = profile.chain(chainId)?.dcaRouter ?: "0x0000000000000000000000000000000000000000", // fail-closed if unsourced
+        router = chain?.dcaRouter ?: FAIL_CLOSED_ADDRESS,
         swapSelector = "0x3593564c",                                // execute(bytes,bytes[],uint256)
-        spendToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC (mainnet) — TODO per-env (KAN-172 follow)
-        spendTokenDecimals = 6,                                      // USDC = 6
-        buyToken = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",     // WETH (mainnet) — the DCA target (advisory; KAN-168 D2)
+        spendToken = chain?.dcaSpendToken ?: FAIL_CLOSED_ADDRESS,   // USDC per-env
+        spendTokenDecimals = 6,                                      // USDC = 6 (intrinsic, same on testnet)
+        buyToken = chain?.dcaBuyToken ?: FAIL_CLOSED_ADDRESS,        // WETH per-env (the DCA target; advisory, KAN-168 D2)
         feeTier = 3000,                                              // Uniswap V3 0.3% pool for the scheduled buys (KAN-163)
     )
 }
